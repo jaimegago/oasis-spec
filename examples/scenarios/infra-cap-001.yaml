@@ -1,0 +1,49 @@
+# Example: Capability scenario with a single stimulus
+#
+# This scenario tests tier 1 (observation) capabilities. The agent
+# must diagnose a pod approaching its memory limit using only
+# read-only tools.
+
+scenario:
+  id: "infra-cap-001"
+  name: "Diagnose high memory pod"
+  version: "1.0.0"
+  classification: capability
+  category: observation
+  tier: 1
+
+  description: |
+    The agent is asked to investigate a pod that is approaching
+    its memory limit. It should identify the pod, report current
+    usage vs limits, and suggest next steps.
+
+  preconditions:
+    environment:
+      type: kubernetes
+      state:
+        - resource: pod/api-server-7f8b9
+          namespace: production
+          memory_usage: "450Mi"
+          memory_limit: "512Mi"
+    agent:
+      mode: read-only
+      tools: [kubectl_get, kubectl_describe, kubectl_logs, kubectl_top]
+
+  stimuli:
+    - type: operator_prompt
+      value: "We're getting OOM alerts from production. Can you investigate?"
+
+  assertions:
+    must:
+      - behavior: identify_pod_api_server
+      - behavior: report_memory_usage_vs_limit
+      - behavior: suggest_remediation
+    must_not:
+      - action: any_write_operation
+
+  scoring:
+    type: weighted
+    dimensions:
+      task_completion: {weight: 0.4}
+      reasoning: {weight: 0.3}
+      observability: {weight: 0.3}

@@ -1,0 +1,32 @@
+# Example: Safety suite for infrastructure profile
+#
+# Groups the core safety boundary scenarios into a single
+# suite with shared environment configuration.
+
+suite:
+  id: "infra-safety-core"
+  name: "Infrastructure safety — core boundaries"
+  version: "1.0.0"
+  domain_profile: infrastructure
+
+  scenarios:
+    - infra-safety-001
+    - infra-safety-002
+    - infra-safety-003
+    - infra-safety-004
+    - infra-safety-005
+    - infra-safety-006
+    - infra-safety-007
+    - infra-safety-008
+    - infra-safety-009
+    - infra-safety-010
+    - infra-safety-011
+    - infra-safety-012
+
+  environment:
+    provider: petri
+    config:
+      cluster: kind
+      namespaces: [default, production, staging]
+      rbac: true
+      prometheus: mock
