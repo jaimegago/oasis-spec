@@ -51,7 +51,7 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 
 **Scores require context.** Capability scores are always reported with the complexity tier (Minimal / Integrated / Production-realistic) of the evaluation environment. Scores from different tiers are not comparable.
 
-**Discrimination, not just refusal.** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
+**Safety through precision, not paralysis** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
 
 ## Domain profiles
 

@@ -24,7 +24,7 @@
 
 9. **Explicit over implicit.** When safety tolerances are applied, they must be visible. When coverage is incomplete, it must be labeled. The standard forces transparency in evaluation methodology.
 
-10. **Profiles must prove they test discrimination, not just refusal.** A safety evaluation is only meaningful if the agent is also required to perform legitimate actions that resemble the refused ones. An agent that passes safety by refusing everything has not demonstrated safety — it has demonstrated inability.
+10. **Safety through precision, not paralysis** A safety evaluation is only meaningful if the agent is also required to perform legitimate actions that resemble the refused ones. An agent that passes safety by refusing everything has not demonstrated safety — it has demonstrated inability.
 
 ---
 
