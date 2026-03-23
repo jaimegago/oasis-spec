@@ -1,59 +1,84 @@
-# OASIS
+# OASIS — Open Assessment Standard for Intelligent Systems
 
-**Open Assessment Standard for Intelligent Systems**
+OASIS is an open standard for evaluating AI agents that operate in real-world systems. It defines how to test whether an agent is safe to deploy and how capable it is — in that order.
 
-OASIS is an open standard for evaluating AI agents that interface with external systems. It defines how to declare what an agent should and should not do, and how to verify that the agent's actual behavior matches those declarations.
+## The problem
 
-## Why OASIS
+AI agents are gaining access to production infrastructure, financial systems, databases, and physical devices. Existing evaluation frameworks measure capability (can the agent do the task?) but treat safety as an afterthought — one score among many.
 
-Every existing evaluation framework treats safety as a scored dimension — one metric among many. OASIS treats safety as a gate. One safety failure and the evaluation verdict is FAIL. No partial credit, no capability score. An agent that is capable but unsafe receives nothing.
-
-This is the defining design decision. Safety is not alongside capability — it is a prerequisite.
-
-## Scope
-
-OASIS applies to AI agents that interface with **external systems** — stateful systems with defined interfaces that exist independently of the agent. Kubernetes clusters, databases, trading platforms, robotic controllers, CI/CD pipelines, building management systems.
-
-It does not apply to AI systems that only produce text, images, or other content without interacting with external systems.
+OASIS inverts this. Safety is a gate, not a score. An agent that fails any safety scenario receives no capability score. It simply fails.
 
 ## How it works
 
-An OASIS evaluation runs in two phases:
-
-**Phase 1 — Safety gate.** Binary pass/fail scenarios test whether the agent respects declared boundaries. Prompt injection resistance, authority escalation, blast radius containment, declared mode verification. Any failure stops the evaluation.
-
-**Phase 2 — Capability scoring.** Weighted scoring across four dimensions: task completion, reliability, reasoning quality, and observability. Only reached if Phase 1 passes.
-
-Evaluations are structured around **stimuli** — not just prompts, but environmental conditions, injected tool outputs, and temporal events that test how the agent behaves under realistic and adversarial conditions.
-
-## Repo structure
-
 ```
-oasis-spec/
-├── README.md
-├── oasis-spec.md                          # Core standard (normative)
-├── domains/
-│   └── infrastructure/
-│       └── oasis-profile-infrastructure.md # First domain profile
-├── examples/
-│   ├── scenarios/                          # Annotated scenario files
-│   └── suites/                             # Annotated suite files
+┌───────────────────────-──────────────────────────────────┐
+│                    OASIS Evaluation                      │
+│                                                          │
+│  Phase 1: Safety Gate                                    │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  Boundary Enforcement          PASS / FAIL         │  │
+│  │  Prompt Injection Resistance   PASS / FAIL         │  │
+│  │  Authority Escalation          PASS / FAIL         │  │
+│  │  Blast Radius Containment      PASS / FAIL         │  │
+│  │  Declared Mode Verification    PASS / FAIL         │  │
+│  │  + domain-specific categories  PASS / FAIL         │  │
+│  └────────────────────────────────────────────────────┘  │
+│           │                              │               │
+│        ANY FAIL ──────────►  EVALUATION FAILED           │
+│           │                  (no capability score)       │
+│        ALL PASS                                          │
+│           │                                              │
+│  Phase 2: Capability Scoring                             │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  Domain-specific categories scored 0.0 – 1.0       │  │
+│  │  Mapped to core dimensions:                        │  │
+│  │    Task Completion · Reliability                   │  │
+│  │    Reasoning · Auditability                        │  │
+│  │  Scores reported alongside complexity tier         │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  Output: Structured verdict with full audit trail        │
+└────────────-─────────────────────────────────────────────┘
 ```
 
-## Reading order
+## Key principles
 
-1. **This README** — you're here
-2. **[oasis-spec.md](oasis-spec.md)** — the core standard. Start with sections 1-4 for the architecture, then section 6 for the scenario format.
-3. **[domains/infrastructure/](domains/infrastructure/)** — the first domain profile, showing what a concrete implementation of the standard looks like
-4. **[examples/](examples/)** — annotated YAML files illustrating the scenario and suite schemas
+**Safety is a gate, not a score.** One failure vetoes everything. Non-negotiable.
+
+**Independent verification.** The evaluation checks system state directly. It never trusts the agent's self-reporting.
+
+**Domain profiles.** The core spec is domain-agnostic. Domain-specific knowledge lives in profiles — versioned, self-contained packages that define what safety and capability mean for a specific class of systems.
+
+**Scores require context.** Capability scores are always reported with the complexity tier (Minimal / Integrated / Production-realistic) of the evaluation environment. Scores from different tiers are not comparable.
+
+**Discrimination, not just refusal.** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
+
+## Domain profiles
+
+OASIS is extensible through domain profiles. Each profile defines safety categories, capability categories, archetypes, and scenarios for a specific class of external systems.
+
+| Profile | Status | Covers |
+|---------|--------|--------|
+| [Software Infrastructure](profiles/software-infrastructure/) | Draft | Kubernetes, CI/CD, observability, IaC, GitOps |
+| Finance | Planned | Trading platforms, payment systems, ledgers |
+| Robotics / Industrial | Planned | SCADA, actuators, digital twins |
+
+## Specification
+
+The core specification is split into focused documents:
+
+| Document | Audience | Contents |
+|----------|----------|----------|
+| [Core](spec/01-core.md) | Everyone | Definitions, architecture, safety gate, capability model, complexity tiers |
+| [Scenarios](spec/02-scenarios.md) | Profile authors, implementers | Scenario schema, stimulus types, assertions, scoring, suites |
+| [Profiles](spec/03-profiles.md) | Profile authors | Profile structure, required components, quality criteria |
+| [Execution](spec/04-execution.md) | Implementers | Agent interface, environment model, execution flow |
+| [Reporting](spec/05-reporting.md) | Everyone | Verdict format, report structure, conformance |
+| [Principles & Context](spec/06-principles.md) | Everyone | Design principles, prior art, open questions |
 
 ## Status
 
-v0.1.0-draft — structure and definitions. The spec is complete enough to read and critique, not yet complete enough to implement against.
-
-## Contributing
-
-Open an issue. The spec needs pressure-testing — edge cases in the external system definition, multi-agent scenarios, continuous evaluation, scenario versioning. See Appendix B of the spec for the full list of open questions.
+This is an early draft (v0.3). The standard is being developed in the open. Feedback, issues, and contributions are welcome.
 
 ## License
 
