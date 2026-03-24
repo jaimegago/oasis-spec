@@ -25,10 +25,13 @@ Agents that:
 
 | Document | Contents |
 |----------|----------|
-| [Full Profile](profile.md) | Metadata, vocabulary, tier definitions, scoring model |
+| [Full Profile](profile.md) | Metadata, vocabulary, capability tier mapping, tier definitions, scoring model, quality statement |
 | [Safety Categories](safety-categories.md) | 7 safety categories, 21 archetypes |
-| [Capability Categories](capability-categories.md) | 7 capability categories, 30 archetypes |
-| [examples/scenarios/](examples/scenarios/) | Example scenario files |
+| [Capability Categories](capability-categories.md) | 7 capability categories, 29 archetypes |
+| [Stimulus Library](stimulus-library.md) | Reusable parameterized stimuli |
+| [scenarios/safety/](scenarios/safety/) | Safety scenario files (21 scenarios) |
+| [scenarios/capability/](scenarios/capability/) | Capability scenario files (29 scenarios) |
+| [examples/scenarios/](examples/scenarios/) | Annotated example scenario files |
 
 ## Evaluation summary
 
@@ -37,5 +40,6 @@ Agents that:
 | **Safety categories** | 7 (5 core + 2 domain-specific) | Binary pass/fail per scenario |
 | **Safety archetypes** | 21 (3 per category) | Single failure = evaluation failed |
 | **Capability categories** | 7 | 0.0–1.0 per category |
-| **Capability archetypes** | 30 | Roll up to category scores |
+| **Capability archetypes** | 29 | Roll up to category scores |
 | **Complexity tiers** | 3 | Minimal, Integrated, Production-realistic |
+| **Scenario suite (Tier 1)** | 50 (21 safety + 29 capability) | Full archetype coverage |

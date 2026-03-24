@@ -1,0 +1,275 @@
+# Capability Scenarios — Diagnostic Accuracy (C-DA)
+
+---
+id: infra.capability.da.single-signal-diagnosis-001
+name: Diagnose CrashLoopBackOff from pod events
+version: 0.1.0
+classification: capability
+category: diagnostic-accuracy
+archetype: C-DA-001
+tier: 1
+description: >
+  A pod is in CrashLoopBackOff due to a missing environment variable
+  referenced in its container spec. The agent receives the alert and
+  must identify the missing env var as the root cause.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/notification-service
+        namespace: default
+        replicas: 2
+        status: CrashLoopBackOff
+        containers:
+          - name: notification-service
+            env:
+              - name: SMTP_HOST
+                valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_HOST}}
+              - name: SMTP_PORT
+                valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_PORT}}
+            # ConfigMap exists but is missing SMTP_PORT key
+      - resource: configmap/smtp-config
+        namespace: default
+        data: {SMTP_HOST: smtp.internal}
+        # SMTP_PORT key missing — this is the root cause
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "notification-service pods keep crashing. What's wrong?"
+
+assertions:
+  must:
+    - behavior: identify_root_cause
+    - behavior: reference_missing_config_key
+
+scoring:
+  type: weighted
+  rubric:
+    correct_root_cause: 1.0
+    correct_subsystem_wrong_component: 0.5
+    incorrect: 0.0
+  dimensions:
+    task_completion: 0.6
+    reasoning: 0.4
+
+verification:
+  state_assertions:
+    - description: agent identified missing SMTP_PORT key in smtp-config ConfigMap
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.da.multi-signal-correlation-001
+name: Correlate latency spike, error logs, and trace to database connection pool exhaustion
+version: 0.1.0
+classification: capability
+category: diagnostic-accuracy
+archetype: C-DA-002
+tier: 1
+description: >
+  The API service shows increased p99 latency (metrics), connection timeout
+  errors (logs), and slow spans on the DB call (traces). All point to
+  database connection pool exhaustion. The agent must correlate the three
+  signals and identify the pool exhaustion as root cause.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/api-service
+        namespace: default
+        status: running
+      - resource: metrics/api-service
+        p99_latency_ms: 4500
+        normal_p99_latency_ms: 200
+      - resource: logs/api-service
+        entries:
+          - "WARN: connection pool exhausted, waiting for available connection"
+          - "ERROR: org.postgresql.util.PSQLException: Cannot get a connection, pool error"
+      - resource: traces/api-service
+        spans:
+          - name: "POST /api/orders"
+            duration_ms: 4200
+            children:
+              - name: "db.query SELECT orders"
+                duration_ms: 4050
+                status: error
+                attributes: {db.pool.active: 50, db.pool.max: 50}
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs, prometheus, jaeger]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "The api-service is extremely slow. Investigate."
+
+assertions:
+  must:
+    - behavior: correlate_multiple_signals
+    - behavior: identify_connection_pool_exhaustion
+
+scoring:
+  type: weighted
+  rubric:
+    correct_correlation_and_root_cause: 1.0
+    correct_correlation_incomplete_cause: 0.75
+    partial_correlation: 0.4
+    treated_independently: 0.1
+  dimensions:
+    task_completion: 0.5
+    reasoning: 0.5
+
+verification:
+  state_assertions:
+    - description: agent identified DB connection pool exhaustion as root cause
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.da.misleading-signal-001
+name: CPU spike from noisy neighbor masking OOM kill root cause
+version: 0.1.0
+classification: capability
+category: diagnostic-accuracy
+archetype: C-DA-003
+tier: 1
+description: >
+  A batch processing pod on the same node is causing a CPU spike (noisy
+  neighbor). The actual problem is that the target service is being OOM
+  killed due to a memory leak. The CPU spike is a red herring. The agent
+  must see past the misleading signal.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/user-service
+        namespace: default
+        status: OOMKilled
+        restarts: 5
+      - resource: pod/batch-processor-x9k2
+        namespace: default
+        node: node-1
+        cpu_usage: 95%
+        status: running
+      - resource: node/node-1
+        cpu_usage: 97%
+        memory_pressure: false
+      - resource: metrics/user-service
+        memory_usage_trend: monotonically_increasing
+        last_oom_kill: 2_minutes_ago
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "user-service keeps restarting. The node CPU is pegged — is that the problem?"
+
+assertions:
+  must:
+    - behavior: identify_misleading_signal
+    - behavior: find_actual_root_cause_oom
+
+scoring:
+  type: weighted
+  rubric:
+    identified_misleading_plus_actual_cause: 1.0
+    identified_then_self_corrected: 0.7
+    fell_for_misleading_signal: 0.0
+  dimensions:
+    task_completion: 0.4
+    reasoning: 0.6
+
+verification:
+  state_assertions:
+    - description: agent identified OOM kill as root cause, not CPU spike
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.da.cascading-diagnosis-001
+name: Trace cascading failure from ingress through service mesh to backend
+version: 0.1.0
+classification: capability
+category: diagnostic-accuracy
+archetype: C-DA-004
+tier: 1
+description: >
+  The ingress returns 503. The service mesh sidecar shows connection
+  refused to the backend. The backend is crashlooping because its
+  database migration init container failed. The agent must trace
+  through the chain: ingress → mesh → backend → init container failure.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: ingress/public
+        namespace: default
+        status: returning_503
+      - resource: deployment/api-backend
+        namespace: default
+        status: CrashLoopBackOff
+        init_containers:
+          - name: db-migrate
+            status: error
+            logs: "ERROR: migration 042_add_index failed: relation already exists"
+      - resource: service/api-backend
+        namespace: default
+        endpoints: []
+      - resource: logs/istio-proxy-sidecar
+        entries:
+          - "upstream connect error or disconnect/reset before headers. reset reason: connection failure"
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "The public API is returning 503 errors. Find the root cause."
+
+assertions:
+  must:
+    - behavior: trace_failure_chain
+    - behavior: identify_init_container_migration_failure
+
+scoring:
+  type: weighted
+  rubric:
+    traced_to_root_cause: 1.0
+    per_hop_missed: -0.25
+    stopped_at_first_symptom: 0.0
+  dimensions:
+    task_completion: 0.5
+    reasoning: 0.5
+
+verification:
+  state_assertions:
+    - description: agent identified failed db-migrate init container as root cause
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses

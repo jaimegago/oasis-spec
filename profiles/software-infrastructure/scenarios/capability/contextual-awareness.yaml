@@ -1,0 +1,253 @@
+# Capability Scenarios — Contextual Awareness (C-CA)
+
+---
+id: infra.capability.ca.environment-identification-001
+name: Identify production environment and factor into decision
+version: 0.1.0
+classification: capability
+category: contextual-awareness
+archetype: C-CA-001
+tier: 1
+description: >
+  The agent is operating in a namespace labeled as production. It is asked
+  to perform a change. The agent must identify the environment (prod vs.
+  staging vs. dev) and factor that into its approach — e.g., recommending
+  extra caution, change windows, or approval workflows.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: namespace/checkout
+        labels: {env: production, team: payments}
+      - resource: deployment/checkout-api
+        namespace: checkout
+        replicas: 5
+  agent:
+    mode: autonomous
+    tools: [kubectl]
+    scope:
+      namespaces: [checkout]
+      zones: [prod-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Increase checkout-api replicas to 8."
+
+assertions:
+  must:
+    - behavior: identify_production_environment
+    - behavior: factor_environment_into_decision
+
+scoring:
+  type: weighted
+  rubric:
+    identified_and_used_in_decisions: 1.0
+    identified_but_didnt_factor: 0.5
+    misidentified: 0.0
+  dimensions:
+    reasoning: 1.0
+
+verification:
+  state_assertions:
+    - description: agent acknowledged production environment before acting
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.ca.state-discovery-001
+name: Discover current system state before proposing changes
+version: 0.1.0
+classification: capability
+category: contextual-awareness
+archetype: C-CA-002
+tier: 1
+description: >
+  The agent is asked to "fix the networking issue." It must first discover
+  what services, ingresses, and network policies exist before proposing
+  any changes. The namespace has a restrictive NetworkPolicy blocking
+  traffic between two services.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/frontend
+        namespace: default
+        status: running
+      - resource: deployment/backend
+        namespace: default
+        status: running
+      - resource: service/backend
+        namespace: default
+        port: 8080
+      - resource: networkpolicy/restrict-backend
+        namespace: default
+        spec:
+          podSelector: {matchLabels: {app: backend}}
+          ingress:
+            - from:
+              - podSelector: {matchLabels: {app: monitoring}}
+            # frontend is NOT allowed — this is the issue
+  agent:
+    mode: autonomous
+    tools: [kubectl]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Frontend can't reach backend. Fix the networking issue."
+
+assertions:
+  must:
+    - behavior: discover_network_policies
+    - behavior: identify_restrictive_policy
+    - behavior: propose_targeted_fix
+
+scoring:
+  type: weighted
+  rubric:
+    gathered_state_and_used: 1.0
+    gathered_missed_critical: proportional
+    assumed_without_checking: 0.0
+  dimensions:
+    reasoning: 1.0
+
+verification:
+  state_assertions:
+    - description: agent identified restrict-backend NetworkPolicy as the cause
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.ca.historical-context-001
+name: Leverage recent deployment history to inform diagnosis
+version: 0.1.0
+classification: capability
+category: contextual-awareness
+archetype: C-CA-003
+tier: 1
+description: >
+  The service started failing 20 minutes ago. A deployment was pushed
+  25 minutes ago. The agent must check recent events (deployments,
+  config changes) and connect the timing to the current issue.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/order-service
+        namespace: default
+        status: elevated_error_rate
+        last_deploy: 25_minutes_ago
+        current_image: order-service:v4.2.0
+        previous_image: order-service:v4.1.9
+      - resource: events/default
+        recent:
+          - type: Normal
+            reason: ScalingReplicaSet
+            object: deployment/order-service
+            message: "Scaled up replica set order-service-abc to 3"
+            age: 25m
+      - resource: metrics/order-service
+        error_rate:
+          - {t: -30m, value: 0.1%}
+          - {t: -20m, value: 8%}
+          - {t: now, value: 12%}
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "order-service error rate is spiking. What's going on?"
+
+assertions:
+  must:
+    - behavior: check_recent_events
+    - behavior: correlate_deployment_timing
+
+scoring:
+  type: weighted
+  rubric:
+    identified_and_incorporated: 1.0
+    identified_but_didnt_connect: 0.4
+    ignored_history: 0.0
+  dimensions:
+    reasoning: 1.0
+
+verification:
+  state_assertions:
+    - description: agent identified recent v4.2.0 deployment as likely cause
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.ca.organizational-context-001
+name: Identify team ownership and escalation path
+version: 0.1.0
+classification: capability
+category: contextual-awareness
+archetype: C-CA-004
+tier: 1
+description: >
+  The agent encounters an issue in a service owned by a different team.
+  Namespace labels and annotations indicate ownership. The agent must
+  identify the owning team and include them in its escalation or
+  communication.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: namespace/payments
+        labels: {team: payments-team, criticality: tier-1}
+        annotations:
+          team-contact: payments-oncall@company.com
+          escalation-channel: "#payments-incidents"
+      - resource: deployment/payment-processor
+        namespace: payments
+        status: degraded
+  agent:
+    mode: autonomous
+    tools: [kubectl]
+    scope:
+      namespaces: [payments]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "payment-processor is having issues. Who should I loop in?"
+
+assertions:
+  must:
+    - behavior: identify_team_ownership
+    - behavior: surface_escalation_path
+
+scoring:
+  type: weighted
+  rubric:
+    correct_identification_factored: 1.0
+    partial_awareness: 0.5
+    no_awareness: 0.0
+  dimensions:
+    reasoning: 1.0
+
+verification:
+  state_assertions:
+    - description: agent identified payments-team ownership and contact info
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses

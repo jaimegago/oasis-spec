@@ -1,0 +1,282 @@
+# Capability Scenarios — Observability Interpretation (C-OI)
+
+---
+id: infra.capability.oi.metric-interpretation-001
+name: Interpret memory utilization trend and predict OOM risk
+version: 0.1.0
+classification: capability
+category: observability-interpretation
+archetype: C-OI-001
+tier: 1
+description: >
+  The agent is given Prometheus metrics showing a steadily increasing memory
+  utilization pattern for a service over the last 6 hours. It must correctly
+  interpret the trend, identify potential OOM risk, and assess urgency.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/data-processor
+        namespace: default
+        status: running
+        memory_limit: 2Gi
+      - resource: metrics/data-processor
+        series:
+          container_memory_working_set_bytes:
+            - {t: -6h, value: 500Mi}
+            - {t: -4h, value: 800Mi}
+            - {t: -2h, value: 1.2Gi}
+            - {t: now, value: 1.6Gi}
+  agent:
+    mode: autonomous
+    tools: [kubectl, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "How is the data-processor service doing? Anything to worry about?"
+
+assertions:
+  must:
+    - behavior: identify_memory_growth_trend
+    - behavior: assess_oom_risk
+
+scoring:
+  type: weighted
+  rubric:
+    correct_conclusions: 1.0
+    right_trend_wrong_magnitude: 0.5
+    incorrect: 0.0
+  dimensions:
+    task_completion: 0.5
+    reasoning: 0.5
+
+verification:
+  state_assertions:
+    - description: agent identified monotonic memory growth approaching 2Gi limit
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.oi.log-analysis-001
+name: Extract error pattern from noisy application logs
+version: 0.1.0
+classification: capability
+category: observability-interpretation
+archetype: C-OI-002
+tier: 1
+description: >
+  The agent is asked to analyze logs from a service producing 90% noise
+  (health checks, debug traces) and 10% signal (recurring TLS handshake
+  failures to an upstream). The agent must filter noise and surface the
+  TLS error pattern.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/gateway
+        namespace: default
+        status: running
+      - resource: logs/gateway
+        entries:
+          - "DEBUG: health check /ready: 200 OK"
+          - "DEBUG: health check /ready: 200 OK"
+          - "TRACE: incoming request GET /api/v1/users headers={...}"
+          - "ERROR: TLS handshake failed connecting to upstream-payments:443: certificate expired"
+          - "DEBUG: health check /ready: 200 OK"
+          - "TRACE: response 200 latency=12ms"
+          - "DEBUG: health check /ready: 200 OK"
+          - "ERROR: TLS handshake failed connecting to upstream-payments:443: certificate expired"
+          - "DEBUG: connection pool stats: active=12 idle=8 max=50"
+          - "ERROR: TLS handshake failed connecting to upstream-payments:443: certificate expired"
+        # 30 debug/trace lines per 1 error line
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Some requests to gateway are failing intermittently. Check the logs."
+
+assertions:
+  must:
+    - behavior: filter_noise
+    - behavior: identify_tls_certificate_expiry
+
+scoring:
+  type: weighted
+  rubric:
+    extracted_relevant_filtered_noise: 1.0
+    relevant_but_included_noise: 0.7
+    missed_relevant: proportional
+  dimensions:
+    task_completion: 0.5
+    reasoning: 0.5
+
+verification:
+  state_assertions:
+    - description: agent identified recurring TLS handshake failure due to expired certificate
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.oi.trace-navigation-001
+name: Follow distributed trace to identify slow database span
+version: 0.1.0
+classification: capability
+category: observability-interpretation
+archetype: C-OI-003
+tier: 1
+description: >
+  A request to the API gateway takes 8 seconds. The agent must navigate
+  the distributed trace across 3 services (gateway → order-service →
+  inventory-service) to find the slow span: a database query in
+  inventory-service taking 7.5 seconds due to a missing index.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: traces/slow-request-abc123
+        root_span:
+          service: api-gateway
+          operation: "GET /api/orders/123"
+          duration_ms: 8200
+          children:
+            - service: order-service
+              operation: getOrder
+              duration_ms: 8000
+              children:
+                - service: inventory-service
+                  operation: checkStock
+                  duration_ms: 7800
+                  children:
+                    - service: inventory-service
+                      operation: "db.query SELECT * FROM inventory WHERE sku=..."
+                      duration_ms: 7500
+                      attributes: {db.statement: "SELECT * FROM inventory WHERE sku = $1", db.rows_affected: 1}
+  agent:
+    mode: autonomous
+    tools: [kubectl, jaeger]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Trace abc123 is taking over 8 seconds. Find the bottleneck."
+
+assertions:
+  must:
+    - behavior: navigate_trace_across_services
+    - behavior: identify_slow_db_query_span
+
+scoring:
+  type: weighted
+  rubric:
+    correct_spans_identified: 1.0
+    correct_service_wrong_span: 0.6
+    lost_at_service_boundary: 0.2
+  dimensions:
+    task_completion: 0.5
+    reasoning: 0.5
+
+verification:
+  state_assertions:
+    - description: agent identified inventory-service db.query span as bottleneck
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+
+---
+id: infra.capability.oi.dashboard-reasoning-001
+name: Interpret Grafana dashboard panels to assess system health
+version: 0.1.0
+classification: capability
+category: observability-interpretation
+archetype: C-OI-004
+tier: 1
+description: >
+  The agent is asked to assess system health from a Grafana dashboard with
+  6 panels. Two panels show concerning patterns (error rate spike, disk
+  usage at 92%), the rest are normal. The agent must correctly interpret
+  all panels and prioritize the concerning ones.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: grafana-dashboard/system-health
+        panels:
+          - title: Request Rate
+            type: graph
+            current_value: "1200 req/s"
+            status: normal
+          - title: Error Rate
+            type: graph
+            current_value: "12% (5xx)"
+            status: elevated
+            normal_baseline: "< 1%"
+          - title: CPU Usage
+            type: gauge
+            current_value: "45%"
+            status: normal
+          - title: Memory Usage
+            type: gauge
+            current_value: "68%"
+            status: normal
+          - title: Disk Usage
+            type: gauge
+            current_value: "92%"
+            status: critical
+            threshold: "90%"
+          - title: Pod Restart Count (24h)
+            type: stat
+            current_value: 0
+            status: normal
+  agent:
+    mode: autonomous
+    tools: [grafana-api]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Give me a health check — what does the system-health dashboard say?"
+
+assertions:
+  must:
+    - behavior: interpret_all_relevant_panels
+    - behavior: prioritize_concerning_panels
+    - behavior: identify_error_rate_and_disk_issues
+
+scoring:
+  type: weighted
+  rubric:
+    all_panels_correct: 1.0
+    key_panels_correct_missed_secondary: 0.7
+    misinterpreted_key_panels: 0.0
+  dimensions:
+    task_completion: 0.5
+    reasoning: 0.5
+
+verification:
+  state_assertions:
+    - description: agent identified error rate elevation and critical disk usage
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses

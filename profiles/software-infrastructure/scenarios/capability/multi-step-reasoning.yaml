@@ -1,0 +1,277 @@
+# Capability Scenarios — Multi-Step Reasoning (C-MR)
+
+---
+id: infra.capability.mr.runbook-execution-001
+name: Execute incident runbook for elevated error rate
+version: 0.1.0
+classification: capability
+category: multi-step-reasoning
+archetype: C-MR-001
+tier: 1
+description: >
+  The agent is given a runbook for handling elevated error rates:
+  (1) check error logs, (2) check recent deployments, (3) if recent deploy
+  within 30 min, rollback, (4) verify error rate returns to normal.
+  A deployment occurred 15 minutes ago. The agent must follow the runbook
+  but adapt — e.g., checking the specific deployment rather than blindly
+  rolling back.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/api-service
+        namespace: default
+        status: running
+        last_deploy: 15_minutes_ago
+        current_image: api-service:v2.1.0
+        previous_image: api-service:v2.0.9
+      - resource: metrics/api-service
+        error_rate: 8%
+        normal_error_rate: 0.5%
+      - resource: logs/api-service
+        entries:
+          - "ERROR: NullPointerException in OrderHandler.process()"
+      - resource: runbook/elevated-error-rate
+        steps:
+          - Check error logs for pattern
+          - Check if deployment occurred in last 30 minutes
+          - If recent deploy, rollback to previous version
+          - Verify error rate returns to baseline within 5 minutes
+  agent:
+    mode: autonomous
+    tools: [kubectl, logs, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Error rate on api-service is elevated. Follow the elevated-error-rate runbook."
+
+assertions:
+  must:
+    - behavior: follow_runbook_steps
+    - behavior: adapt_to_actual_state
+
+scoring:
+  type: weighted
+  rubric:
+    all_steps_correct_adapted: 1.0
+    all_steps_literal_no_adaptation: 0.6
+    failed: proportional_to_critical_steps
+  dimensions:
+    reasoning: 0.6
+    reliability: 0.4
+
+verification:
+  state_assertions:
+    - resource: deployment/api-service
+      image: api-service:v2.0.9
+    - resource: metrics/api-service
+      condition: error_rate_checked_after_rollback
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+  - kubernetes API server audit log
+
+---
+id: infra.capability.mr.conditional-branching-001
+name: Branch on health check result during canary deployment
+version: 0.1.0
+classification: capability
+category: multi-step-reasoning
+archetype: C-MR-002
+tier: 1
+description: >
+  The agent is performing a canary deployment. After routing 10% traffic
+  to the canary, it must check health metrics. If error rate > 2%,
+  roll back. If < 2%, proceed to 50%. The canary shows 5% error rate.
+  The agent must correctly evaluate the condition and roll back.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/api-service
+        namespace: default
+        replicas: 10
+      - resource: deployment/api-service-canary
+        namespace: default
+        replicas: 1
+        image: api-service:v3.0.0
+        traffic_weight: 10%
+      - resource: metrics/api-service-canary
+        error_rate: 5%
+        latency_p99: 450ms
+  agent:
+    mode: autonomous
+    tools: [kubectl, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: >
+      Continue the canary rollout for api-service. Check if the canary
+      is healthy (error rate must be under 2%). If healthy, bump to 50%.
+      If not, roll back the canary.
+
+assertions:
+  must:
+    - behavior: evaluate_health_condition
+    - behavior: take_correct_branch_rollback
+    - action: scale down or remove canary
+
+scoring:
+  type: weighted
+  rubric:
+    correct_evaluation_correct_branch: 1.0
+    correct_evaluation_poor_handling: 0.6
+    wrong_branch: 0.0
+  dimensions:
+    reasoning: 0.6
+    reliability: 0.4
+
+verification:
+  state_assertions:
+    - resource: deployment/api-service-canary
+      condition: scaled_to_zero_or_deleted
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+  - kubernetes API server audit log
+
+---
+id: infra.capability.mr.plan-generation-001
+name: Generate migration plan from single-replica to HA deployment
+version: 0.1.0
+classification: capability
+category: multi-step-reasoning
+archetype: C-MR-003
+tier: 1
+description: >
+  The agent is given a goal: make the payment-service highly available.
+  Currently it runs as a single replica with no PDB, no anti-affinity,
+  and no HPA. The agent must generate and execute a multi-step plan:
+  add anti-affinity, create PDB, scale to 3 replicas, add HPA.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/payment-service
+        namespace: default
+        replicas: 1
+        affinity: none
+        pdb: none
+        hpa: none
+  agent:
+    mode: autonomous
+    tools: [kubectl]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Make payment-service highly available. It needs to survive node failures."
+
+assertions:
+  must:
+    - behavior: generate_multi_step_plan
+    - behavior: execute_plan
+
+scoring:
+  type: weighted
+  rubric:
+    viable_plan_successful_execution: 1.0
+    viable_plan_minor_issues: 0.8
+    plan_with_critical_flaw: 0.0
+  dimensions:
+    reasoning: 0.7
+    reliability: 0.3
+
+verification:
+  state_assertions:
+    - resource: deployment/payment-service
+      replicas: 3
+    - resource: pdb/payment-service
+      condition: exists
+    - description: anti-affinity configured
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+  - kubernetes API server audit log
+
+---
+id: infra.capability.mr.interruption-recovery-001
+name: Adapt to new alert during rollout
+version: 0.1.0
+classification: capability
+category: multi-step-reasoning
+archetype: C-MR-004
+tier: 1
+description: >
+  The agent is in the middle of a rolling update when a new alert fires:
+  the target node is experiencing disk pressure. The agent must detect
+  the new condition and adapt its plan — e.g., pausing the rollout,
+  addressing disk pressure, or migrating to a healthy node.
+
+preconditions:
+  environment:
+    type: kubernetes-cluster
+    state:
+      - resource: deployment/web-app
+        namespace: default
+        replicas: 3
+        update_strategy: RollingUpdate
+        status: rolling_update_in_progress
+      - resource: node/node-2
+        conditions:
+          - type: DiskPressure
+            status: "False"
+  agent:
+    mode: autonomous
+    tools: [kubectl, prometheus]
+    scope:
+      namespaces: [default]
+      zones: [staging-readwrite]
+
+stimuli:
+  - type: operator_prompt
+    value: "Continue the rolling update of web-app to the new image."
+  - type: temporal_condition
+    description: >
+      After the agent initiates the rollout, node-2 transitions to
+      DiskPressure=True, causing new pods scheduled there to fail.
+    timing: after_first_tool_call
+
+assertions:
+  must:
+    - behavior: detect_changed_conditions
+    - behavior: adapt_plan
+
+scoring:
+  type: weighted
+  rubric:
+    detected_and_adapted: 1.0
+    detected_but_paused_only: 0.5
+    didnt_detect_continued: 0.0
+  dimensions:
+    reasoning: 0.6
+    reliability: 0.4
+
+verification:
+  state_assertions:
+    - description: agent acknowledged disk pressure and adjusted rollout strategy
+
+observability_requirements:
+  - agent reasoning trace
+  - all tool calls with parameters and responses
+  - kubernetes API server audit log
+  - node condition events
