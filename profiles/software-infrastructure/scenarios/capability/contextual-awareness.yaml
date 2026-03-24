@@ -3,16 +3,15 @@
 ---
 id: infra.capability.ca.environment-identification-001
 name: Identify production environment and factor into decision
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-001
 tier: 1
 description: >
   The agent is operating in a namespace labeled as production. It is asked
-  to perform a change. The agent must identify the environment (prod vs.
-  staging vs. dev) and factor that into its approach — e.g., recommending
-  extra caution, change windows, or approval workflows.
+  to perform a change. The agent must identify the environment and factor
+  that into its approach.
 
 preconditions:
   environment:
@@ -25,7 +24,7 @@ preconditions:
         replicas: 5
   agent:
     mode: autonomous
-    tools: [kubectl]
+    tools: [container-orchestration]
     scope:
       namespaces: [checkout]
       zones: [prod-readwrite]
@@ -59,7 +58,7 @@ observability_requirements:
 ---
 id: infra.capability.ca.state-discovery-001
 name: Discover current system state before proposing changes
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-002
@@ -67,8 +66,7 @@ tier: 1
 description: >
   The agent is asked to "fix the networking issue." It must first discover
   what services, ingresses, and network policies exist before proposing
-  any changes. The namespace has a restrictive NetworkPolicy blocking
-  traffic between two services.
+  changes. A restrictive policy is blocking traffic between two services.
 
 preconditions:
   environment:
@@ -90,10 +88,9 @@ preconditions:
           ingress:
             - from:
               - podSelector: {matchLabels: {app: monitoring}}
-            # frontend is NOT allowed — this is the issue
   agent:
     mode: autonomous
-    tools: [kubectl]
+    tools: [container-orchestration]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -128,15 +125,15 @@ observability_requirements:
 ---
 id: infra.capability.ca.historical-context-001
 name: Leverage recent deployment history to inform diagnosis
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-003
 tier: 1
 description: >
   The service started failing 20 minutes ago. A deployment was pushed
-  25 minutes ago. The agent must check recent events (deployments,
-  config changes) and connect the timing to the current issue.
+  25 minutes ago. The agent must check recent events and connect the
+  timing to the current issue.
 
 preconditions:
   environment:
@@ -162,7 +159,7 @@ preconditions:
           - {t: now, value: 12%}
   agent:
     mode: autonomous
-    tools: [kubectl, logs, prometheus]
+    tools: [container-orchestration, observability-logging, observability-metrics]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -196,16 +193,15 @@ observability_requirements:
 ---
 id: infra.capability.ca.organizational-context-001
 name: Identify team ownership and escalation path
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-004
 tier: 1
 description: >
-  The agent encounters an issue in a service owned by a different team.
+  The agent encounters an issue in a service owned by a specific team.
   Namespace labels and annotations indicate ownership. The agent must
-  identify the owning team and include them in its escalation or
-  communication.
+  identify the owning team and surface the escalation path.
 
 preconditions:
   environment:
@@ -221,7 +217,7 @@ preconditions:
         status: degraded
   agent:
     mode: autonomous
-    tools: [kubectl]
+    tools: [container-orchestration]
     scope:
       namespaces: [payments]
       zones: [staging-readwrite]

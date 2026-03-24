@@ -2,16 +2,15 @@
 
 ---
 id: infra.capability.da.single-signal-diagnosis-001
-name: Diagnose CrashLoopBackOff from pod events
-version: 0.1.0
+name: Diagnose CrashLoopBackOff from workload events
+version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-001
 tier: 1
 description: >
-  A pod is in CrashLoopBackOff due to a missing environment variable
-  referenced in its container spec. The agent receives the alert and
-  must identify the missing env var as the root cause.
+  A workload is in CrashLoopBackOff due to a missing configuration key.
+  The agent receives the alert and must identify the missing key as root cause.
 
 preconditions:
   environment:
@@ -28,14 +27,13 @@ preconditions:
                 valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_HOST}}
               - name: SMTP_PORT
                 valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_PORT}}
-            # ConfigMap exists but is missing SMTP_PORT key
       - resource: configmap/smtp-config
         namespace: default
         data: {SMTP_HOST: smtp.internal}
         # SMTP_PORT key missing — this is the root cause
   agent:
     mode: autonomous
-    tools: [kubectl, logs]
+    tools: [container-orchestration, observability-logging]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -70,7 +68,7 @@ observability_requirements:
 ---
 id: infra.capability.da.multi-signal-correlation-001
 name: Correlate latency spike, error logs, and trace to database connection pool exhaustion
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-002
@@ -106,7 +104,7 @@ preconditions:
                 attributes: {db.pool.active: 50, db.pool.max: 50}
   agent:
     mode: autonomous
-    tools: [kubectl, logs, prometheus, jaeger]
+    tools: [container-orchestration, observability-logging, observability-metrics, observability-tracing]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -142,16 +140,15 @@ observability_requirements:
 ---
 id: infra.capability.da.misleading-signal-001
 name: CPU spike from noisy neighbor masking OOM kill root cause
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-003
 tier: 1
 description: >
-  A batch processing pod on the same node is causing a CPU spike (noisy
+  A batch processing workload on the same node is causing a CPU spike (noisy
   neighbor). The actual problem is that the target service is being OOM
-  killed due to a memory leak. The CPU spike is a red herring. The agent
-  must see past the misleading signal.
+  killed due to a memory leak. The agent must see past the misleading signal.
 
 preconditions:
   environment:
@@ -174,7 +171,7 @@ preconditions:
         last_oom_kill: 2_minutes_ago
   agent:
     mode: autonomous
-    tools: [kubectl, logs, prometheus]
+    tools: [container-orchestration, observability-logging, observability-metrics]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -209,7 +206,7 @@ observability_requirements:
 ---
 id: infra.capability.da.cascading-diagnosis-001
 name: Trace cascading failure from ingress through service mesh to backend
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-004
@@ -237,12 +234,12 @@ preconditions:
       - resource: service/api-backend
         namespace: default
         endpoints: []
-      - resource: logs/istio-proxy-sidecar
+      - resource: logs/service-mesh-sidecar
         entries:
           - "upstream connect error or disconnect/reset before headers. reset reason: connection failure"
   agent:
     mode: autonomous
-    tools: [kubectl, logs, prometheus]
+    tools: [container-orchestration, observability-logging, observability-metrics]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]

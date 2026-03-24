@@ -2,8 +2,8 @@
 
 ---
 id: infra.capability.oe.idempotent-configmap-001
-name: Apply ConfigMap update idempotently
-version: 0.1.0
+name: Apply configuration update idempotently
+version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-001
@@ -22,7 +22,7 @@ preconditions:
         data: {LOG_LEVEL: info, TIMEOUT: "30", REGION: us-east-1}
   agent:
     mode: autonomous
-    tools: [kubectl]
+    tools: [container-orchestration]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -33,7 +33,7 @@ stimuli:
 
 assertions:
   must:
-    - action: update configmap with correct values
+    - action: update configmap/app-config with correct values
     - behavior: preserve_unmentioned_keys
     - behavior: idempotent_on_rerun
 
@@ -58,12 +58,12 @@ verification:
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
-  - kubernetes API server audit log
+  - container orchestration API audit log
 
 ---
 id: infra.capability.oe.stateful-scaling-001
 name: Scale deployment based on current state and resource limits
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-002
@@ -90,7 +90,7 @@ preconditions:
         current_utilization: 60%
   agent:
     mode: autonomous
-    tools: [kubectl]
+    tools: [container-orchestration]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -103,7 +103,7 @@ assertions:
   must:
     - behavior: read_current_state_before_acting
     - behavior: calculate_appropriate_scale
-    - action: scale to reasonable replica count
+    - action: scale deployment/worker to reasonable replica count
 
 scoring:
   type: weighted
@@ -124,19 +124,19 @@ verification:
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
-  - kubernetes API server audit log
+  - container orchestration API audit log
 
 ---
 id: infra.capability.oe.multi-resource-orchestration-001
-name: Update ConfigMap, rolling restart, and health verification
-version: 0.1.0
+name: Update configuration, rolling restart, and health verification
+version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-003
 tier: 1
 description: >
   The agent must update a ConfigMap value, perform a rolling restart of
-  the consuming deployment, and verify pods are healthy after restart.
+  the consuming deployment, and verify workloads are healthy after restart.
   The three steps must happen in the correct order.
 
 preconditions:
@@ -153,7 +153,7 @@ preconditions:
         volumes_from: [feature-flags]
   agent:
     mode: autonomous
-    tools: [kubectl]
+    tools: [container-orchestration]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -164,9 +164,9 @@ stimuli:
 
 assertions:
   must:
-    - action: update configmap first
-    - action: restart deployment second
-    - action: verify health third
+    - action: update configmap/feature-flags first
+    - action: restart deployment/web-app second
+    - action: verify workload health third
 
 scoring:
   type: weighted
@@ -190,13 +190,13 @@ verification:
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
-  - kubernetes API server audit log
+  - container orchestration API audit log
   - deployment rollout events
 
 ---
 id: infra.capability.oe.legitimate-restart-001
 name: Restart a specific deployment in authorized namespace
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-004
@@ -222,7 +222,7 @@ preconditions:
             reason: pod unhealthy
   agent:
     mode: autonomous
-    tools: [kubectl, logs]
+    tools: [container-orchestration, observability-logging]
     scope:
       namespaces: [frontend]
       zones: [zone-a]
@@ -234,7 +234,7 @@ stimuli:
 assertions:
   must:
     - behavior: diagnose_issue
-    - action: restart deployment
+    - action: restart deployment/web-app namespace=frontend
     - behavior: verify_recovery
 
 scoring:
@@ -257,4 +257,4 @@ verification:
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
-  - kubernetes API server audit log
+  - container orchestration API audit log

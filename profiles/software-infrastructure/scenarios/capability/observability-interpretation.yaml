@@ -3,15 +3,15 @@
 ---
 id: infra.capability.oi.metric-interpretation-001
 name: Interpret memory utilization trend and predict OOM risk
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-001
 tier: 1
 description: >
-  The agent is given Prometheus metrics showing a steadily increasing memory
-  utilization pattern for a service over the last 6 hours. It must correctly
-  interpret the trend, identify potential OOM risk, and assess urgency.
+  The agent is given metrics showing a steadily increasing memory utilization
+  pattern for a service over the last 6 hours. It must correctly interpret
+  the trend, identify potential OOM risk, and assess urgency.
 
 preconditions:
   environment:
@@ -30,7 +30,7 @@ preconditions:
             - {t: now, value: 1.6Gi}
   agent:
     mode: autonomous
-    tools: [kubectl, prometheus]
+    tools: [container-orchestration, observability-metrics]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -65,7 +65,7 @@ observability_requirements:
 ---
 id: infra.capability.oi.log-analysis-001
 name: Extract error pattern from noisy application logs
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-002
@@ -95,10 +95,9 @@ preconditions:
           - "ERROR: TLS handshake failed connecting to upstream-payments:443: certificate expired"
           - "DEBUG: connection pool stats: active=12 idle=8 max=50"
           - "ERROR: TLS handshake failed connecting to upstream-payments:443: certificate expired"
-        # 30 debug/trace lines per 1 error line
   agent:
     mode: autonomous
-    tools: [kubectl, logs]
+    tools: [container-orchestration, observability-logging]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -133,16 +132,15 @@ observability_requirements:
 ---
 id: infra.capability.oi.trace-navigation-001
 name: Follow distributed trace to identify slow database span
-version: 0.1.0
+version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-003
 tier: 1
 description: >
-  A request to the API gateway takes 8 seconds. The agent must navigate
-  the distributed trace across 3 services (gateway → order-service →
-  inventory-service) to find the slow span: a database query in
-  inventory-service taking 7.5 seconds due to a missing index.
+  A request takes 8 seconds. The agent must navigate the distributed trace
+  across 3 services to find the slow span: a database query taking 7.5
+  seconds due to a missing index.
 
 preconditions:
   environment:
@@ -168,7 +166,7 @@ preconditions:
                       attributes: {db.statement: "SELECT * FROM inventory WHERE sku = $1", db.rows_affected: 1}
   agent:
     mode: autonomous
-    tools: [kubectl, jaeger]
+    tools: [container-orchestration, observability-tracing]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
@@ -202,23 +200,23 @@ observability_requirements:
 
 ---
 id: infra.capability.oi.dashboard-reasoning-001
-name: Interpret Grafana dashboard panels to assess system health
-version: 0.1.0
+name: Interpret dashboard panels to assess system health
+version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-004
 tier: 1
 description: >
-  The agent is asked to assess system health from a Grafana dashboard with
-  6 panels. Two panels show concerning patterns (error rate spike, disk
-  usage at 92%), the rest are normal. The agent must correctly interpret
-  all panels and prioritize the concerning ones.
+  The agent is asked to assess system health from a dashboard with 6 panels.
+  Two panels show concerning patterns (error rate spike, disk usage at 92%),
+  the rest are normal. The agent must correctly interpret all panels and
+  prioritize the concerning ones.
 
 preconditions:
   environment:
     type: kubernetes-cluster
     state:
-      - resource: grafana-dashboard/system-health
+      - resource: dashboard/system-health
         panels:
           - title: Request Rate
             type: graph
@@ -248,7 +246,7 @@ preconditions:
             status: normal
   agent:
     mode: autonomous
-    tools: [grafana-api]
+    tools: [observability-dashboards]
     scope:
       namespaces: [default]
       zones: [staging-readwrite]
