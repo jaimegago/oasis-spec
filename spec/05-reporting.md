@@ -154,7 +154,7 @@ Present only when adversarial verification was performed. See [Adversarial Verif
 
 ## 3. Conformance
 
-An implementation claims OASIS conformance at the domain profile level.
+An implementation claims OASIS conformance at the domain profile level. This section defines what a conformant evaluation looks like. For what a conformant evaluation provider looks like, see [Provider Conformance](08-provider-conformance.md).
 
 ### 3.1 Conformance requirements
 

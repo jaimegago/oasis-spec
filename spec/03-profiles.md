@@ -28,7 +28,19 @@ Domain-specific terms used in scenarios, each with a name, definition, and mappi
 
 The vocabulary enables scenario authors to write in domain-native language while preserving semantic interoperability across profiles.
 
-### 2.3 Safety category mapping
+### 2.3 Behavior definitions
+
+Every named behavior referenced in scenario assertions MUST be formally defined in the profile. A behavior definition includes:
+
+- **Identifier** — the string used in scenario assertion `behavior` fields (e.g., `treat_log_content_as_data`).
+- **Definition** — a prose description of what the behavior means.
+- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting.
+
+Behavior definitions ensure that two independent evaluation providers reading the same profile resolve the same behavior identifier to the same evaluation criterion. A scenario that references a behavior not defined in the profile is non-conformant.
+
+Behaviors used in `must_not` assertions (negative behaviors) MUST also be defined, with verification methods that describe how to detect their presence.
+
+### 2.4 Safety category mapping
 
 The profile MUST map at least one safety boundary and at least one archetype to each core safety category (boundary violation, prompt injection resistance, authority escalation, blast radius containment, declared mode verification).
 
@@ -39,13 +51,13 @@ The profile MAY define additional safety categories. Each additional category mu
 - Archetypes within the category
 - At least one scenario per archetype
 
-### 2.4 Capability category definition
+### 2.5 Capability category definition
 
 The profile defines its own capability categories and archetypes. Each category MUST declare which core capability dimension(s) it maps to (task completion, reliability, reasoning, auditability). A single category may map to multiple dimensions.
 
 The profile MUST map at least one category to each core dimension.
 
-### 2.5 Capability tier mapping
+### 2.6 Capability tier mapping
 
 A mapping of domain-specific operations to the three capability tiers:
 
@@ -55,11 +67,11 @@ A mapping of domain-specific operations to the three capability tiers:
 
 Each tier lists the concrete operations that belong to it.
 
-### 2.6 Complexity tier requirements
+### 2.7 Complexity tier requirements
 
 The domain-specific environment characteristics required for each complexity tier (Minimal, Integrated, Production-realistic), and the minimum evaluation coverage required at each tier.
 
-### 2.7 Scenario suite
+### 2.8 Scenario suite
 
 The complete set of scenarios, divided into safety and capability scenarios. Each scenario conforms to the [scenario schema](02-scenarios.md).
 
@@ -69,7 +81,7 @@ Requirements:
 - At least one scenario per archetype in each capability category
 - Negative testing ratio satisfied (see section 3.4)
 
-### 2.8 Environment specification
+### 2.9 Environment specification
 
 Requirements an environment provider must satisfy:
 
@@ -78,15 +90,15 @@ Requirements an environment provider must satisfy:
 - Isolation requirements
 - Minimum fidelity — which aspects must be faithfully simulated and which may be mocked
 
-### 2.9 Stimulus library
+### 2.10 Stimulus library
 
 A catalog of reusable, domain-specific stimuli available for use in scenarios. Individual scenarios may reference library stimuli or define their own.
 
-### 2.10 Profile quality statement
+### 2.11 Profile quality statement
 
 A dedicated section addressing each quality criterion defined in section 3. This is a transparency mechanism, not a self-certification.
 
-### 2.11 Reserved scenarios (optional)
+### 2.12 Reserved scenarios (optional)
 
 A set of scenarios withheld from public distribution, available only to certified evaluators. See [Adversarial Verification Extension](../spec/07-adversarial-verification.md) for the full mechanism.
 

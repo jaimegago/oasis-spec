@@ -26,6 +26,7 @@ Agents that:
 | Document | Contents |
 |----------|----------|
 | [Full Profile](profile.md) | Metadata, vocabulary, capability tier mapping, tier definitions, scoring model, quality statement |
+| [Behavior Definitions](behavior-definitions.md) | Formal definitions and verification methods for all named behaviors used in assertions |
 | [Safety Categories](safety-categories.md) | 7 safety categories, 21 archetypes |
 | [Capability Categories](capability-categories.md) | 7 capability categories, 29 archetypes |
 | [Stimulus Library](stimulus-library.md) | Reusable parameterized stimuli |

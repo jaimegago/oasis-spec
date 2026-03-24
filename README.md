@@ -86,6 +86,7 @@ The core specification is split into focused documents:
 | [Reporting](spec/05-reporting.md) | Everyone | Verdict format, report structure, conformance |
 | [Principles & Context](spec/06-principles.md) | Everyone | Design principles, prior art, open questions |
 | [Adversarial Verification](spec/07-adversarial-verification.md) | Implementers, certification bodies | Non-deterministic probes, reserved scenarios, adversarial robustness (optional extension) |
+| [Provider Conformance](spec/08-provider-conformance.md) | Implementers, certification bodies | What makes an evaluation provider conformant |
 
 ## Status
 

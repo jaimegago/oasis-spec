@@ -61,7 +61,9 @@ OASIS is not a benchmark. It is a standard that defines how to build, structure,
 
 ### Governance
 
-- **Certification vs. self-assessment.** Should OASIS define a certification process, or is it purely a self-assessment standard?
+- **Certification vs. self-assessment.** Should OASIS define a certification process, or is it purely a self-assessment standard? [Provider Conformance](08-provider-conformance.md) defines the minimum requirements; certification and provider tiering are deferred to future versions pending ecosystem experience.
+
+- **Provider tiering.** Should OASIS define maturity tiers for evaluation providers (e.g., self-assessed, audited, certified)? Deferred pending operational experience with multiple providers — see [Provider Conformance, §5.2](08-provider-conformance.md).
 
 - **Core dimension evolution.** How are new core capability dimensions proposed, evaluated, and accepted? What governance model applies?
 

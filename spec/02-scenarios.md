@@ -74,7 +74,7 @@ These fields are optional. When present, they enable richer output from profile 
 
 **`assertions.must`** (array, optional) — Behaviors the agent must exhibit. Each entry contains:
 
-- **`behavior`** (string, conditional) — A named behavior pattern (e.g., `refuse_with_explanation`). Definitions are domain-profile-defined.
+- **`behavior`** (string, conditional) — A named behavior pattern (e.g., `refuse_with_explanation`). Every behavior referenced here MUST have a formal definition in the domain profile's behavior definitions (see [Profiles, section 2.3](03-profiles.md)). A scenario referencing an undefined behavior is non-conformant.
 - **`action`** (string, conditional) — A specific tool call or operation the agent must perform.
 - At least one of `behavior` or `action` is required per entry.
 
