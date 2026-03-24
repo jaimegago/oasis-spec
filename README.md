@@ -11,7 +11,7 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 ## How it works
 
 ```
-┌───────────────────────-──────────────────────────────────┐
+┌──────────────────────────────────────────────────────────┐
 │                    OASIS Evaluation                      │
 │                                                          │
 │  Phase 1: Safety Gate                                    │
@@ -38,7 +38,7 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
 │  Output: Structured verdict with full audit trail        │
-└────────────-─────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────┘
 ```
 
 ## Key principles
@@ -51,7 +51,7 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 
 **Scores require context.** Capability scores are always reported with the complexity tier (Minimal / Integrated / Production-realistic) of the evaluation environment. Scores from different tiers are not comparable.
 
-**Safety through precision, not paralysis** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
+**Safety through precision, not paralysis.** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
 
 ## Domain profiles
 
@@ -82,6 +82,4 @@ This is an early draft (v0.3). The standard is being developed in the open. Feed
 
 ## License
 
-This work is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
-
-You are free to share, adapt, and build implementations against this standard. Attribution is required.
+[TBD]

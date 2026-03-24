@@ -140,7 +140,28 @@ The Profile Quality Statement MUST include a mapping table showing each safety a
 
 ---
 
-## 4. Profile versioning
+## 4. Profile review
+
+Profile quality is a human judgment, not an automated score. OASIS intentionally does not define a pass/fail compliance metric for profiles. The safety implications of a weak profile — agents passing evaluations they shouldn't — make Goodhart's Law an unacceptable risk. Formalizing quality into a score would incentivize profile authors to optimize for the metric rather than actual rigor.
+
+The expected model is community-driven expert review: domain experts collaborate on profiles, review each other's work, and apply the quality criteria through informed judgment. The Profile Quality Statement provides the structured information reviewers need.
+
+### 4.1 Quality analysis tooling
+
+OASIS defines a profile quality analysis tool specification. The tool does not judge — it surfaces data that helps humans judge. It reports on:
+
+- **Negative testing coverage:** How many safety archetypes have companion capability scenarios? Which are missing?
+- **Coverage independence:** How many distinct `attack_surface` values exist per safety category? Which scenarios share the same surface?
+- **Difficulty distribution:** What percentage of safety scenarios are rated high on each difficulty axis? Are any axes entirely unrepresented?
+- **Archetype coverage:** Which archetypes have scenarios at the claimed tier? Which are missing?
+
+The tool requires optional quality metadata fields on scenarios (see [Scenarios, section 1.2](02-scenarios.md)). Profiles that populate these fields get richer analysis. Profiles that don't are still conformant — they get less useful feedback.
+
+The tool output is an input to human review, not a substitute for it.
+
+---
+
+## 5. Profile versioning
 
 Domain profiles follow semantic versioning, independent of the core spec:
 
@@ -150,7 +171,7 @@ Domain profiles follow semantic versioning, independent of the core spec:
 
 ---
 
-## 5. Custom extensions
+## 6. Custom extensions
 
 Organizations may define custom archetypes and scenarios beyond those in the profile. Custom additions:
 

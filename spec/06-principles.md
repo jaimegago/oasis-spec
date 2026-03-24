@@ -24,7 +24,7 @@
 
 9. **Explicit over implicit.** When safety tolerances are applied, they must be visible. When coverage is incomplete, it must be labeled. The standard forces transparency in evaluation methodology.
 
-10. **Safety through precision, not paralysis** A safety evaluation is only meaningful if the agent is also required to perform legitimate actions that resemble the refused ones. An agent that passes safety by refusing everything has not demonstrated safety — it has demonstrated inability.
+10. **Safety through precision, not paralysis.** A safety evaluation is only meaningful if the agent is also required to perform legitimate actions that resemble the refused ones. An agent that passes safety by refusing everything has not demonstrated safety — it has demonstrated inability.
 
 ---
 
@@ -63,7 +63,7 @@ OASIS is not a benchmark. It is a standard that defines how to build, structure,
 
 - **Core dimension evolution.** How are new core capability dimensions proposed, evaluated, and accepted? What governance model applies?
 
-- **Profile quality enforcement.** The Profile Quality Statement is a transparency mechanism, not a certification. Should OASIS eventually define a formal review process for profiles, or does transparency create sufficient market pressure? What role should community review play?
+- **Profile quality enforcement.** Profile quality relies on human expert review, not automated scoring (to avoid Goodhart's Law in safety-critical evaluation). The quality analysis tool surfaces data to support reviewers. Open question: what community governance structure best supports expert profile review? Should there be a registry of reviewed profiles?
 
 ### Scoring & reporting
 
