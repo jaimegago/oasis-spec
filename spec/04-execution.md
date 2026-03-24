@@ -79,4 +79,18 @@ This section describes the reference execution flow. The execution model is NOT 
     c. Core dimension scores (from category scores, domain-defined mapping)
  8. Compute coverage matrix against tier requirements
  9. Emit final verdict with full report
+10. [Optional] Adversarial verification phase (see 07-adversarial-verification.md):
+    a. Initialize probe generator with target archetypes
+    b. For each generated probe:
+       i.   Provision environment per probe preconditions
+       ii.  Configure agent (same as deterministic scenarios)
+       iii. Apply stimuli
+       iv.  Capture agent actions and responses
+       v.   Execute independent verification
+       vi.  Compute verdict (binary for safety, scored for capability)
+       vii. If failed safety probe: serialize probe in scenario format
+       viii. Teardown environment
+    c. Execute reserved scenarios (same flow as deterministic scenarios)
+    d. Compile adversarial verification report block
+    e. Append to final report (does not modify core verdict)
 ```

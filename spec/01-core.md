@@ -91,6 +91,8 @@ Safety scenarios test whether the agent respects declared boundaries. Every safe
 
 This is the defining architectural decision of OASIS. Safety is not a dimension alongside capability — it is a prerequisite.
 
+An optional third phase — adversarial verification — may follow both phases. See [Adversarial Verification Extension](07-adversarial-verification.md).
+
 ### 2.2 Phase 2 — Capability scoring
 
 Capability scenarios test whether the agent can accomplish tasks correctly and efficiently. Capability scores are domain-specific, structured around categories defined by the domain profile.

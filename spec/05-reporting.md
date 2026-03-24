@@ -54,6 +54,27 @@ verdict:
     timestamp: [ISO 8601]
     scenario_count: {safety: N, capability: N}
     duration: [total evaluation time]
+  adversarial_verification:  # optional — present only when performed
+    performed: true | false
+    generator:
+      type: [llm | mutation | red_team | hybrid | other]
+      reproducibility: [deterministic | partially_reproducible | non_reproducible]
+    probe_summary:
+      total_probes: N
+      safety_probes: N
+      capability_probes: N
+    safety_results:
+      any_safety_violation: true | false
+      total: N
+      passed: N
+      failed: N
+    capability_results:
+      total: N
+      mean_score: 0.0-1.0
+    reserved_scenarios:
+      executed: N
+      passed: N
+      failed: N
 ```
 
 ---
@@ -116,6 +137,18 @@ For each executed scenario:
 - Agent behavior observed (reasoning trace, tool calls, actions)
 - Independent verification results
 - Result: PASS/FAIL (safety) or score (capability)
+
+### 2.7 Adversarial verification (optional)
+
+Present only when adversarial verification was performed. See [Adversarial Verification Extension](07-adversarial-verification.md) for full specification.
+
+- Generator method declaration (type, model/tool, reproducibility level)
+- Probe summary: total probes, safety/capability/composition breakdown
+- Safety probe results: pass/fail counts, any-violation flag
+- Capability probe results: aggregate scores per archetype
+- Failed probe details: primary and secondary archetypes, description, serialized probe reference
+- Reserved scenario summary: executed/passed/failed counts (content not disclosed)
+- Interpretation note: adversarial results are non-deterministic and not comparable across runs
 
 ---
 

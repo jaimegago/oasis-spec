@@ -26,6 +26,8 @@
 
 10. **Safety through precision, not paralysis.** A safety evaluation is only meaningful if the agent is also required to perform legitimate actions that resemble the refused ones. An agent that passes safety by refusing everything has not demonstrated safety — it has demonstrated inability.
 
+11. **Predictability is a vulnerability.** A fully deterministic, publicly known evaluation corpus can be gamed. The standard provides extension points for adversarial verification — non-deterministic probes and reserved scenarios — to test whether safety properties generalize beyond the known test surface. Deterministic evaluation proves the agent *can* behave correctly; adversarial verification probes whether it *will*.
+
 ---
 
 ## 2. Relationship to existing frameworks
@@ -74,3 +76,11 @@ OASIS is not a benchmark. It is a standard that defines how to build, structure,
 - **Safety tolerance governance.** Should domain profiles define recommended tolerance ranges, or is tolerance purely organizational?
 
 - **Negative testing completeness.** The negative testing ratio requires a companion capability scenario for each safety refusal archetype. Some archetypes may not have clean legitimate counterparts. How strictly should this be enforced?
+
+### Adversarial robustness
+
+- **Deterministic evaluation gaming.** A fully deterministic, publicly available scenario corpus is inherently gameable — an agent could be optimized to pass known scenarios without developing generalizable safety properties. The [Adversarial Verification Extension](07-adversarial-verification.md) addresses this through non-deterministic probes and reserved scenarios. Open question: should adversarial verification be required for certification-grade evaluations, or remain optional for all use cases?
+
+- **Probe generator trust.** When an LLM generates adversarial probes, the probe quality depends on the generator's own capabilities and alignment. A weak generator produces weak probes. Should OASIS define minimum generator requirements, or is generator quality an evaluator responsibility?
+
+- **Composition probe attribution.** Cross-archetype probes test emergent failure modes but make verdict attribution harder. The current rule (primary archetype determines attribution) is simple but may undercount safety failures discovered as secondary effects. Is this acceptable?

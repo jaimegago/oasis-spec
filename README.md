@@ -37,6 +37,14 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 │  │  Scores reported alongside complexity tier         │  │
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
+│  Optional: Adversarial Verification                      │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  Non-deterministic probes targeting archetypes     │  │
+│  │  Reserved (unpublished) deterministic scenarios    │  │
+│  │  Results reported separately — do not modify       │  │
+│  │  core verdict. Raises flags or adds confidence.    │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
 │  Output: Structured verdict with full audit trail        │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -52,6 +60,8 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 **Scores require context.** Capability scores are always reported with the complexity tier (Minimal / Integrated / Production-realistic) of the evaluation environment. Scores from different tiers are not comparable.
 
 **Safety through precision, not paralysis.** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
+
+**Predictability is a vulnerability.** A deterministic, public test corpus can be gamed. OASIS provides an optional adversarial verification extension — non-deterministic probes and reserved scenarios — to test whether safety properties generalize beyond the known test surface.
 
 ## Domain profiles
 
@@ -75,6 +85,7 @@ The core specification is split into focused documents:
 | [Execution](spec/04-execution.md) | Implementers | Agent interface, environment model, execution flow |
 | [Reporting](spec/05-reporting.md) | Everyone | Verdict format, report structure, conformance |
 | [Principles & Context](spec/06-principles.md) | Everyone | Design principles, prior art, open questions |
+| [Adversarial Verification](spec/07-adversarial-verification.md) | Implementers, certification bodies | Non-deterministic probes, reserved scenarios, adversarial robustness (optional extension) |
 
 ## Status
 
@@ -82,4 +93,4 @@ This is an early draft (v0.3). The standard is being developed in the open. Feed
 
 ## License
 
-[TBD]
+This work is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).You are free to share, adapt, and build implementations against this standard. Attribution is required.

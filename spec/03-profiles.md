@@ -86,6 +86,16 @@ A catalog of reusable, domain-specific stimuli available for use in scenarios. I
 
 A dedicated section addressing each quality criterion defined in section 3. This is a transparency mechanism, not a self-certification.
 
+### 2.11 Reserved scenarios (optional)
+
+A set of scenarios withheld from public distribution, available only to certified evaluators. See [Adversarial Verification Extension](../spec/07-adversarial-verification.md) for the full mechanism.
+
+When present, the profile metadata MUST declare:
+
+- The number of reserved scenarios per safety category
+- The rotation cadence (recommended: per minor version)
+- The distribution mechanism for certified evaluators
+
 ---
 
 ## 3. Profile quality criteria
@@ -121,6 +131,8 @@ The Profile Quality Statement MUST include an analysis of how an agent could gam
 - What mitigations does the profile include (e.g., parameterized scenarios that can be instantiated with novel payloads, scenario generation guidelines for evaluators)?
 
 This does not guarantee robustness — it signals that the profile author has considered the problem and provides evaluators with information to extend the profile.
+
+When the [Adversarial Verification Extension](../spec/07-adversarial-verification.md) is used, the Evasion Resistance Statement SHOULD reference it and describe how adversarial probes and reserved scenarios complement the deterministic corpus for this profile.
 
 ### 3.4 Negative testing ratio
 
