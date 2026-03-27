@@ -118,25 +118,56 @@ A provider MAY claim conformance for multiple domain profiles and multiple tiers
 
 ---
 
-## 5. Non-requirements
+## 5. Profile reference management
+
+A provider implementation MUST reference a specific version of the domain profile it claims conformance to. The profile contains normative artifacts — scenario definitions, behavior definitions, the provider implementation guide — that the provider depends on. Copying these artifacts into the provider's codebase creates drift risk: the profile evolves, the copy does not, and the provider silently falls out of conformance.
+
+### 5.1 Recommended approach
+
+Provider implementations SHOULD include the domain profile's repository as a version-pinned dependency — for example, a git submodule pointing at a specific tagged release or commit. This ensures:
+
+- The provider always references a specific, immutable version of the profile
+- Updates are deliberate: the implementer bumps the pin, verifies compatibility, and commits the change
+- The pinned version is visible in the provider's version control history, providing an auditable record of which profile version the provider was built against
+- Automated tooling (CI, evaluation runners) can verify that the provider's pinned profile version matches the profile version declared in evaluation reports
+
+### 5.2 Version alignment
+
+The provider's conformance claim (section 4) declares a domain profile version. The profile artifacts the provider references — whether via submodule, package dependency, or other mechanism — MUST match that declared version. A provider that claims conformance to profile version 0.2.0 but references profile artifacts from version 0.1.0 is non-conformant.
+
+When a profile releases a new version, provider implementers should:
+
+1. Update the profile reference to the new version
+2. Review the provider implementation guide for new or changed operations
+3. Implement any new operations required by new scenarios
+4. Verify that existing operations still conform to updated behavior definitions
+5. Update the conformance claim version
+
+### 5.3 Anti-pattern: artifact copying
+
+Copying profile artifacts (scenarios, behavior definitions, provider implementation guides) into the provider's codebase without a version-pinned reference to the source is an anti-pattern. It obscures which profile version the provider was built against and makes it difficult to detect when the provider has fallen behind the profile. If copying is unavoidable (e.g., for offline or air-gapped environments), the provider MUST record the exact profile version and commit hash the artifacts were copied from, and MUST re-copy when claiming conformance to a newer profile version.
+
+---
+
+## 6. Non-requirements
 
 The following are explicitly NOT required for provider conformance. They may become requirements in future spec versions as the ecosystem matures.
 
-### 5.1 Provider certification
+### 6.1 Provider certification
 
 OASIS v0.3 does not define a certification process for providers. Conformance is self-assessed. The evaluation report provides the evidence trail for external audit.
 
-### 5.2 Provider tiering
+### 6.2 Provider tiering
 
 OASIS v0.3 does not define provider tiers (e.g., minimal, certified, accredited). All conformant providers meet the same requirements. Provider tiering is a natural evolution once the ecosystem has multiple implementations and operational experience to inform meaningful tier boundaries.
 
-### 5.3 Cross-provider reproducibility guarantee
+### 6.3 Cross-provider reproducibility guarantee
 
 OASIS v0.3 does not guarantee that two conformant providers will produce identical verdicts for the same agent. The conformance requirements ensure both providers apply the same evaluation model (same scenarios, same verification methods, same scoring), which maximizes comparability. However, differences in environment provisioning, stimulus timing, and agent non-determinism may produce different results. The evaluation report captures enough context to identify the source of any divergence.
 
 ---
 
-## 6. Relationship to other spec documents
+## 7. Relationship to other spec documents
 
 | Document | Defines conformance for... |
 |----------|---------------------------|
