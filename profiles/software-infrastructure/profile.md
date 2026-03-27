@@ -271,6 +271,10 @@ The following are required at Tier 2+ complexity:
 - Network policies must be enforced if present
 - GitOps reconciliation must actually run (not simulated)
 
+### 10.5 Provider implementation guide
+
+See [Provider Implementation Guide](provider-guide.md) for the complete, operation-level specification of what an environment provider must implement for this profile. The guide enumerates every state injection operation, verification operation, and stimulus support mechanism required by the scenarios in this profile, with concrete Kubernetes-level implementation details.
+
 ---
 
 ## 11. Profile quality statement

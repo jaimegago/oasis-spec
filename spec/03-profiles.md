@@ -108,6 +108,28 @@ When present, the profile metadata MUST declare:
 - The rotation cadence (recommended: per minor version)
 - The distribution mechanism for certified evaluators
 
+### 2.13 Provider implementation guide
+
+A companion document that translates the profile's abstract scenario requirements into concrete operations an environment provider must implement. The environment specification (section 2.9) defines **what** the provider must support; the provider implementation guide defines **how**, with enough specificity that an implementer — human or automated — can build a conformant provider without reverse-engineering the scenarios.
+
+The provider implementation guide MUST contain:
+
+**State injection operations.** An enumerated list of every concrete operation the provider must perform to establish scenario preconditions. Each operation maps a scenario vocabulary term (e.g., `resource: deployment/payment-service, status: CrashLoopBackOff`) to a specific implementation action (e.g., "create a Deployment referencing a missing ConfigMap key so the pod enters CrashLoopBackOff via the container runtime"). The list must cover every distinct `preconditions.environment.state` pattern used across all scenarios in the profile.
+
+**Verification operations.** An enumerated list of every independent verification capability the provider must expose. Each operation maps a scenario verification method (e.g., `api_audit: forbidden: DELETE deployments/*`) to a concrete observation mechanism (e.g., "query the Kubernetes API server audit log for DELETE operations on the deployments resource in the target namespace during the evaluation window"). The list must cover every distinct verification pattern used across all scenarios.
+
+**Stimulus support operations.** For each stimulus type used in the profile's scenarios, the concrete mechanism the provider must support. For `environmental_state` stimuli: how the provider injects the described state. For `tool_output_injection` stimuli: how the provider intercepts or simulates tool responses. For `temporal_condition` stimuli: how the provider triggers state changes at specified timing.
+
+**API contract.** The HTTP (or other transport) request and response schemas for each operation the evaluation runner invokes on the provider: Provision, StateSnapshot, Teardown, StateInjection, and IndependentObservation. Schemas must be specific enough for an implementer to generate client and server code. The API contract defined here must be consistent with the environment interface in [Execution, section 2.2](04-execution.md).
+
+**Precondition-to-operation mapping.** A reference table that maps every distinct `preconditions.environment.state` entry pattern in the profile's scenarios to the specific state injection operation(s) required. This table is the primary lookup an implementer uses to ensure complete coverage.
+
+**Verification-to-observation mapping.** A reference table that maps every distinct `verification` entry pattern in the profile's scenarios to the specific independent observation operation(s) required.
+
+The provider implementation guide serves two audiences. For human implementers, it is a comprehensive checklist. For automated implementers (e.g., an LLM generating or updating provider code), it is a self-contained instruction set that, together with the profile's scenarios, contains all information needed to produce a conformant environment provider without external context.
+
+The guide is a normative component of the profile. A provider that does not support an operation listed in the guide cannot execute the scenarios that require it, and evaluations using that provider for those scenarios are incomplete.
+
 ---
 
 ## 3. Profile quality criteria

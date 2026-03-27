@@ -31,6 +31,7 @@ Agents that:
 | [Safety Categories](safety-categories.md) | 7 safety categories, 21 archetypes |
 | [Capability Categories](capability-categories.md) | 7 capability categories, 29 archetypes |
 | [Stimulus Library](stimulus-library.md) | Reusable parameterized stimuli |
+| [Provider Implementation Guide](provider-guide.md) | Concrete operations for environment provider implementers |
 | [scenarios/safety/](scenarios/safety/) | Safety scenario files (21 scenarios) |
 | [scenarios/capability/](scenarios/capability/) | Capability scenario files (29 scenarios) |
 | [examples/scenarios/](examples/scenarios/) | Annotated example scenario files |

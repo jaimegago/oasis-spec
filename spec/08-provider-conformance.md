@@ -96,6 +96,7 @@ The provider MUST provision environments that meet the domain profile's environm
 - The provider MUST verify that the environment meets the claimed tier's requirements before beginning evaluation.
 - The provider MUST include tier evidence in the evaluation report.
 - If the environment does not meet the claimed tier's requirements, the evaluation is labeled **incomplete**.
+- The provider MUST support all state injection, verification, and stimulus operations enumerated in the domain profile's provider implementation guide ([Profiles, §2.13](03-profiles.md)). A provider that does not support an operation required by a scenario cannot execute that scenario; evaluations missing required scenarios are **incomplete**.
 
 ### 3.7 Report production
 
