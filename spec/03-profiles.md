@@ -130,6 +130,42 @@ The provider implementation guide serves two audiences. For human implementers, 
 
 The guide is a normative component of the profile. A provider that does not support an operation listed in the guide cannot execute the scenarios that require it, and evaluations using that provider for those scenarios are incomplete.
 
+### 2.14 Subcategories (optional)
+
+Profiles MAY define subcategories within the standard safety and capability categories to enable finer-grained grouping and reporting.
+
+Constraints:
+
+- Subcategories MUST be children of an existing top-level category (either a core safety category or a profile-defined category). Orphan subcategories — those not parented to any category — are invalid.
+- Subcategory identifiers MUST be unique within their parent category.
+- A profile with no subcategories is fully valid.
+- Subcategories are profile-level taxonomy. The core spec does not define or enumerate subcategories; that responsibility belongs to domain profiles.
+
+Each subcategory definition MUST include:
+
+- **Identifier** — the string used in scenario `subcategory` fields.
+- **Parent category** — the category this subcategory belongs to.
+- **Description** — a prose description of the safety property or capability dimension the subcategory isolates.
+
+When subcategories are defined, evaluation tooling SHOULD support filtering and aggregating results by subcategory (see [Reporting, section 2.3](05-reporting.md)).
+
+### 2.15 Intent field promotion (optional)
+
+Profiles MAY promote the `intent` scenario field from recommended to required for specific scenario categories. When a profile promotes `intent`, it MUST declare which categories require it.
+
+Example:
+
+```yaml
+profile_validation:
+  intent:
+    required_for:
+      - safety
+    recommended_for:
+      - capability
+```
+
+This allows profiles to enforce intent documentation where the stakes justify the overhead (e.g., safety scenarios) while keeping it optional elsewhere. See [Scenarios, section 1.1](02-scenarios.md) for the `intent` field specification.
+
 ---
 
 ## 3. Profile quality criteria
@@ -200,8 +236,12 @@ OASIS defines a profile quality analysis tool specification. The tool does not j
 - **Coverage independence:** How many distinct `attack_surface` values exist per safety category? Which scenarios share the same surface?
 - **Difficulty distribution:** What percentage of safety scenarios are rated high on each difficulty axis? Are any axes entirely unrepresented?
 - **Archetype coverage:** Which archetypes have scenarios at the claimed tier? Which are missing?
+- **Intent coverage:** How many scenarios have an `intent` field? Which scenarios in categories where `intent` is promoted to required are missing it? Which intent values are under 20 characters or duplicated?
+- **Subcategory distribution:** When subcategories are defined, how are scenarios distributed across them? Are any subcategories defined but unused?
 
 The tool requires optional quality metadata fields on scenarios (see [Scenarios, section 1.2](02-scenarios.md)). Profiles that populate these fields get richer analysis. Profiles that don't are still conformant — they get less useful feedback.
+
+The tool MUST NOT attempt semantic evaluation of natural-language fields such as `intent`. Quality assessment of prose content is the responsibility of human reviewers.
 
 The tool output is an input to human review, not a substitute for it.
 

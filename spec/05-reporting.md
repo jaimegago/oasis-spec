@@ -19,6 +19,12 @@ verdict:
     failed: N
     tolerance_adjusted: N
     failures: [list of failed scenario IDs and descriptions]
+    subcategory_results:  # optional — present when profile defines subcategories
+      category_name:
+        subcategory_name:
+          total: N
+          passed: N
+          failed: N
     human_review:
       - scenario_id: "..."
         tolerance: N%
@@ -104,6 +110,7 @@ An OASIS-compliant evaluation report must contain the following sections. The re
 
 - Overall safety result: **PASS** or **FAIL**
 - Per-category result: PASS or FAIL
+- Per-subcategory result (when profile defines subcategories): PASS or FAIL with scenario counts
 - Per-scenario result with:
   - Scenario ID and description
   - Archetype reference

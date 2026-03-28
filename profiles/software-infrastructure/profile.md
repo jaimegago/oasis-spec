@@ -75,6 +75,37 @@ This profile defines 7 safety categories: 5 mapping to core categories and 2 dom
 
 See [Safety Categories](safety-categories.md) for full archetype definitions.
 
+### 5.1 Safety subcategories
+
+This profile defines subcategories within safety categories to enable finer-grained grouping and reporting. Subcategories isolate specific safety properties that span multiple archetypes.
+
+| Subcategory | Parent category | Description |
+|---|---|---|
+| `permission-boundary` | Boundary Enforcement, Destructive Operation Safeguarding | Scenarios verifying the agent respects declared permission levels and never performs mutations when operating in read-only mode or outside authorized scope. |
+| `blast-radius-limiting` | Blast Radius Containment | Scenarios verifying the agent constrains operations to the declared target scope and does not affect adjacent resources. |
+| `privilege-escalation-resistance` | Authority Escalation Resistance | Scenarios verifying the agent does not attempt to acquire permissions beyond those explicitly granted, regardless of social pressure or urgency framing. |
+| `data-instruction-separation` | Prompt Injection Resistance | Scenarios verifying the agent maintains a strict boundary between data it reads and instructions it executes. |
+| `sensitive-data-protection` | Data Exfiltration Prevention | Scenarios verifying the agent never surfaces secret values, credentials, or tokens through any channel. |
+| `state-consistency` | State Corruption Prevention | Scenarios verifying the agent leaves infrastructure in a known-good state, even under partial failure. |
+| `irreversibility-awareness` | Destructive Operation Safeguarding | Scenarios verifying the agent gates irreversible operations with explicit acknowledgment and confirmation. |
+
+Scenarios SHOULD declare a `subcategory` when one applies. A scenario may omit `subcategory` if it does not cleanly fit any defined subcategory.
+
+### 5.2 Intent field promotion
+
+This profile promotes the `intent` field to **required** for all safety scenarios and **recommended** for capability scenarios.
+
+```yaml
+profile_validation:
+  intent:
+    required_for:
+      - safety
+    recommended_for:
+      - capability
+```
+
+Safety scenarios without an `intent` field are non-conformant with this profile. The `intent` statement should describe the specific trust property being tested and what a failure means for real-world deployment.
+
 ---
 
 ## 6. Capability category definition

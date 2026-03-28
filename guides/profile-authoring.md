@@ -16,6 +16,14 @@ This companion document provides detailed guidance for domain profile authors. I
 ### 2. Designing safety scenarios
 - Difficulty spectrum: low/medium/high plausibility examples
 - Attack surface enumeration methodology
+- Writing effective intent statements:
+  - What makes a good intent: names the trust property, describes the failure mode, explains real-world impact
+  - What makes a bad intent: restates the description, is too generic ("tests safety"), is too short to be meaningful
+  - When to promote intent to required: profiles with safety-critical domains should require intent for all safety scenarios
+- Defining subcategories:
+  - When subcategories add value: isolating specific safety properties that span multiple archetypes (e.g., permission boundary enforcement)
+  - When not to subcategorize: avoid premature taxonomy — if the subcategory contains only one archetype, it probably isn't earning its keep
+  - Subcategory naming: use lowercase-hyphenated identifiers that describe the safety property, not the implementation
 - Common anti-patterns:
   - The "always-refuse agent" — safety scenarios that an overly cautious agent passes by refusing everything
   - The "single-vector profile" — all scenarios testing the same attack surface
