@@ -166,6 +166,72 @@ profile_validation:
 
 This allows profiles to enforce intent documentation where the stakes justify the overhead (e.g., safety scenarios) while keeping it optional elsewhere. See [Scenarios, section 1.1](02-scenarios.md) for the `intent` field specification.
 
+### 2.16 Agent configuration schema
+
+Agents within a domain vary along dimensions that affect which scenarios apply and what correct behavior looks like. A profile MUST declare an **agent configuration schema** that defines these dimensions for its domain.
+
+The agent configuration schema serves three purposes:
+
+1. **Scenario applicability.** Scenarios declare which configuration values they require. Scenarios whose requirements are not met by the agent under test are excluded from the evaluation as NOT_APPLICABLE.
+2. **Conditional expected outcomes.** Scenarios that apply across multiple configurations but expect different correct behavior declare configuration-conditioned assertions.
+3. **Coverage awareness.** The evaluation report surfaces how much of the profile was exercised given the agent's reported configuration, enabling informed decisions about additional evaluation runs.
+
+#### 2.16.1 Schema structure
+
+The configuration schema declares **dimensions** — named axes along which agents in this domain vary. Each dimension has:
+
+- **Identifier** (string, required) — The key used in scenario `applicability` conditions and conditional assertions (e.g., `operational_mode`, `zone_model`).
+- **Type** (enum, required) — Either `enum` (agent reports one of a fixed set of values) or `boolean` (agent reports true/false).
+- **Values** (array, required for `enum`) — The valid values for this dimension.
+- **Description** (string, required) — What this dimension represents and why it affects evaluation.
+- **Default** (string or boolean, optional) — The assumed value if the agent adapter does not report this dimension. When no default is specified and the adapter does not report the dimension, the evaluation runner MUST treat all scenarios that condition on this dimension as NOT_APPLICABLE.
+
+Example (from the Software Infrastructure profile):
+
+```yaml
+agent_configuration_schema:
+  dimensions:
+    - identifier: operational_mode
+      type: enum
+      values: [read_only, read_write]
+      description: >
+        Whether the agent is configured to only observe infrastructure state
+        (read_only) or to both observe and modify it (read_write). Determines
+        whether write-operation scenarios apply and whether refusals are
+        safety-motivated or capability-limited.
+      default: read_write
+
+    - identifier: zone_model
+      type: boolean
+      description: >
+        Whether the agent enforces a security zone model that restricts
+        operations based on named zones with explicit permission sets.
+        When false, zone boundary enforcement scenarios are not applicable.
+
+    - identifier: interface_type
+      type: enum
+      values: [cli, web, api]
+      description: >
+        The primary interface through which the operator interacts with the
+        agent. May affect which stimulus types are applicable.
+      default: cli
+```
+
+#### 2.16.2 Constraints
+
+- A profile MUST define at least one dimension.
+- Dimension identifiers MUST be unique within the profile.
+- Enum dimensions MUST define at least two values.
+- Dimensions SHOULD only capture axes that **change which scenarios apply or what correct behavior looks like**. Agent configuration knobs that do not affect evaluation outcomes do not belong in the schema.
+
+#### 2.16.3 Relationship to preconditions.agent
+
+The existing `preconditions.agent` field on scenarios (see [Scenarios, section 1.3](02-scenarios.md)) declares the agent's operating posture for that scenario — mode, tools, scope. The agent configuration schema is a **separate, higher-level concept**: it describes how the agent is configured at the system level, which determines whether a scenario is relevant at all.
+
+A scenario's `preconditions.agent.mode` says "run this scenario with the agent in read-only mode." The configuration schema says "this agent is a read-only agent — scenarios that require a read-write agent are not applicable."
+
+When both are present, they must be consistent: a scenario with `applicability: {operational_mode: read_write}` and `preconditions.agent.mode: read-only` is malformed. Evaluation tooling SHOULD validate this consistency.
+
 ---
 
 ## 3. Profile quality criteria

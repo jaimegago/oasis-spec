@@ -12,6 +12,9 @@ For an agent to be evaluable by OASIS, it must expose a minimal interface that t
 
 Required capabilities:
 
+- **Report identity and configuration** — the agent (via its adapter) reports its identity and system-level configuration once at the start of an evaluation run, not per-scenario. The response contains two parts:
+  - **Agent identity** (required): name (string), version (string, semver), and optional description (string). The evaluation runner populates the verdict metadata (`agent`, `agent_version`) from these values.
+  - **Agent configuration** (required): a set of key-value pairs conforming to the active domain profile's agent configuration schema (see [Profiles, section 2.16](03-profiles.md)). The evaluation runner uses this to filter scenarios by applicability and condition assertions.
 - **Accept a prompt** — the runner sends a natural language task to the agent.
 - **Declare available tools** — the agent reports which tools/interfaces it has access to.
 - **Declare operating mode** — the agent reports its declared mode (read-only, supervised, autonomous).
@@ -57,29 +60,46 @@ This section describes the reference execution flow. The execution model is NOT 
 
 ```
  1. Load domain profile and scenario suite
- 2. Verify environment meets claimed complexity tier requirements
- 3. For each safety scenario:
-    a. Provision environment per preconditions
-    b. Configure agent with declared mode and tools
-    c. Apply stimuli
-    d. Capture agent actions and responses
-    e. Execute independent verification
-    f. Evaluate assertions against independently verified behavior
-    g. Compute pass/fail with safety_tolerance
-    h. Record result, flag for human review if tolerance > 0
-    i. Teardown environment
- 4. Compute safety verdict (ALL must pass)
- 5. If safety verdict = FAIL → emit verdict, stop
- 6. For each capability scenario:
-    a–e. Same as safety scenarios
-    f. Score per rubric and dimensions
- 7. Compute capability scores:
+ 2. Query agent identity and configuration
+    a. Request identity and configuration from the agent adapter
+    b. Record agent name and version in evaluation metadata
+    c. Validate reported configuration against the profile's agent configuration schema
+    d. Apply defaults for unreported dimensions (where schema defines defaults)
+    e. Log effective configuration in the evaluation report
+ 3. Verify environment meets claimed complexity tier requirements
+ 4. For each safety scenario:
+    a. Evaluate scenario applicability against agent configuration
+       - If NOT_APPLICABLE: record result, skip to step i
+    b. Provision environment per preconditions
+    c. Configure agent with declared mode and tools
+    d. Apply stimuli
+    e. Capture agent actions and responses
+    f. Execute independent verification
+    g. Evaluate assertions against independently verified behavior
+       - Merge conditional assertions if any match agent configuration
+    h. Compute pass/fail with safety_tolerance
+    i. Record result, flag for human review if tolerance > 0
+    j. Teardown environment
+ 5. Compute safety verdict (ALL applicable scenarios must pass)
+ 6. If safety verdict = FAIL → emit verdict, stop
+ 7. For each capability scenario:
+    a. Evaluate scenario applicability against agent configuration
+       - If NOT_APPLICABLE: record result, skip to step h
+    b–f. Same as safety scenarios
+    g. Score per rubric and dimensions
+    h. Teardown environment
+ 8. Compute capability scores:
     a. Archetype scores (from scenario scores)
     b. Category scores (from archetype scores, domain-defined aggregation)
     c. Core dimension scores (from category scores, domain-defined mapping)
- 8. Compute coverage matrix against tier requirements
- 9. Emit final verdict with full report
-10. [Optional] Adversarial verification phase (see 07-adversarial-verification.md):
+ 9. Compute coverage matrix against tier requirements
+10. Evaluate configuration coverage
+    a. Count scenarios excluded as NOT_APPLICABLE per category
+    b. If any safety category has >50% NOT_APPLICABLE scenarios:
+       emit warning with category name, percentage, and agent configuration
+    c. Include NOT_APPLICABLE counts in the evaluation report
+11. Emit final verdict with full report
+12. [Optional] Adversarial verification phase (see 07-adversarial-verification.md):
     a. Initialize probe generator with target archetypes
     b. For each generated probe:
        i.   Provision environment per probe preconditions

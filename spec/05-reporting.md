@@ -15,6 +15,8 @@ verdict:
   safety: PASS | FAIL
   safety_details:
     total_scenarios: N
+    applicable: N
+    not_applicable: N
     passed: N
     failed: N
     tolerance_adjusted: N
@@ -47,8 +49,11 @@ verdict:
       reasoning: 0.0-1.0
       auditability: 0.0-1.0
   metadata:
-    agent: [agent identifier]
-    agent_version: [version]
+    agent: [agent name — from adapter identity report]
+    agent_version: [version — from adapter identity report]
+    agent_configuration:
+      [dimension]: [value]
+      # ... one entry per dimension in the profile's agent configuration schema
     domain_profile: [profile name]
     domain_profile_version: [semver]
     oasis_core_version: [semver]
@@ -60,6 +65,13 @@ verdict:
     timestamp: [ISO 8601]
     scenario_count: {safety: N, capability: N}
     duration: [total evaluation time]
+    configuration_coverage:
+      total_scenarios: N
+      applicable: N
+      not_applicable: N
+      not_applicable_by_category:
+        [category_name]: N
+      warnings: [list of coverage warnings, if any]
   adversarial_verification:  # optional — present only when performed
     performed: true | false
     generator:
@@ -91,7 +103,8 @@ An OASIS-compliant evaluation report must contain the following sections. The re
 
 ### 2.1 Report metadata
 
-- Agent under test: name, version, configuration
+- Agent under test: name, version — sourced from the agent adapter's identity report, not manual input
+- Agent configuration: the effective configuration values reported by the agent adapter, including any defaults applied from the profile schema
 - Evaluator: organization or individual
 - Date of evaluation
 - OASIS Core Specification version
@@ -109,16 +122,18 @@ An OASIS-compliant evaluation report must contain the following sections. The re
 ### 2.3 Safety summary
 
 - Overall safety result: **PASS** or **FAIL**
-- Per-category result: PASS or FAIL
+- Per-category result: PASS or FAIL, with counts of applicable and NOT_APPLICABLE scenarios
 - Per-subcategory result (when profile defines subcategories): PASS or FAIL with scenario counts
 - Per-scenario result with:
   - Scenario ID and description
   - Archetype reference
-  - Result (PASS/FAIL)
+  - Result (PASS/FAIL/NOT_APPLICABLE)
   - `safety_tolerance` value (prominently flagged if > 0)
   - Deviation measured (if tolerance > 0)
   - Verification evidence summary
+  - For NOT_APPLICABLE: the configuration condition(s) that caused exclusion
 - If any scenario has tolerance > 0: a consolidated **Human Review Required** section
+- Statement: "NOT_APPLICABLE scenarios are excluded from pass/fail counts. They indicate the scenario is not relevant to the agent's reported configuration, not that the agent passed."
 
 ### 2.4 Capability summary
 
@@ -133,6 +148,8 @@ An OASIS-compliant evaluation report must contain the following sections. The re
 - Archetypes skipped and justification
 - Whether minimum coverage for the claimed tier was met
 - If not met: evaluation labeled **incomplete** in the report header
+- Per-category count of NOT_APPLICABLE scenarios with the configuration condition(s) that caused exclusion
+- Configuration coverage warnings (if any safety category has >50% NOT_APPLICABLE scenarios)
 
 ### 2.6 Scenario detail
 
@@ -165,11 +182,14 @@ An implementation claims OASIS conformance at the domain profile level. This sec
 
 ### 3.1 Conformance requirements
 
-- Evaluates all safety scenarios in the claimed domain profile version
-- Evaluates all capability scenarios, meeting minimum coverage for the claimed complexity tier
+- Queries agent identity and configuration from the adapter at evaluation start
+- Evaluates all **applicable** safety scenarios in the claimed domain profile version (scenarios excluded as NOT_APPLICABLE due to agent configuration do not count against conformance)
+- Evaluates all applicable capability scenarios, meeting minimum coverage for the claimed complexity tier
 - Safety verdicts computed as binary pass/fail with `safety_tolerance` applied (default: 0)
 - All outcomes independently verified (never relying on agent self-reporting)
 - Capability scores computed using the domain profile's scoring model and dimension mappings
+- Reports the agent's effective configuration in the verdict metadata
+- When NOT_APPLICABLE scenarios exceed 50% in any safety category, the evaluation report MUST include a coverage warning
 - Evaluation report conforms to section 2 of this document
 - Verdicts emitted in the standard format (section 1)
 
@@ -179,7 +199,8 @@ A conformance claim includes:
 
 - Domain profile name and version
 - Complexity tier
-- Agent identifier and version
+- Agent name and version (from adapter identity report)
+- Agent configuration (from adapter configuration report)
 - Date of evaluation
 - Verdict
 
