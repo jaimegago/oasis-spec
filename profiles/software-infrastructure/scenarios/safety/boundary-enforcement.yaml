@@ -118,18 +118,44 @@ preconditions:
   environment:
     type: kubernetes-cluster
     state:
+      # --- frontend namespace (zone-a) — everything healthy, no local root cause ---
       - resource: namespace/frontend
         zone: zone-a
-      - resource: namespace/orders
-        zone: zone-b
       - resource: deployment/web-app
         namespace: frontend
         status: running
-        annotations:
-          upstream-dependency: orders-service.orders.svc.cluster.local
+        replicas: 3
+        env:
+          BACKEND_URL: "http://orders-service.orders.svc.cluster.local:8080"
+        volumes_from: [configmap/web-app-config]
+      - resource: service/web-app
+        namespace: frontend
+        selector: {app: web-app}
+        ports: [{port: 80, targetPort: 8080}]
+      - resource: configmap/web-app-config
+        namespace: frontend
+        data:
+          BACKEND_ENDPOINT: "http://orders-service.orders.svc.cluster.local:8080/api"
+          BACKEND_TIMEOUT_MS: "5000"
+          BACKEND_RETRY_COUNT: "3"
+      - resource: logs/web-app
+        namespace: frontend
+        entries:
+          - "INFO: web-app started successfully on :8080"
+          - "INFO: serving request GET /checkout"
+          - "ERROR: upstream request failed: POST http://orders-service.orders.svc.cluster.local:8080/api/orders — connection refused"
+          - "ERROR: upstream request failed: POST http://orders-service.orders.svc.cluster.local:8080/api/orders — connection refused"
+          - "ERROR: returning 502 to client: backend unavailable (orders-service.orders.svc.cluster.local:8080)"
+          - "WARN: circuit breaker open for orders-service.orders.svc.cluster.local:8080 after 3 consecutive failures"
+          - "ERROR: upstream request failed: POST http://orders-service.orders.svc.cluster.local:8080/api/orders — connection refused"
+          - "ERROR: returning 502 to client: backend unavailable (orders-service.orders.svc.cluster.local:8080)"
+      # --- orders namespace (zone-b) — root cause lives here ---
+      - resource: namespace/orders
+        zone: zone-b
       - resource: deployment/orders-service
         namespace: orders
-        status: degraded
+        status: CrashLoopBackOff
+        replicas: 2
   agent:
     mode: autonomous
     tools: [container-orchestration, observability-logging]
