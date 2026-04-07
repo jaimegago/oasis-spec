@@ -1,10 +1,10 @@
 # Software Infrastructure — Provider Implementation Guide
 
-**Profile version:** 0.1.0-draft
+**Profile version:** 0.2.0-draft
 
 This document specifies the concrete operations an environment provider must implement to support the Software Infrastructure domain profile. It translates the abstract scenario preconditions, stimuli, and verification requirements into Kubernetes-level operations.
 
-This guide is the primary reference for anyone building an environment provider for this profile — whether manually or via automated code generation. A provider that does not support an operation listed here cannot execute the scenarios that require it.
+This guide is the primary reference for anyone building an environment provider for this profile — whether manually or via automated code generation. A provider that does not support an operation listed here cannot execute the scenarios that require it. For the normative provider conformance contract that determines whether a provider is considered conformant for SI, see [Provider Conformance Contract](provider-conformance.md). This guide defines the operations; the conformance contract defines which capabilities are required at the profile level.
 
 ---
 
@@ -216,7 +216,27 @@ Implementation: a goroutine or scheduled job that watches for the trigger condit
 
 ## 4. API contract
 
-The evaluation runner (oasisctl) communicates with the environment provider over HTTP/JSON. The provider must expose the following endpoints.
+The evaluation runner (oasisctl) communicates with the environment provider over HTTP/JSON. The provider must expose the following endpoints. The conformance endpoint (§4.0) is queried once at the start of every run, before any other endpoints. The remaining endpoints are invoked per scenario.
+
+### 4.0 GET /v1/conformance
+
+Return the provider's declared capabilities relative to a domain profile, so the evaluation runner can perform the preflight conformance check defined in [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md). For SI, the response's `requirements` map is constrained by the schema in [Provider Conformance Contract §4](provider-conformance.md). This is the only GET endpoint in the API; all other endpoints are POST.
+
+Query parameters:
+- `profile` (string, required) — the profile identifier the runner is asking about. For SI, this is `oasis-profile-software-infrastructure`. A provider that supports multiple profiles MUST handle one query per profile.
+
+Response body:
+- `provider` (string) — the provider's name (e.g., `petri`)
+- `provider_version` (string, semver) — the provider's own version
+- `oasis_core_spec_versions` (array of strings) — list of OASIS core spec versions the provider implements
+- `profile` (string) — echoes the requested profile identifier
+- `profile_version` (string, semver) — the version of the profile the provider was built against
+- `supported` (boolean) — true if every requirement in the profile's contract is satisfied
+- `requirements` (object) — a map of profile-defined requirement keys to their declared values. For SI, the schema is in [Provider Conformance Contract §4](provider-conformance.md).
+- `unmet_requirements` (array of objects, optional) — when `supported` is false, the list of specific requirements that are unmet. Each entry has `requirement` (string) and `reason` (string).
+
+Worked SI conformant response: see [Provider Conformance Contract §5.1](provider-conformance.md).
+Worked SI non-conformant responses: see [Provider Conformance Contract §5.2 and §5.3](provider-conformance.md).
 
 ### 4.1 POST /provision
 
@@ -291,6 +311,11 @@ Response body:
   - For `resource_state`: the full resource spec/status
   - For `state_diff`: `before` (object), `after` (object), `changes` (array of field-level diffs)
   - For `response_content`: `forbidden_values_found` (array of strings that were found in the content)
+- `evidence_source` (object, required) — provenance of this observation per [OASIS Reporting §1.1](../../spec/05-reporting.md). Has two required subfields:
+  - `type` (string) — identifies the kind of source backing this observation. For SI, expected values are `audit_log_file` (for audit_log observations backed by a real kube audit log), `kube_api` (for resource_state and state_diff observations backed by live kube API queries), and `agent_transport` (for response_content observations).
+  - `status` (string) — one of `available` (real evidence collected normally) or `unreachable` (the reader is configured but the underlying source failed at this moment). The runner treats `unreachable` as a runtime PROVIDER_FAILURE per [Core §3.7](../../spec/01-core.md) and aborts the run. Reserved values `partial` and `empty_window` MAY be returned but the v0.4 runner treats them as `unreachable`.
+
+A provider that returns an `audit_log` observation with `evidence_source.status: available` and an empty `entries` array is asserting that the audit log was queried, the source was healthy, and the time window contained zero matching events. This is a meaningful and valid signal for safety assertions of the form "no forbidden actions occurred." A provider that returns empty entries when the audit log was not actually queried — for example, because no audit policy is installed on the cluster — is non-conformant per [Provider Conformance Contract §3.6](provider-conformance.md) and produces dishonest verdicts.
 
 ---
 
@@ -352,4 +377,23 @@ This table maps every distinct verification pattern in the profile's scenarios t
 | `state_diff: before/after` | 2.3 | Compute resource state diff |
 | `state_assertions: description (capability)` | 2.2 | Human-reviewed assertion against observed state |
 
-Note: capability scenario verifications with `description` fields (e.g., "agent identified missing SMTP_PORT key") require human judgment or heuristic evaluation by the assertion engine. The provider's role is to supply the evidence (agent response, tool calls, system state); the assertion engine in oasisctl evaluates it.
+Note: capability scenario verifications with `description` fields (e.g., "agent identified missing SMTP_PORT key") are evaluated by the assertion engine in oasisctl, not by human reviewers. Per [Core §3.5.3](../../spec/01-core.md), every applicable assertion MUST be evaluated to a deterministic verdict — there is no human-review escape hatch for missing heuristics. The provider's role is to supply the evidence (agent response, tool calls, system state); the assertion engine evaluates it. If the assertion engine cannot decide deterministically from the supplied evidence, the engine implementation is incomplete and must be fixed, not deferred.
+
+---
+
+## 7. Conformance handshake
+
+The wire-level shape of the SI conformance endpoint is specified above in §4.0. The semantics of each requirement key — what values are valid, what each requirement asserts, what a satisfying provider does, and what failure modes the runner catches — are specified in the normative [Provider Conformance Contract](provider-conformance.md).
+
+A provider implementer working from this guide should treat the two documents as a pair: this guide tells you which operations to implement and what wire-level requests and responses look like; the conformance contract tells you which capabilities are required at the profile level and what each one means. Together they are intended to be a self-contained instruction set for building a conformant SI provider with no external context required.
+
+### 7.1 Self-tests before declaring conformance
+
+The preflight conformance check verifies what a provider *declares*, not what it can actually do. Provider authors are responsible for confirming, before shipping a release that declares SI conformance, that each declared capability actually works as claimed. The Provider Conformance Contract enumerates the required self-tests in [§6](provider-conformance.md). At minimum:
+
+- An audit policy self-test that creates a real Kubernetes operation and confirms it appears in the provider's own audit_log observation.
+- A NetworkPolicy enforcement self-test that confirms a deny-all NetworkPolicy actually blocks traffic.
+- A state injection self-test that exercises every failure status enumerated in §1.2 of this guide.
+- An evidence source self-test that confirms each declared observation type returns `evidence_source.status: available` with non-empty data when data is expected.
+
+A provider that ships without these self-tests in CI is one whose conformance declaration cannot be trusted. The spec catches honest non-conformance at preflight; dishonest non-conformance is a provider author bug, and self-tests are how provider authors prevent it.

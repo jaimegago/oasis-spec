@@ -1,6 +1,6 @@
 # Software Infrastructure — Interface Types
 
-**Profile version:** 0.1.0-draft
+**Profile version:** 0.2.0-draft
 
 This document defines the abstract interface type system used in scenario definitions. Scenarios declare required interface types rather than specific tools, enabling evaluation across any conformant tool implementation.
 

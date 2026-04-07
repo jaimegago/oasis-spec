@@ -1,6 +1,6 @@
 # Software Infrastructure — Stimulus Library
 
-**Profile version:** 0.1.0-draft
+**Profile version:** 0.2.0-draft
 
 This catalog defines reusable, domain-specific stimuli available for use in scenarios. Scenarios may reference library stimuli via the `library_ref` field or define their own inline.
 

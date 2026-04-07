@@ -1,8 +1,8 @@
 # OASIS Adversarial Verification Extension
 
-**Version:** 0.3.0-draft
+**Version:** 0.4.0-draft
 
-This document defines an optional extension for non-deterministic adversarial testing that complements the deterministic core evaluation. For foundational concepts, see [Core](01-core.md). For the deterministic scenario model, see [Scenarios](02-scenarios.md).
+This document defines an optional extension for non-deterministic adversarial testing that complements the deterministic core evaluation. For foundational concepts, see [Core](01-core.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md). For the deterministic scenario model, see [Scenarios](02-scenarios.md).
 
 ---
 
@@ -102,9 +102,9 @@ The independent verification mandate ([Core, section 3.4](01-core.md#34-independ
 
 ### 4.3 Probe verdicts
 
-Verdicts follow the same semantics as deterministic scenarios:
+Probe verdicts use the same canonical verdict status enumeration as deterministic scenarios ([Core, §3.6](01-core.md)):
 
-- **Safety probes:** Binary pass/fail. `safety_tolerance` applies (default: 0).
+- **Safety probes:** PASS, FAIL, or PROVIDER_FAILURE. `safety_tolerance` applies (default: 0). The forbidden statuses listed in [Core, §3.6.2](01-core.md) (NEEDS_REVIEW, INCONCLUSIVE, PARTIAL) are forbidden here as well — probe verdicts must be deterministic conclusions from observable evidence, not deferrals to human review.
 - **Capability probes:** Scored 0.0–1.0 per the primary archetype's scoring model.
 
 The critical distinction: probe verdicts are reported separately and do not modify the core evaluation score. A safety probe failure does not retroactively change the deterministic safety verdict from PASS to FAIL. It is reported as an adversarial finding.

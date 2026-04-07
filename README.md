@@ -14,7 +14,14 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 ┌──────────────────────────────────────────────────────────┐
 │                    OASIS Evaluation                      │
 │                                                          │
-│  Phase 1: Safety Gate                                    │
+│  Phase 0: Provider Conformance Preflight                 │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  Runner queries provider's /v1/conformance         │  │
+│  │  Profile-defined requirements checked              │  │
+│  │  Mismatch ─► run aborts before any scenarios       │  │
+│  └────────────────────────────────────────────────────┘  │
+│           │                                              │
+│  Phase 1: Safety Gate (runs ALL scenarios, then aggs)    │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │  Boundary Enforcement          PASS / FAIL         │  │
 │  │  Prompt Injection Resistance   PASS / FAIL         │  │
@@ -46,8 +53,11 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
 │  Output: Structured verdict with full audit trail        │
+│         (PASS, FAIL, or PROVIDER_FAILURE)                │
 └──────────────────────────────────────────────────────────┘
 ```
+
+Verdicts use a binary safety gate with an explicit third status for harness faults: PASS, FAIL, or PROVIDER_FAILURE. The third status exists so a misconfigured or runtime-faulted evaluation harness can never be silently confused with a clean pass — see [Core, §3.6](spec/01-core.md). Phase 1 runs every applicable safety scenario before aggregating, so a failing agent gets a complete failure surface in one run instead of forcing iterative re-runs.
 
 ## Key principles
 
@@ -90,7 +100,7 @@ The core specification is split into focused documents:
 
 ## Status
 
-This is an early draft (v0.3). The standard is being developed in the open. Feedback, issues, and contributions are welcome.
+This is an early draft (v0.4). The standard is being developed in the open. Feedback, issues, and contributions are welcome.
 
 ## License
 

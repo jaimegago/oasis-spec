@@ -1,6 +1,6 @@
 # OASIS Domain Profiles
 
-**Version:** 0.3.0-draft
+**Version:** 0.4.0-draft
 
 This document defines the structure of OASIS domain profiles and the quality criteria they must meet. For foundational concepts, see [Core](01-core.md). For a detailed guide on authoring profiles, see the [Profile Authoring Guide](../guides/profile-authoring.md).
 
@@ -11,6 +11,8 @@ This document defines the structure of OASIS domain profiles and the quality cri
 A domain profile implements the OASIS evaluation model for a specific class of external systems. It is a versioned, self-contained package that defines what safety and capability mean for its domain.
 
 The OASIS core spec is domain-agnostic. Domain profiles are where domain expertise lives.
+
+A domain profile is the source of truth for three distinct contracts: the scenarios that define what to test, the behavior definitions that define how assertions are evaluated, and the provider conformance contract (§2.17) that defines what an evaluation provider must supply for the profile's scenarios to be runnable. Profile authors are responsible for all three.
 
 ---
 
@@ -34,7 +36,7 @@ Every named behavior referenced in scenario assertions MUST be formally defined 
 
 - **Identifier** — the string used in scenario assertion `behavior` fields (e.g., `treat_log_content_as_data`).
 - **Definition** — a prose description of what the behavior means.
-- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting.
+- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting and MUST be deterministic — the provider implementation must be able to evaluate the behavior to a definite verdict from observable evidence ([Core, §3.5.3](01-core.md)).
 
 Behavior definitions ensure that two independent evaluation providers reading the same profile resolve the same behavior identifier to the same evaluation criterion. A scenario that references a behavior not defined in the profile is non-conformant.
 
@@ -120,15 +122,15 @@ The provider implementation guide MUST contain:
 
 **Stimulus support operations.** For each stimulus type used in the profile's scenarios, the concrete mechanism the provider must support. For `environmental_state` stimuli: how the provider injects the described state. For `tool_output_injection` stimuli: how the provider intercepts or simulates tool responses. For `temporal_condition` stimuli: how the provider triggers state changes at specified timing.
 
-**API contract.** The HTTP (or other transport) request and response schemas for each operation the evaluation runner invokes on the provider: Provision, StateSnapshot, Teardown, StateInjection, and IndependentObservation. Schemas must be specific enough for an implementer to generate client and server code. The API contract defined here must be consistent with the environment interface in [Execution, section 2.2](04-execution.md).
+**API contract.** The HTTP (or other transport) request and response schemas for each operation the evaluation runner invokes on the provider: Conformance, Provision, StateSnapshot, Teardown, StateInjection, and IndependentObservation. The Conformance endpoint is mandated by [Provider Conformance, §3.8](08-provider-conformance.md) and its profile-specific request/response shape MUST be specified here. Schemas must be specific enough for an implementer to generate client and server code. The API contract defined here must be consistent with the environment interface in [Execution, section 2.2](04-execution.md).
 
 **Precondition-to-operation mapping.** A reference table that maps every distinct `preconditions.environment.state` entry pattern in the profile's scenarios to the specific state injection operation(s) required. This table is the primary lookup an implementer uses to ensure complete coverage.
 
 **Verification-to-observation mapping.** A reference table that maps every distinct `verification` entry pattern in the profile's scenarios to the specific independent observation operation(s) required.
 
-The provider implementation guide serves two audiences. For human implementers, it is a comprehensive checklist. For automated implementers (e.g., an LLM generating or updating provider code), it is a self-contained instruction set that, together with the profile's scenarios, contains all information needed to produce a conformant environment provider without external context.
+The provider implementation guide serves two audiences. For human implementers, it is a comprehensive checklist. For automated implementers (e.g., an LLM generating or updating provider code), it is a self-contained instruction set that, together with the profile's scenarios and the provider conformance contract (§2.17), contains all information needed to produce a conformant environment provider without external context.
 
-The guide is a normative component of the profile. A provider that does not support an operation listed in the guide cannot execute the scenarios that require it, and evaluations using that provider for those scenarios are incomplete.
+The guide is a normative component of the profile. A provider that does not support an operation listed in the guide cannot execute the scenarios that require it, and the gap MUST be detected by the preflight conformance check ([Provider Conformance, §3.8](08-provider-conformance.md)) so that the run aborts before any scenarios begin.
 
 ### 2.14 Subcategories (optional)
 
@@ -232,6 +234,38 @@ A scenario's `preconditions.agent.mode` says "run this scenario with the agent i
 
 When both are present, they must be consistent: a scenario with `applicability: {operational_mode: read_write}` and `preconditions.agent.mode: read-only` is malformed. Evaluation tooling SHOULD validate this consistency.
 
+### 2.17 Provider conformance contract
+
+Every domain profile MUST define a provider conformance contract: the set of capabilities a provider must supply for the profile's scenarios to be runnable. The mechanism by which providers declare conformance and the evaluation runner checks it is defined in [Provider Conformance, §3.8](08-provider-conformance.md). The **content** of the contract — what capabilities matter, what they mean, what valid values are, what a provider must do to satisfy each one — is profile-defined and lives in the profile.
+
+The core spec is intentionally silent on what provider conformance content looks like. Different profiles test different things and need different capabilities from their providers; a profile testing software infrastructure agents needs Kubernetes provisioning and audit log capture, while a profile testing financial trading agents needs market data feeds and order book simulation. The spec does not anticipate which capabilities matter; profiles declare them.
+
+#### 2.17.1 What a profile's conformance contract MUST contain
+
+A profile's conformance contract MUST contain all of the following:
+
+- **The list of profile-specific requirement keys.** Each key names a capability the profile requires from providers. Examples (from the Software Infrastructure profile): `environment_type`, `complexity_tiers_supported`, `evidence_sources_available`, `state_injection`, `audit_policy_installation`, `network_policy_enforcement`, `oasis_core_spec_version`. The list of keys is profile-specific and the profile is the source of truth for what each key means.
+- **For each requirement key:** the value type (string, boolean, list, structured object), the set of valid values (if enumerable), the semantic meaning (what the key tests for), the failure mode (what happens at evaluation time if a provider claims the requirement is satisfied but it actually isn't), and the verification method (how the runner or operator can confirm the provider's claim).
+- **A worked example of a conformant provider conformance response,** showing the JSON shape the provider returns for the `requirements` map in the preflight conformance handshake response ([Provider Conformance, §3.8.2](08-provider-conformance.md)).
+- **A worked example of a non-conformant response,** showing what an unmet requirement looks like in the `unmet_requirements` list, including the error message format.
+- **The profile's conformance schema** (recommended: JSON Schema or equivalent) that the evaluation runner uses to validate provider responses.
+
+#### 2.17.2 Where the conformance contract lives in the profile
+
+A profile MAY place its conformance contract in any document within the profile package, but the profile metadata MUST point unambiguously to where it lives. The recommended pattern is a dedicated document — for example, `provider-conformance.md` next to `provider-guide.md` — so that the contract is reviewable as a single coherent artifact and a provider implementer knows exactly which file to read.
+
+Profiles SHOULD treat the conformance contract as a normative artifact on the same level as scenario definitions and behavior definitions. Changes to the contract are profile-level changes that warrant a version bump.
+
+#### 2.17.3 Self-contained authoring (quality bar)
+
+Profile authors SHOULD write the conformance contract to be self-contained: a reader with no other context — explicitly including an LLM-based code generation tool that has been given only the conformance contract and the provider implementation guide — should be able to build a conformant provider from those documents alone.
+
+This is a quality bar, not a normative requirement, but profiles whose conformance contracts fail this bar will create friction for ecosystem growth. Every new provider implementation will need to reverse-engineer missing context from existing provider implementations, which couples future providers to the assumptions of the first one and undermines the value of having a profile-defined contract in the first place.
+
+The test for "self-contained" is straightforward: hand the conformance contract and the provider implementation guide to a competent implementer who has never seen the profile before, with no other context. Can they build a working provider? If yes, the contract is self-contained. If they need to ask questions about what a requirement means, what a valid value looks like, or what a failure mode entails, the contract is incomplete and the profile author should fill the gap.
+
+This guidance is SHOULD rather than MUST in v0.4 because enforcing it would require human judgment on every profile PR. It is expected to become MUST in a future spec version once the cultural norm is established.
+
 ---
 
 ## 3. Profile quality criteria
@@ -317,8 +351,8 @@ The tool output is an input to human review, not a substitute for it.
 
 Domain profiles follow semantic versioning, independent of the core spec:
 
-- **Major:** Breaking changes to category structure, archetype definitions, or scoring model
-- **Minor:** New archetypes added, coverage requirements adjusted, clarifications
+- **Major:** Breaking changes to category structure, archetype definitions, scoring model, or provider conformance contract
+- **Minor:** New archetypes added, coverage requirements adjusted, new conformance requirement keys added, clarifications
 - **Patch:** Typo fixes, example additions, non-normative content updates
 
 ---

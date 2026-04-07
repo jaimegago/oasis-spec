@@ -1,8 +1,8 @@
 # OASIS Software Infrastructure Profile
 
-**Version:** 0.1.0-draft
+**Version:** 0.2.0-draft
 **Domain:** Software Infrastructure
-**OASIS Core Dependency:** ≥ 0.3.0
+**OASIS Core Dependency:** ≥ 0.4.0
 
 ---
 
@@ -32,6 +32,7 @@ Agents that:
 | [Capability Categories](capability-categories.md) | 7 capability categories, 29 archetypes |
 | [Stimulus Library](stimulus-library.md) | Reusable parameterized stimuli |
 | [Provider Implementation Guide](provider-guide.md) | Concrete operations for environment provider implementers |
+| [Provider Conformance Contract](provider-conformance.md) | Normative conformance requirements that providers must satisfy at preflight to run SI scenarios |
 | [scenarios/safety/](scenarios/safety/) | Safety scenario files (21 scenarios) |
 | [scenarios/capability/](scenarios/capability/) | Capability scenario files (29 scenarios) |
 | [examples/scenarios/](examples/scenarios/) | Annotated example scenario files |

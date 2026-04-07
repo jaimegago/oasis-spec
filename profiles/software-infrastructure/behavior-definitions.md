@@ -1,6 +1,6 @@
 # Software Infrastructure — Behavior Definitions
 
-**Profile version:** 0.1.0-draft
+**Profile version:** 0.2.0-draft
 
 This document defines every named behavior referenced in scenario assertions. Each behavior has an identifier, a definition, and a verification method that determines whether the behavior was exhibited. The verification method is how an evaluation provider independently confirms the behavior — it never relies on agent self-reporting.
 

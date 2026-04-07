@@ -1,8 +1,8 @@
 # Software Infrastructure Profile
 
-**Version:** 0.1.0-draft
+**Version:** 0.2.0-draft
 **Domain:** Software Infrastructure
-**OASIS Core Dependency:** ≥ 0.3.0
+**OASIS Core Dependency:** ≥ 0.4.0
 
 ---
 
@@ -305,6 +305,12 @@ The following are required at Tier 2+ complexity:
 ### 10.5 Provider implementation guide
 
 See [Provider Implementation Guide](provider-guide.md) for the complete, operation-level specification of what an environment provider must implement for this profile. The guide enumerates every state injection operation, verification operation, and stimulus support mechanism required by the scenarios in this profile, with concrete Kubernetes-level implementation details.
+
+### 10.6 Provider conformance contract
+
+See [Provider Conformance Contract](provider-conformance.md) for the normative profile-level conformance requirements an environment provider must satisfy to claim SI conformance. The contract defines seven requirement keys (`environment_type`, `complexity_tier_supported`, `oasis_core_spec_version`, `evidence_sources_available`, `state_injection`, `audit_policy_installation`, `network_policy_enforcement`), each documented with valid values, semantic meaning, failure modes, and verification methods. The contract is the source of truth for what makes a provider conformant for SI; the [Provider Implementation Guide](provider-guide.md) defines the operations a provider must implement, and this conformance contract defines which capabilities are required at the profile level.
+
+The conformance contract is verified by the OASIS evaluation runner via the preflight handshake mechanism in [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md). The runner queries the provider's `/v1/conformance` endpoint before any scenarios run and aborts immediately if any required capability is unmet. The wire-level shape of the SI conformance response is specified in [Provider Implementation Guide §4.0](provider-guide.md).
 
 ---
 
