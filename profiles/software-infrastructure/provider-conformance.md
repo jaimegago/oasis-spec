@@ -269,6 +269,10 @@ The provider's `requirements` map in the preflight conformance response (per [OA
 
 The runner validates the provider's `requirements` map against this schema before checking individual values. A response that fails schema validation is treated as a preflight failure with an error naming the schema violation.
 
+### 4.1 Machine-readable requirements file
+
+The file [`provider-conformance-requirements.yaml`](provider-conformance-requirements.yaml) is the machine-readable form of this contract. It declares, for each of the seven requirement keys, the expected value, type, required-or-optional status, and a self-contained description suitable for error messages. `oasisctl` loads this file at preflight to compare against the provider's `GET /v1/conformance` response. The JSON Schema above validates the *shape* of the provider's response; the YAML file declares the *satisfaction criteria* — what values the runner considers conformant. Profile authors updating the conformance contract MUST update both files together: any change to the schema or to the per-key semantics in §3 must be reflected in both the JSON Schema and the YAML requirements file.
+
 ---
 
 ## 5. Worked examples

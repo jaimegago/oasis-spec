@@ -1,0 +1,96 @@
+# Software Infrastructure — Provider Conformance Requirements (machine-readable)
+#
+# Profile: oasis-profile-software-infrastructure
+# Profile version: 0.2.0-draft
+# OASIS Core Dependency: >= 0.4.0
+#
+# This file is the canonical machine-readable declaration of which provider
+# capabilities the SI profile requires. oasisctl loads it at preflight to
+# compare against the provider's GET /v1/conformance response.
+#
+# The JSON Schema in provider-conformance.md section 4 validates the shape
+# of the provider's conformance response. This YAML file declares what
+# counts as "satisfied" per requirement key. Profile authors updating the
+# contract MUST update both files together.
+
+profile: oasis-profile-software-infrastructure
+profile_version: 0.2.0-draft
+oasis_core_dependency: ">=0.4.0"
+
+requirements:
+  environment_type:
+    type: string
+    required: true
+    expected: "kubernetes-cluster"
+    description: >
+      The provider must provision Kubernetes clusters as the environment type.
+      SI scenarios are written entirely against Kubernetes resources and require
+      a real or realistically-simulated Kubernetes API server. Any value other
+      than 'kubernetes-cluster' means the provider cannot run SI scenarios.
+
+  complexity_tier_supported:
+    type: integer
+    required: true
+    expected:
+      comparison_operator: gte
+      value: requested
+    description: >
+      The highest OASIS complexity tier the provider can provision (1, 2, or 3).
+      The provider's declared tier must be greater than or equal to the tier
+      requested for the evaluation run. A provider declaring tier 1 cannot run
+      tier 2 or tier 3 scenarios.
+
+  oasis_core_spec_version:
+    type: semver_list
+    required: true
+    expected: ">=0.4.0"
+    description: >
+      The OASIS core spec versions the provider implements. At least one
+      declared version must satisfy >=0.4.0. SI v0.2 depends on core spec
+      v0.4 for the conformance handshake, PROVIDER_FAILURE verdict status,
+      and the explicit forbidding of NEEDS_REVIEW.
+
+  evidence_sources_available:
+    type: array
+    required: true
+    expected:
+      - audit_log
+      - resource_state
+      - response_content
+    description: >
+      The observation types the provider can supply with 'available' status.
+      The provider's declared list must include all of audit_log, resource_state,
+      and response_content. state_diff is optional. Missing any required type
+      means SI safety assertions cannot be independently verified.
+
+  state_injection:
+    type: boolean
+    required: true
+    expected: true
+    description: >
+      The provider must support injecting preconditions into provisioned
+      environments via /v1/inject-state. Every SI scenario depends on staged
+      initial state. Without state injection the scenarios cannot be set up
+      and the evaluation cannot proceed.
+
+  audit_policy_installation:
+    type: boolean
+    required: true
+    expected: true
+    description: >
+      The provider must install a Kubernetes API server audit policy on every
+      cluster it provisions, capturing write operations at RequestResponse level
+      and read operations at Metadata level minimum. Without a real audit policy,
+      audit_log observations return empty results and safety assertions that
+      depend on audit evidence produce dishonest verdicts.
+
+  network_policy_enforcement:
+    type: boolean
+    required: true
+    expected: true
+    description: >
+      The provider's clusters must use a CNI plugin that enforces NetworkPolicy
+      resources. Without enforcement, NetworkPolicy resources are silent
+      decoration and zone boundary scenarios pass for the wrong reason. The
+      default kindnet CNI does not enforce NetworkPolicy; providers using kind
+      must replace it with an enforcing CNI such as Calico or Cilium.

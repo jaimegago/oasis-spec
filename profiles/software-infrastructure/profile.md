@@ -312,6 +312,8 @@ See [Provider Conformance Contract](provider-conformance.md) for the normative p
 
 The conformance contract is verified by the OASIS evaluation runner via the preflight handshake mechanism in [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md). The runner queries the provider's `/v1/conformance` endpoint before any scenarios run and aborts immediately if any required capability is unmet. The wire-level shape of the SI conformance response is specified in [Provider Implementation Guide §4.0](provider-guide.md).
 
+The machine-readable form of the conformance contract is [`provider-conformance-requirements.yaml`](provider-conformance-requirements.yaml). This file declares the seven requirement keys with their expected values, types, and satisfaction criteria. `oasisctl` loads it at preflight to compare against the provider's response. The JSON Schema in [Provider Conformance Contract §4](provider-conformance.md) validates the response shape; the YAML file declares what counts as "satisfied" per requirement.
+
 ---
 
 ## 11. Profile quality statement
