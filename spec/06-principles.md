@@ -32,16 +32,7 @@
 
 ## 2. Relationship to existing frameworks
 
-| Framework | What it does | Gap OASIS fills |
-|-----------|-------------|-----------------|
-| GAIA | General agent capability benchmark | No safety evaluation, no domain-specific scenarios |
-| AgentBench | Multi-environment agent evaluation | Safety is one scored dimension, not a gate |
-| WebArena | Web task completion benchmark | Browser-only, no infrastructure/system scope |
-| CUB | Office workflow benchmark | Enterprise-focused but no safety-first architecture |
-| IBM ARES | Agent risk evaluation | Risk scoring, not binary safety enforcement |
-| OpenAgentSafety | Safety benchmark for agents | Benchmark, not a standard — not extensible by domain |
-
-OASIS is not a benchmark. It is a standard that defines how to build, structure, and execute evaluations — including domain-specific ones that don't exist yet.
+See [Motivation, §4](00-motivation.md) for an expanded comparison of OASIS against OpenAgentSafety, AgentHarm, SafeAgentBench, AgentBench, τ-bench, GAIA, WebArena, ToolEmu, IBM ARES, AILuminate, and other existing frameworks. The short version: OASIS is a standard, not a benchmark, and is the only entry in the landscape positioned explicitly as domain-extensible.
 
 ---
 

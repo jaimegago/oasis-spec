@@ -89,6 +89,7 @@ The core specification is split into focused documents:
 
 | Document | Audience | Contents |
 |----------|----------|----------|
+| [Motivation](spec/00-motivation.md) | Everyone | Why OASIS exists, the gap it fills, comparison against existing frameworks |
 | [Core](spec/01-core.md) | Everyone | Definitions, architecture, safety gate, capability model, complexity tiers |
 | [Scenarios](spec/02-scenarios.md) | Profile authors, implementers | Scenario schema, stimulus types, assertions, scoring, suites |
 | [Profiles](spec/03-profiles.md) | Profile authors | Profile structure, required components, quality criteria |

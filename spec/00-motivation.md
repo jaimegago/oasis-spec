@@ -1,0 +1,110 @@
+# Why OASIS Exists
+
+**Version:** 0.4.0-draft
+
+This document explains why OASIS was created, what gap it fills in the current AI agent evaluation landscape, and how it relates to existing benchmarks and frameworks. It is non-normative — readers looking for the technical specification should start with [Core](01-core.md).
+
+---
+
+## 1. The problem
+
+AI agents are gaining access to production infrastructure, financial systems, databases, industrial control systems, and physical devices. The gap between what agents *can* do and what we can reliably *verify* about their behavior is widening — and it is widening inside systems where mistakes have consequences that don't roll back.
+
+Recent empirical work makes the scale of the gap concrete. Carnegie Mellon and AI2's OpenAgentSafety benchmark, applied to five frontier models in realistic multi-turn workplace scenarios, found unsafe behavior rates between 51% and 73% on safety-vulnerable tasks. SafeAgentBench reports rejection rates as low as 5–10% for embodied agents handed explicitly hazardous instructions. AgentHarm shows that frontier models are "surprisingly compliant" with malicious agent requests even without jailbreaking. These are not edge cases. They are the baseline.
+
+The evaluation methodology has not kept pace. Most existing frameworks were designed when agents were research artifacts, not production systems. They measure capability with elaborate scoring rubrics and treat safety as one dimension among many — a score on a dashboard, a percentage to optimize, a number that trades off against task completion. This shape of evaluation is fine for measuring model progress on a leaderboard. It is not fine for deciding whether an agent is safe to connect to a Kubernetes cluster, a trading desk, or a robotic arm.
+
+OASIS exists because the systems we are about to hand to agents require a different shape of evaluation — one where safety is a precondition for capability to be measured at all, where evaluation results are reproducible and independently verifiable, and where the methodology is a standard the whole ecosystem can align on rather than another benchmark from another team.
+
+---
+
+## 2. Why a standard, not another benchmark
+
+The distinction matters. A benchmark is a fixed corpus of tasks published by a research team — valuable for comparing models on that specific corpus at a specific moment. A standard defines *how* evaluations are built, structured, and reported, so that different teams working on different domains can produce results that are comparable, auditable, and composable.
+
+The current landscape is rich with benchmarks and thin on standards. OpenAgentSafety, AgentHarm, SafeAgentBench, AgentBench, GAIA, WebArena — each is a fixed task set bound to a specific environment and a specific domain (workplace productivity, embodied robotics, web browsing, general capability). None of them define a shape that a third party could use to evaluate an agent in a domain the benchmark authors never considered — a DNS server, a SCADA controller, a clinical ordering system, a payment rail.
+
+OASIS takes the opposite approach. The core spec is domain-agnostic and defines grammar: what a scenario is, what a safety gate is, what independent verification means, how conformance is reported. Domain knowledge lives in versioned profiles that anyone can author. The first profile (Software Infrastructure) is the reference case, not the entire standard. Finance, robotics, and clinical profiles are planned but not bottlenecks — a team with domain expertise and no prior involvement with OASIS can write a conformant profile and publish it independently.
+
+This is how HTTP, OpenTelemetry, OAuth, and SQL became ubiquitous. The spec is the product. Reference implementations are how you prove the spec works, not how you own the ecosystem.
+
+---
+
+## 3. Why safety must be a gate
+
+OASIS treats safety as a binary gate with an explicit tolerance parameter, not a score. An agent that fails any applicable safety scenario receives no capability score — the evaluation simply fails.
+
+This is a deliberate departure from scored safety evaluation and it exists because scored safety has a structural problem: optimization. A score that can be traded against other scores invites optimization that treats safety violations as acceptable losses for capability gains. In systems with rollback — chatbots, drafting assistants, code suggestions — this is defensible. In systems where the agent can delete the production database, transfer funds, or actuate a motor, the trade-off is not defensible, and the evaluation methodology should reflect that.
+
+The gate model has a second property worth naming: it makes safety failures visible as failures. A 0.92 safety score on a dashboard reads as "mostly fine." A FAIL verdict reads as "do not deploy." Evaluation methodology is a communication channel to the humans making deployment decisions, and the channel should carry signals that match the stakes.
+
+OASIS pairs the gate with a negative testing requirement (principle 10, *safety through precision, not paralysis*). An agent cannot pass OASIS by refusing everything — each safety refusal archetype must have a matching capability scenario that tests whether the agent correctly *performs* the legitimate version of what it was supposed to refuse. Safety without capability is not a pass; it is abstention, and the spec treats it as such.
+
+---
+
+## 4. Relationship to existing frameworks
+
+The table below maps OASIS against the current landscape. The goal is not to dismiss these projects — several are excellent and OASIS borrows ideas from them. The goal is to make it clear what shape of gap OASIS is filling.
+
+| Framework | Type | Scope | Safety model | What OASIS does differently |
+|---|---|---|---|---|
+| **OpenAgentSafety** (CMU / AI2, 2025) | Benchmark | Workplace tools (GitLab, file systems, browsers) | Rule-based + LLM-judge, reported as rates | Standard with pluggable profiles; binary gate with explicit tolerance; deterministic core separated from adversarial verification |
+| **AgentHarm** (UK AISI / Gray Swan, 2024) | Benchmark | 110 malicious multi-step tasks across 11 harm categories | Harm score + refusal rate | Not a misuse benchmark — OASIS tests agents operating on behalf of legitimate operators in real systems, not adversarial users trying to weaponize them |
+| **SafeAgentBench** (2024) | Benchmark | Embodied agents in AI2-THOR simulation | Rejection rate on 750 tasks (450 hazardous + 300 safe control) across 10 hazard types | Real external systems, not simulators; domain-extensible via profiles rather than bound to one environment |
+| **AgentBench** | Benchmark | Multi-environment capability evaluation | Safety as one scored dimension | Safety is a gate, not a dimension; domain-specific rather than general-purpose |
+| **τ-bench / τ²-bench / τ³-bench** (Sierra, 2024–2026) | Benchmark | Customer service domains (airline, retail, telecom, banking knowledge, voice); multi-turn tool-agent-user interaction; policy adherence; dual-control (τ²) and knowledge/voice (τ³) extensions | Goal-database state verification; pass^k reliability metric across repeated trials | Independent state verification is shared ground — but τ-bench is capability and reliability focused with fixed customer service domains, no safety gate, and no profile mechanism for new domains. OASIS could host a τ-bench-style customer service profile; the inverse is not true. |
+| **GAIA** | Benchmark | General assistant capability | None — capability only | Adds safety-first architecture and domain scoping |
+| **WebArena / VisualWebArena** | Benchmark | Web browsing tasks | None — task completion only | Scope extends beyond browsers; safety is primary |
+| **ToolEmu** | Framework | LLM-emulated tool sandboxes | LLM grades accidental safety violations | Real external systems with independent state verification, not LLM-emulated tools or LLM-graded verdicts |
+| **IBM ARES** (AI Robustness Evaluation System) | Red-teaming framework | Attack orchestration against AI endpoints (models, agentic apps, REST APIs); plugin-based, integrates Garak, Crescendo, etc.; mapped to OWASP LLM categories | Attack-success scoring per intent | Standard rather than an attack framework; deterministic scenario verdicts and independent state verification, with adversarial probing as an explicitly optional extension that does not modify the core verdict |
+| **AILuminate** (MLCommons, v1.0 / 2025) | Benchmark with formal assessment standard | Single-turn chat model safety across 12 hazard categories (violent crimes, CSE, CBRNE, self-harm, IP, privacy, defamation, hate, sexual content, specialized advice, etc.) | Hazard-category grades on a 5-tier scale relative to a reference model | OASIS evaluates agents acting on external systems with multi-turn execution and state verification, not single-turn chat outputs; complementary rather than overlapping |
+| **MLflow 3 GenAI Eval / Mosaic AI Agent Evaluation** (Databricks) | Evaluator framework | Trace-based scorers, built-in and custom LLM judges, agent-as-judge | Scorers attach feedback to traces; pass/fail or numeric per scorer | OASIS defines *what* to evaluate and the verdict shape; tooling like this can be used to implement conformant runners |
+
+Two patterns are worth calling out.
+
+**Benchmarks vs. standards.** Almost every entry above is a benchmark — a fixed task corpus. OASIS is the only entry positioned explicitly as a standard. AILuminate is the closest comparison: MLCommons has done significant work building it as a standard for chat model safety, with a formal taxonomy and governance. OASIS fills the corresponding gap for agents that act on external systems.
+
+**LLM-as-judge vs. independent verification.** Many benchmarks rely on LLM-as-judge for final verdicts. OASIS permits LLM-as-judge for adversarial verification (which is optional and non-deterministic by design) but requires independent verification — direct inspection of external system state — for the deterministic core safety verdict. The agent's self-reporting is never used as evidence. τ-bench is a notable precedent in the same direction, evaluating against goal database state rather than conversation quality; OASIS generalizes this discipline across domains and elevates it from a design choice to a conformance requirement. This is not a criticism of LLM-as-judge; it is a recognition that the core safety verdict needs to be reproducible by a third party using the same scenario corpus, and LLM-as-judge alone is not reproducible enough to carry that weight.
+
+---
+
+## 5. What OASIS is not
+
+To keep the scope clear:
+
+- **OASIS is not a benchmark.** It does not publish a fixed task corpus as its primary artifact. The Software Infrastructure profile ships with a scenario library, but that library is one profile's implementation, not the standard itself.
+
+- **OASIS is not a certification body.** The provider conformance spec ([08-provider-conformance.md](08-provider-conformance.md)) defines what makes an evaluation provider conformant. Certification, accreditation, and governance are deferred until there is operational experience with multiple independent providers.
+
+- **OASIS is not a chat model safety evaluation.** Tools like AILuminate, HELM safety, and red-teaming benchmarks for chat models address a different problem: the model's textual outputs. OASIS addresses what the agent does when it has hands — when it can call APIs, modify state, and affect systems that exist independently of the conversation.
+
+- **OASIS is not opposed to existing benchmarks.** Benchmarks prove problems exist (the OpenAgentSafety numbers are cited above precisely because they are useful). Standards give the ecosystem a common shape for solving those problems. Both are needed.
+
+- **OASIS is not a replacement for human judgment.** Profile quality is assessed by domain experts, not scored automatically. The spec is explicit about this ([03-profiles.md, §2.9](03-profiles.md)) because safety-critical evaluation is a Goodhart trap waiting to happen.
+
+---
+
+## 6. Design lineage
+
+OASIS draws on four traditions.
+
+**Software testing discipline.** The binary gate, isolation by default, deterministic assertions, and negative testing requirements come from decades of practice in safety-critical software (aviation, medical devices, nuclear control). The field already knows how to separate "it might work" from "it will work" — OASIS imports that discipline rather than reinventing it.
+
+**Standards ecosystems.** The profile mechanism, the conformance spec, the separation of normative and non-normative content, and the CC BY 4.0 license borrow from how HTTP, OAuth, OpenTelemetry, and SQL grew. The goal is to make it easy for anyone to author a conformant profile or implementation without permission.
+
+**Empirical AI safety research.** The adversarial verification extension ([07-adversarial-verification.md](07-adversarial-verification.md)) draws on red-teaming practice and on the recognition — from OpenAgentSafety, AgentHarm, and others — that deterministic corpora alone can be gamed. The open question of probe generator trust is a direct descendant of that research tradition.
+
+**Operational production experience.** The blast radius, declared mode verification, authority escalation, and state corruption categories come from incident retrospectives in real infrastructure environments. They are not theoretical risk categories. They are the failures platform engineers have watched happen.
+
+---
+
+## 7. What success looks like
+
+OASIS succeeds if, within two to three years:
+
+- A handful of domain profiles exist beyond Software Infrastructure, authored by teams with no prior OASIS involvement.
+- At least one independent evaluation provider publishes conformance reports that a third party can reproduce.
+- Agent builders cite OASIS verdicts in the same way software vendors cite SOC 2 or ISO 27001 — as baseline evidence of due diligence, not as a marketing score.
+- Regulators, auditors, and procurement teams can point to a document and say "evaluate against this" without having to specify the methodology themselves.
+
+Success is not adoption of a specific benchmark. It is the emergence of a common vocabulary for "is this agent safe to deploy in this context?" — a vocabulary the field currently lacks.
