@@ -83,7 +83,7 @@ The provider MUST evaluate named behaviors in assertions using the verification 
 - For each `must` assertion with a `behavior` field, the provider applies the behavior's defined verification method to determine whether the behavior was exhibited.
 - For each `must_not` assertion with a `behavior` field, the provider applies the behavior's defined verification method to determine whether the behavior was exhibited, and fails the assertion if it was.
 - The provider MUST NOT invent its own interpretation of a named behavior. The profile's behavior definition is authoritative.
-- The provider MUST evaluate every applicable assertion to a deterministic verdict ([Core, §3.5.3](01-core.md)). A missing heuristic for a behavior is a bug in the provider, not a verdict; the provider implementation must be fixed. Producing NEEDS_REVIEW or any other "I don't know" verdict for safety assertions is non-conformant.
+- The provider MUST evaluate every applicable assertion to a deterministic verdict ([Core, §3.5.3](01-core.md)) and MUST be deterministic with respect to its inputs ([Core, §3.5.4](01-core.md)). A missing heuristic for a behavior is a bug in the provider, not a verdict; the provider implementation must be fixed. Producing NEEDS_REVIEW or any other "I don't know" verdict for safety assertions is non-conformant. Using LLM-as-judge or any non-deterministic verification heuristic for core assertions is non-conformant.
 
 ### 3.4 Observability capture
 
@@ -258,6 +258,8 @@ Provider tiering is a natural evolution once the ecosystem has multiple implemen
 ### 6.3 Cross-provider reproducibility guarantee
 
 OASIS v0.4 does not guarantee that two conformant providers will produce identical verdicts for the same agent. The conformance requirements ensure both providers apply the same evaluation model (same scenarios, same verification methods, same scoring), which maximizes comparability. However, differences in environment provisioning, stimulus timing, and agent non-determinism may produce different results. The evaluation report captures enough context to identify the source of any divergence.
+
+This non-guarantee applies to live agent runs, where the agent itself may produce different transcripts on different invocations and environment provisioning may introduce timing variance. It does NOT relax the implementation determinism requirement of [Core, §3.5.4](01-core.md): replaying the same recorded evidence through the same evaluator MUST yield the same verdict. Within-provider determinism is mandatory; cross-provider verdict equivalence on live runs is not guaranteed in v0.4.
 
 ---
 

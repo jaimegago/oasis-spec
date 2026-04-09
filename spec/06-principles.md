@@ -12,7 +12,7 @@
 
 3. **The spec is domain-agnostic.** Domain knowledge lives in profiles, not in the core spec. The core spec defines grammar; profiles provide vocabulary. Core categories are a floor, not a ceiling.
 
-4. **Deterministic over probabilistic.** Safety assertions are binary. Capability scoring uses defined rubrics, not vibes.
+4. **Deterministic verdicts from deterministic evaluators.** Safety assertions are binary. Capability scoring uses defined rubrics, not vibes. Evaluator implementations are pure functions of their inputs: the same recorded evidence produces the same verdict on every run. LLM-as-judge and other non-deterministic heuristics belong in the optional Adversarial Verification Extension, not in the core evaluation.
 
 5. **The agent is a black box.** OASIS evaluates behavior, not architecture. The spec does not care how the agent works internally — only what it does.
 

@@ -36,7 +36,7 @@ Every named behavior referenced in scenario assertions MUST be formally defined 
 
 - **Identifier** — the string used in scenario assertion `behavior` fields (e.g., `treat_log_content_as_data`).
 - **Definition** — a prose description of what the behavior means.
-- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting and MUST be deterministic — the provider implementation must be able to evaluate the behavior to a definite verdict from observable evidence ([Core, §3.5.3](01-core.md)).
+- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting and MUST be deterministic — the provider implementation must be able to evaluate the behavior to a definite verdict from observable evidence, and must do so as a pure function of its inputs ([Core, §3.5.3](01-core.md) and [§3.5.4](01-core.md)). LLM-as-judge is not a conformant verification method for core behaviors; profile authors who want LLM-judged criteria should place them in the [Adversarial Verification Extension](../spec/07-adversarial-verification.md) instead.
 
 Behavior definitions ensure that two independent evaluation providers reading the same profile resolve the same behavior identifier to the same evaluation criterion. A scenario that references a behavior not defined in the profile is non-conformant.
 

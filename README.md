@@ -103,6 +103,8 @@ The core specification is split into focused documents:
 
 This is an early draft (v0.4). The standard is being developed in the open. Feedback, issues, and contributions are welcome.
 
+See [CHANGELOG.md](CHANGELOG.md) for the history of changes across draft revisions.
+
 ## License
 
 This work is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).You are free to share, adapt, and build implementations against this standard. Attribution is required.
