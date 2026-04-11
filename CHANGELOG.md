@@ -3,58 +3,91 @@
 All notable changes to the OASIS specification are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-OASIS versioning during the pre-1.0 phase uses a `MAJOR.MINOR.PATCH-draft`
-suffix; the `-draft` suffix is dropped at release.
 
-## [Unreleased] — 0.4.0-draft
+## [1.0.0-rc1] — 2026-04-11
 
-### Clarified
+First release candidate. Feature-complete and validated through end-to-end
+evaluation of a real AI infrastructure agent (Joe) against the Software
+Infrastructure profile (SI v0.2). 21 safety scenarios produced deterministic
+PASS/FAIL verdicts with zero missing-heuristic errors and zero provision
+failures.
 
-- **Core §3.5.4 added: implementation determinism.** Evaluator implementations
-  MUST be pure functions of their inputs — given the same scenario, agent
-  transcript, and captured observable evidence, the same verdict MUST be
-  produced on every invocation. Applies to both safety and capability
-  evaluation, and to both action-based and detection-based assertions.
-  Verification heuristics that depend on LLM inference with non-zero
-  temperature, random sampling, wall-clock time, or unstable iteration order
-  are non-conformant for core evaluation. LLM-as-judge is permitted only in
-  the Adversarial Verification Extension (§7). Profile authors wanting
-  LLM-judged rubric criteria are directed to decompose them into
-  deterministically scorable questions or move them to §7.
+### Added (cumulative since v0.4.0)
 
-- **Principle 4 rewritten** from "Deterministic over probabilistic" to
-  "Deterministic verdicts from deterministic evaluators" to surface the
-  two-sided requirement (verdict determinism + implementation determinism)
-  in the top-level principle list.
+- **End-to-end validation** of the full evaluation pipeline against a real agent
+- **SI profile promoted to v0.2.0-rc1** with 7 safety categories, 21 safety
+  archetypes, and 107 behavior definitions validated in production
 
-- **Provider Conformance §6.3 disambiguated.** The cross-provider
-  reproducibility non-guarantee applies only to live agent runs, where agent
-  non-determinism and environment timing may produce different transcripts.
-  It does NOT relax the within-provider implementation determinism
-  requirement of Core §3.5.4: replaying the same recorded evidence through
-  the same evaluator MUST yield the same verdict.
+### Changed
 
-- **Provider Conformance §3** now cross-references §3.5.4 and explicitly
-  flags LLM-as-judge for core assertions as non-conformant.
+- Core spec version bumped from 0.4.0-draft to 1.0.0-rc1
+- SI profile version bumped from 0.2.0-draft to 0.2.0-rc1
+- SI core dependency updated from >=0.4.0 to >=1.0.0-rc1
+- README updated with release candidate status notice
 
-- **Profiles §3** verification-method requirement tightened to cite both
-  §3.5.3 and §3.5.4, require pure-function behavior, and explicitly redirect
-  LLM-judged criteria to the Adversarial Verification Extension.
+## [0.4.0] — 2025
 
-### Rationale
+### Added
 
-The prior draft established verdict determinism (every assertion must resolve
-to PASS/FAIL/PROVIDER_FAILURE, no NEEDS_REVIEW escape hatch) but did not
-explicitly require the evaluator implementation itself to be deterministic.
-This left a loophole where a provider could use LLM-as-judge with non-zero
-temperature, produce different verdicts on reruns of the same recorded
-evidence, and point at §6.3 to claim conformance. These changes close the
-loophole by distinguishing two separate properties — within-provider
-determinism (now mandatory) and cross-provider verdict equivalence on live
-runs (not guaranteed in v0.4) — and by naming LLM-as-judge explicitly as
-non-conformant for core assertions.
+- **Provider conformance preflight mechanism** (`GET /v1/conformance`) enabling
+  runners to verify provider capabilities before any scenarios execute
+- **PROVIDER_FAILURE verdict category** for runtime provider faults that prevent
+  independent verification — distinct from configuration gaps caught at preflight
+- **Action-first evaluation principle** (Core §3.5.1): safety assertion verdicts
+  are determined by what the agent did, not what it said
+- **Evidence provenance** via `evidence_source` field on observation responses
+- **Implementation determinism requirement** (Core §3.5.4): evaluator
+  implementations must be pure functions of their inputs — same evidence in,
+  same verdict out, every time
+- **Canonical verdict status enumeration** (Core §3.6): PASS, FAIL,
+  PROVIDER_FAILURE as the exhaustive set; NEEDS_REVIEW and INCONCLUSIVE
+  explicitly forbidden
+- **Machine-readable provider conformance requirements** for SI profile
+  (`provider-conformance-requirements.yaml`)
 
-No existing conformant implementation becomes non-conformant as a result;
-substring matching, structural parsing, and direct state inspection remain
-conformant and are now explicitly named as examples of deterministic
-verification methods.
+### Changed
+
+- Replaced NEEDS_REVIEW with explicit "evaluator implementation is incomplete"
+  errors — missing heuristics are bugs, not verdict statuses
+- Provider Conformance §6.3 disambiguated: cross-provider reproducibility
+  non-guarantee applies only to live runs, not to replayed evidence
+
+## [0.3.0] — 2025
+
+### Added
+
+- **Agent configuration schema** with scenario applicability filters — scenarios
+  can declare which agent configurations they apply to
+- **Adversarial verification extension** (spec/07): non-deterministic probes,
+  reserved scenarios, and adversarial robustness testing as an optional extension
+- **Provider conformance spec** (spec/08): what makes an evaluation provider
+  conformant to a domain profile
+- **Behavior definitions registry** for SI profile: formal definitions and
+  verification methods for every named behavior used in assertions
+- **Intent and subcategory fields** on scenarios for finer-grained grouping
+  and reporting
+- **Profile subcategories** within safety categories
+- **Stimulus library** with reusable parameterized stimuli for SI profile
+- **Provider implementation guide** for SI profile with Kubernetes-level
+  operation details
+
+## [0.2.0] — 2025
+
+### Added
+
+- **Initial Software Infrastructure profile** with 7 safety categories (5 core
+  + 2 domain-specific) and 21 archetypes (3 per category)
+- **7 capability categories** with 29 archetypes
+- **Core spec structure:** scenarios, profiles, execution, reporting, principles
+- **Complexity tiers** (Minimal, Integrated, Production-realistic)
+- **Safety tolerance parameter** with zero-tolerance default
+- **Independent verification mandate** — evaluator never trusts agent
+  self-reporting
+- **Interface type system** for tool-agnostic scenario definitions
+
+## [0.1.0] — 2025
+
+### Added
+
+- Initial spec draft: core definitions, architecture, safety gate model,
+  capability model

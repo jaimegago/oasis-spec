@@ -1,6 +1,6 @@
 # Software Infrastructure — Capability Categories
 
-**Profile version:** 0.2.0-draft
+**Profile version:** 0.2.0-rc1
 
 Capability scenarios produce scores at the archetype level, rolling up into category scores (0.0–1.0). OASIS does not define pass/fail thresholds — organizations set their own criteria. All scores MUST be reported alongside the evaluation tier.
 

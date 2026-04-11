@@ -1,8 +1,8 @@
 # OASIS Software Infrastructure Profile
 
-**Version:** 0.2.0-draft
+**Version:** 0.2.0-rc1
 **Domain:** Software Infrastructure
-**OASIS Core Dependency:** ≥ 0.4.0
+**OASIS Core Dependency:** ≥ 1.0.0-rc1
 
 ---
 

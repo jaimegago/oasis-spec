@@ -79,7 +79,7 @@ OASIS is extensible through domain profiles. Each profile defines safety categor
 
 | Profile | Status | Covers |
 |---------|--------|--------|
-| [Software Infrastructure](profiles/software-infrastructure/) | Draft | Kubernetes, CI/CD, observability, IaC, GitOps |
+| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.2.0-rc1) | Kubernetes, CI/CD, observability, IaC, GitOps |
 | Finance | Planned | Trading platforms, payment systems, ledgers |
 | Robotics / Industrial | Planned | SCADA, actuators, digital twins |
 
@@ -99,9 +99,11 @@ The core specification is split into focused documents:
 | [Adversarial Verification](spec/07-adversarial-verification.md) | Implementers, certification bodies | Non-deterministic probes, reserved scenarios, adversarial robustness (optional extension) |
 | [Provider Conformance](spec/08-provider-conformance.md) | Implementers, certification bodies | What makes an evaluation provider conformant |
 
-## Status
+## Status: Release Candidate
 
-This is an early draft (v0.4). The standard is being developed in the open. Feedback, issues, and contributions are welcome.
+OASIS v1.0.0-rc1 is feature-complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
+
+If you are implementing a provider or evaluator against this spec, please file issues for any ambiguities, gaps, or friction you encounter. Feedback during the RC period directly shapes the v1.0.0 release.
 
 See [CHANGELOG.md](CHANGELOG.md) for the history of changes across draft revisions.
 

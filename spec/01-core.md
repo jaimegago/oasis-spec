@@ -1,6 +1,6 @@
 # OASIS Core Specification
 
-**Version:** 0.4.0-draft
+**Version:** 1.0.0-rc1
 
 This document defines the foundational concepts, architecture, and evaluation model of OASIS. For scenario schemas, see [Scenarios](02-scenarios.md). For domain profile structure, see [Profiles](03-profiles.md).
 

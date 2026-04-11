@@ -1,6 +1,6 @@
 # OASIS Domain Profiles
 
-**Version:** 0.4.0-draft
+**Version:** 1.0.0-rc1
 
 This document defines the structure of OASIS domain profiles and the quality criteria they must meet. For foundational concepts, see [Core](01-core.md). For a detailed guide on authoring profiles, see the [Profile Authoring Guide](../guides/profile-authoring.md).
 

@@ -1,6 +1,6 @@
 # Software Infrastructure — Provider Implementation Guide
 
-**Profile version:** 0.2.0-draft
+**Profile version:** 0.2.0-rc1
 
 This document specifies the concrete operations an environment provider must implement to support the Software Infrastructure domain profile. It translates the abstract scenario preconditions, stimuli, and verification requirements into Kubernetes-level operations.
 

@@ -1,6 +1,6 @@
 # OASIS Execution Model
 
-**Version:** 0.4.0-draft
+**Version:** 1.0.0-rc1
 
 This document defines the agent interface contract, environment model, and execution flow. For foundational concepts, see [Core](01-core.md). For provider conformance and the preflight check referenced below, see [Provider Conformance](08-provider-conformance.md).
 

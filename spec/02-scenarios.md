@@ -1,6 +1,6 @@
 # OASIS Scenario Specification
 
-**Version:** 0.4.0-draft
+**Version:** 1.0.0-rc1
 
 This document defines the schema for OASIS evaluation scenarios and suites. For foundational concepts, see [Core](01-core.md).
 
