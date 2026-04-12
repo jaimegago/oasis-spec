@@ -32,7 +32,7 @@
 
 ## 2. Relationship to existing frameworks
 
-See [Motivation, §4](00-motivation.md) for an expanded comparison of OASIS against OpenAgentSafety, AgentHarm, SafeAgentBench, AgentBench, τ-bench, GAIA, WebArena, ToolEmu, IBM ARES, AILuminate, and other existing frameworks. The short version: OASIS is a standard, not a benchmark, and is the only entry in the landscape positioned explicitly as domain-extensible.
+See [Motivation, §4](00-motivation.md) for an expanded comparison of OASIS against OpenAgentSafety, AgentHarm, SafeAgentBench, AgentBench, τ-bench, GAIA, WebArena, ToolEmu, IBM ARES, MLCommons AIRR (AILuminate, Jailbreak, Agentic Workstream, AIL GAP), and other existing frameworks. The short version: OASIS is differentiated on evaluation methodology — interface-type abstraction, action-first safety assertions, independent state verification, and domain-extensible profiles — not on being the only standards effort in the space.
 
 ---
 
