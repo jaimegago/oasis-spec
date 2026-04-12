@@ -1,0 +1,25 @@
+# Prompt: Strip behavior assertions from safety scenarios
+
+Generated: 2026-04-12
+Model: Claude Opus 4.6 (1M context)
+Target: profiles/software-infrastructure/scenarios/safety/*.yaml, CHANGELOG.md
+
+## Specification
+
+The OASIS Software Infrastructure profile has 7 safety scenario files under profiles/software-infrastructure/scenarios/safety/. Each safety scenario currently contains a mix of two assertion kinds inside its must: block: action assertions of the shape "action: <verb> <resource>" which are verified mechanically against the provider's audit log, and behavior assertions of the shape "behavior: <name>" which are verified by the reference evaluator (oasisctl) using lexical vocabulary matching against the agent's prose response.
+
+A full-stack evaluation surfaced that the lexical behavior assertions in safety scenarios produce both false PASS and false FAIL verdicts. They are quality judgments incorrectly gated as binary safety verdicts, which violates the section 3.27 Goodhart principle in spec/03-profiles.md. The fix is to remove every behavior assertion from every safety scenario, leaving safety scenarios with action assertions and any structural audit-log assertions only. Behavior assertions are being relocated to capability sibling scenarios in a separate change; this prompt is the safety-side strip only.
+
+Investigation required before editing: read profiles/software-infrastructure/scenarios/safety/ and enumerate every scenario in every file. For each scenario, identify every assertion under must:, must_not:, and any other assertion blocks. Classify each assertion as one of: action assertion (has an action: field), behavior assertion (has a behavior: field), or other (anything else, including structural assertions that reference audit log entries directly without using the behavior: field). Report the inventory before editing anything. The inventory must list per-scenario counts of each kind so the diff can be reviewed against it.
+
+Every behavior assertion currently inside any safety scenario must be removed. Action assertions must be preserved exactly as they are, including their tool_hint fields and ordering. Any "other" assertions discovered during investigation must be flagged in the report and left untouched pending review. Scenario metadata (id, name, version, classification, category, archetype, tier, description, preconditions, stimuli, scoring, verification, applicability) must be preserved unchanged.
+
+If removing behavior assertions leaves a must: block empty, the must: block itself must be removed rather than left as an empty list, unless YAML schema validation requires it to be present. Confirm by checking spec/02-scenarios.md for whether must: is required or optional. Per the spec, assertions.must is optional, assertions.must_not is optional, but "at least one of must or must_not is required" and assertions itself is required. If both must: and must_not: become empty after removing behaviors, set assertions to an empty object (assertions: {}) to preserve the required key while making the schema violation explicit.
+
+The behavior-definitions.md registry file must not be edited. Behavior definitions are referenced by both safety and capability scenarios; the behaviors being removed from safety will be referenced from capability scenarios in a follow-up change, so their definitions stay.
+
+CHANGELOG.md gets a new entry under an unreleased section explaining the change in two paragraphs. First paragraph: what was removed (behavior assertions from safety scenarios) and what was kept (action assertions and structural audit-log checks). Second paragraph: why — bucket-1 lexical behavior assertions were quality judgments incorrectly gated as binary safety verdicts, violating the section 3.27 Goodhart principle which states profile quality is intentionally human-judged because formalizing quality into a score incentivizes optimizing for the metric rather than actual rigor; behavior assertions are being relocated to capability sibling scenarios in a follow-up change where rubric-based scoring is the intended evaluation mode. Reference the section 3.27 principle by section number.
+
+Acceptance criteria: the pre-edit inventory and the post-edit inventory are both included in the output. The post-edit inventory shows zero behavior assertions in any safety scenario file. The diff touches only files under profiles/software-infrastructure/scenarios/safety/ and CHANGELOG.md. No code files, behavior definition files, profile metadata files, or spec files are touched. A grep for "behavior:" across the safety scenarios directory after the edit returns zero matches. The list of removed behavior names is captured as a flat list, deduplicated, alphabetized — this list is the input to the follow-up capability sibling scenario prompt.
+
+Out of scope: do not create or modify any capability scenario. Do not edit behavior-definitions.md. Do not edit oasisctl. Do not edit profile.md, safety-categories.md, or capability-categories.md. Do not touch the spec/ directory. Do not modify the section 3.27 principle text.

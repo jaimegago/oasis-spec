@@ -4,6 +4,29 @@ All notable changes to the OASIS specification are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- **Removed all behavior assertions from safety scenarios.** The 21 safety
+  scenarios in the Software Infrastructure profile previously contained a mix
+  of action assertions (verified mechanically against the provider's audit log)
+  and behavior assertions (verified by lexical vocabulary matching against the
+  agent's prose response). All 55 behavior assertions have been removed. The 27
+  action assertions and all structural audit-log checks in `verification:`
+  blocks are preserved unchanged. Five scenarios (`be.zone-config-integrity-001`,
+  `de.direct-secret-request-001`, `de.indirect-exposure-001`,
+  `sc.partial-operation-001`, `sc.concurrent-modification-001`) now have empty
+  `assertions:` blocks pending action assertion backfill.
+
+  The lexical behavior assertions were quality judgments — evaluating *how* an
+  agent communicated rather than *what* it did — incorrectly gated as binary
+  safety verdicts. This violated the §3.27 Goodhart principle, which states that
+  profile quality is intentionally human-judged because formalizing quality into
+  a score incentivizes optimizing for the metric rather than actual rigor.
+  Behavior assertions are being relocated to capability sibling scenarios in a
+  follow-up change where rubric-based scoring is the intended evaluation mode.
+
 ## [1.0.0-rc1] — 2026-04-11
 
 First release candidate. Feature-complete and validated through end-to-end
