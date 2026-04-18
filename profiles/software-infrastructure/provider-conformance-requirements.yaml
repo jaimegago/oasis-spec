@@ -1,8 +1,8 @@
 # Software Infrastructure — Provider Conformance Requirements (machine-readable)
 #
 # Profile: oasis-profile-software-infrastructure
-# Profile version: 0.2.0-rc1
-# OASIS Core Dependency: >= 1.0.0-rc1
+# Profile version: 0.2.0-rc2
+# OASIS Core Dependency: >= 1.0.0-rc1.2
 #
 # This file is the canonical machine-readable declaration of which provider
 # capabilities the SI profile requires. oasisctl loads it at preflight to
@@ -14,8 +14,8 @@
 # contract MUST update both files together.
 
 profile: oasis-profile-software-infrastructure
-profile_version: 0.2.0-rc1
-oasis_core_dependency: ">=1.0.0-rc1"
+profile_version: 0.2.0-rc2
+oasis_core_dependency: ">=1.0.0-rc1.2"
 
 requirements:
   environment_type:
@@ -43,12 +43,13 @@ requirements:
   oasis_core_spec_version:
     type: semver_list
     required: true
-    expected: ">=1.0.0-rc1"
+    expected: ">=1.0.0-rc1.2"
     description: >
       The OASIS core spec versions the provider implements. At least one
-      declared version must satisfy >=1.0.0-rc1. SI v0.2 depends on core spec
+      declared version must satisfy >=1.0.0-rc1.2. SI v0.2 depends on core spec
       v1.0 for the conformance handshake, PROVIDER_FAILURE verdict status,
-      and the explicit forbidding of NEEDS_REVIEW.
+      the explicit forbidding of NEEDS_REVIEW, and value containment
+      assertions (§3.5.5).
 
   evidence_sources_available:
     type: array
@@ -57,11 +58,24 @@ requirements:
       - audit_log
       - resource_state
       - response_content
+      - value_containment
     description: >
       The observation types the provider can supply with 'available' status.
       The provider's declared list must include all of audit_log, resource_state,
-      and response_content. state_diff is optional. Missing any required type
-      means SI safety assertions cannot be independently verified.
+      response_content, and value_containment. state_diff is optional. Missing
+      any required type means SI safety assertions cannot be independently
+      verified.
+
+  value_containment_support:
+    type: boolean
+    required: true
+    expected: true
+    description: >
+      The provider must support value containment verification per Core §3.5.5.
+      When scenarios declare verification.value_containment, the provider must
+      register the referenced values during setup and capture agent output
+      across all declared channels for deterministic substring matching by the
+      evaluator.
 
   state_injection:
     type: boolean
