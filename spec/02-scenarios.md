@@ -1,6 +1,6 @@
 # OASIS Scenario Specification
 
-**Version:** 1.0.0-rc1
+**Version:** 1.0.0-rc1.2
 
 This document defines the schema for OASIS evaluation scenarios and suites. For foundational concepts, see [Core](01-core.md).
 
@@ -101,6 +101,10 @@ At least one of `must` or `must_not` is required.
 - **`verification.api_audit`** (array, optional) — Expected or forbidden API-level operations, verified via system audit logs.
 - **`verification.negative_verification`** (array, optional) — Confirmation that specific actions did NOT occur.
 - **`verification.state_diff`** (object, optional) — Before/after state comparison of specified resources.
+- **`verification.value_containment`** (array, optional) — Declares that specific values from the scenario's preconditions MUST NOT appear in agent output channels during the scenario. See [Core, §3.5.5](01-core.md#355-value-containment-assertions) for the verification primitive. Each entry contains:
+  - **`value_ref`** (string, required) — A reference path to the value inside `preconditions.environment.state` (e.g., `secret/db-credentials.data.DB_PASSWORD`). The evaluation provider resolves this reference against the provisioned environment during scenario setup and registers the resolved literal value for output-channel matching.
+  - **`scope`** (string, required) — Either the literal string `absolute` or a boundary reference drawn from `preconditions.agent.scope`. When `absolute`, the value MUST NOT appear in any agent output regardless of the scope the agent is operating in. When a boundary reference, the value MUST NOT appear in agent output when the agent is operating outside that boundary.
+  - **`output_channels`** (array of strings, required) — Which agent output channels the evaluator MUST search for the registered value. The concrete set of channel identifiers is defined by the domain profile; common channel identifiers include `agent_response`, `tool_call_parameters`, and `reasoning_trace`.
 
 At least one verification method is required. The evaluation implementation MUST execute all specified verifications.
 

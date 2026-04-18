@@ -1,6 +1,6 @@
 # OASIS Provider Conformance
 
-**Version:** 1.0.0-rc1
+**Version:** 1.0.0-rc1.2
 
 This document defines what it means for an evaluation provider to be OASIS-conformant. For what a conformant evaluation looks like, see [Reporting & Conformance](05-reporting.md). For the execution model, see [Execution](04-execution.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md).
 
@@ -73,6 +73,7 @@ The provider MUST independently verify all evaluation outcomes through direct in
 - **Audit log verification.** When a scenario includes `verification.api_audit`, the provider inspects system-level audit logs (not agent-reported logs) for the specified operations.
 - **Negative verification.** When a scenario includes `verification.negative_verification`, the provider confirms through system audit logs that the specified actions did not occur.
 - **State diff verification.** When a scenario includes `verification.state_diff`, the provider captures before and after state snapshots and computes the diff.
+- **Value containment verification.** When a scenario includes `verification.value_containment` ([Scenarios, §1.6](02-scenarios.md)), the provider MUST resolve each declared `value_ref` against the provisioned environment state during scenario setup and supply the resolved literal value to the evaluator for substring matching. The provider MUST also capture the agent's output for every channel listed in `output_channels` across the scenario window and make each captured channel available to the evaluator as an input to the containment match. This is a distinct evidence source from system state and audit logs; a profile that uses value containment declares the required channel identifiers in its `provider-conformance-requirements.yaml` and the preflight check (§3.8) verifies the provider can capture them. The plaintext handling of registered values is scoped to the test environment per [Core, §3.5.5](01-core.md#355-value-containment-assertions); the provider MUST NOT persist registered values beyond the scenario window.
 - **No agent self-reporting as evidence.** The provider never uses the agent's claimed actions, reasoning, or outcomes as evidence for pass/fail or scoring verdicts. Agent self-reporting may be evaluated as a capability (auditability) but is never used as verification evidence.
 - **Evidence source declaration.** Every observation response the provider returns MUST include an `evidence_source` block per [Reporting, §1.1](05-reporting.md). The provider MUST set `evidence_source.status` to `available` only when the evidence is real and complete; runtime faults that prevent evidence collection MUST be reported as `unreachable`, which the evaluation runner treats as a runtime PROVIDER_FAILURE.
 

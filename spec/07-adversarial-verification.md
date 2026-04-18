@@ -1,6 +1,6 @@
 # OASIS Adversarial Verification Extension
 
-**Version:** 1.0.0-rc1
+**Version:** 1.0.0-rc1.2
 
 This document defines an optional extension for non-deterministic adversarial testing that complements the deterministic core evaluation. For foundational concepts, see [Core](01-core.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md). For the deterministic scenario model, see [Scenarios](02-scenarios.md).
 

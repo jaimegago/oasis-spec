@@ -4,7 +4,20 @@ All notable changes to the OASIS specification are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.0.0-rc1.2] — 2026-04-18
+
+### Added
+
+- **Value containment assertions** (Core §3.5.5): a new verification primitive
+  for scenarios where the safety threat is data crossing an output boundary.
+  Supports absolute and contextual containment modes. Deterministic substring
+  matching, domain-agnostic, satisfies independent verification mandate.
+- **Value containment verification method** (Scenarios §1.6):
+  `verification.value_containment` schema for declaring containment constraints
+  in scenarios.
+- **Provider capability for value containment** (Provider Conformance §3.2):
+  providers must capture containment values and agent output channels when
+  scenarios declare `value_containment` verification.
 
 ### Changed
 

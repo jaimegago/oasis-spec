@@ -1,6 +1,6 @@
 # OASIS Core Specification
 
-**Version:** 1.0.0-rc1
+**Version:** 1.0.0-rc1.2
 
 This document defines the foundational concepts, architecture, and evaluation model of OASIS. For scenario schemas, see [Scenarios](02-scenarios.md). For domain profile structure, see [Profiles](03-profiles.md).
 
@@ -204,6 +204,27 @@ LLM-as-judge is permitted only in the [Adversarial Verification Extension](07-ad
 Profile authors who find themselves wanting LLM-judged rubric criteria — particularly for capability scoring, where criteria like "was the agent's reasoning sound?" resist reduction to observable evidence — should decompose those criteria into deterministically scorable questions grounded in tool call order, system state, or structured output fields. Criteria that cannot be decomposed this way belong in the Adversarial Verification Extension, not in the core scenario corpus. This discipline is what allows OASIS capability scores to be compared across agents and across runs; relaxing it would collapse the "scores require context" guarantee ([Principles, §1](06-principles.md)) into noise.
 
 The cross-provider reproducibility guarantee in [Provider Conformance, §6.3](08-provider-conformance.md) addresses a different question — whether two *different* providers running a *live* agent will produce identical verdicts — and does not relax this within-provider determinism requirement.
+
+#### 3.5.5 Value containment assertions
+
+A value containment constraint declares that a specific value, present in the scenario's preconditions, MUST NOT appear in any agent output channel during the scenario. Containment is the assertion primitive for scenarios where the safety threat is the agent emitting a bounded value across an output boundary — scenarios in which the harmful action IS the output, and thus cannot be verified by system state or audit logs alone.
+
+Containment constraints operate in one of two modes:
+
+- **Absolute containment** — the value MUST NOT appear in any agent output, regardless of the scope the agent is operating in. An absolute containment constraint is violated the moment the value is emitted, under any circumstances.
+- **Contextual containment** — the value is bound to a declared boundary context (a scope, zone, namespace, tenant, or any other domain-defined boundary) and MUST NOT appear in agent output when the agent is operating outside that context. When the agent operates inside the declared boundary, the value may legitimately appear; crossing the boundary with the value in tow is the violation.
+
+Absolute containment is the degenerate case of contextual containment where the restricted scope is defined as "all scopes." The two modes share a single verification mechanism; the mode determines only whether the scope check gates the substring match.
+
+The evaluation provider registers containment values during scenario setup by resolving the scenario's declared value references against the provisioned environment state. Because the provider is a test environment and not a production system, the registered values are synthetic: the evaluator holds them in plaintext for the duration of the scenario for the sole purpose of output-channel matching. Containment values are not production secrets and their plaintext handling by the evaluator carries no confidentiality implication.
+
+Verification is deterministic substring matching: for each declared output channel, the evaluator searches the captured channel contents for the literal registered value. No semantic interpretation, paraphrase detection, or vocabulary matching is performed. The match is a pure function of the registered value and the captured output, which satisfies the implementation determinism requirement of §3.5.4. Substring matching against a fixed literal value is the minimal mechanism that answers the question "did the value cross the boundary?" without incurring the non-determinism that §3.5.4 forbids.
+
+Value containment satisfies the independent verification mandate of §3.4: the evaluator performs the match directly against the output the provider captured, not against any agent self-report about what it did or did not emit. An agent that claims to have withheld a value but in fact included it in a tool call parameter is caught by the containment check; an agent that claims to have leaked a value but in fact did not is credited with containment.
+
+Value containment assertions are a form of action-based assertion per §3.5.1. The "action" being verified is whether the agent emitted the bounded value through any declared output channel during the scenario window. Like other action-based assertions, the verdict is determined from observable evidence — here, the captured output channels — and not from the agent's communicated explanation of its behavior.
+
+Containment constraints are domain-agnostic. Any domain profile MAY declare containment constraints for any scenario whose threat model involves a value crossing an output boundary. Typical applications include credentials bound to a provisioning context, personal data bound to a tenant, compliance-regulated values bound to a regulatory zone, and cross-tenant data bound to an account boundary. The core spec does not enumerate which classes of values qualify; the profile's threat model determines when containment is the appropriate verification primitive.
 
 ### 3.6 Canonical verdict status enumeration
 

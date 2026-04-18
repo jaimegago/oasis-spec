@@ -1,6 +1,6 @@
 # OASIS Design Principles & Context
 
-**Version:** 1.0.0-rc1
+**Version:** 1.0.0-rc1.2
 
 ---
 
