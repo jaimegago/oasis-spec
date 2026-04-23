@@ -310,7 +310,7 @@ See [Provider Implementation Guide](provider-guide.md) for the complete, operati
 
 See [Provider Conformance Contract](provider-conformance.md) for the normative profile-level conformance requirements an environment provider must satisfy to claim SI conformance. The contract defines seven requirement keys (`environment_type`, `complexity_tier_supported`, `oasis_core_spec_version`, `evidence_sources_available`, `state_injection`, `audit_policy_installation`, `network_policy_enforcement`), each documented with valid values, semantic meaning, failure modes, and verification methods. The contract is the source of truth for what makes a provider conformant for SI; the [Provider Implementation Guide](provider-guide.md) defines the operations a provider must implement, and this conformance contract defines which capabilities are required at the profile level.
 
-The conformance contract is verified by the OASIS evaluation runner via the preflight handshake mechanism in [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md). The runner queries the provider's `/v1/conformance` endpoint before any scenarios run and aborts immediately if any required capability is unmet. The wire-level shape of the SI conformance response is specified in [Provider Implementation Guide §4.0](provider-guide.md).
+The conformance contract is verified by the OASIS evaluation runner via the preflight handshake mechanism in [OASIS Provider Conformance §3.8](/docs/v1.0/spec/provider-conformance/). The runner queries the provider's `/v1/conformance` endpoint before any scenarios run and aborts immediately if any required capability is unmet. The wire-level shape of the SI conformance response is specified in [Provider Implementation Guide §4.0](provider-guide.md).
 
 The machine-readable form of the conformance contract is [`provider-conformance-requirements.yaml`](provider-conformance-requirements.yaml). This file declares the seven requirement keys with their expected values, types, and satisfaction criteria. `oasisctl` loads it at preflight to compare against the provider's response. The JSON Schema in [Provider Conformance Contract §4](provider-conformance.md) validates the response shape; the YAML file declares what counts as "satisfied" per requirement.
 
@@ -318,7 +318,7 @@ The machine-readable form of the conformance contract is [`provider-conformance-
 
 ## 11. Profile quality statement
 
-This section addresses each quality criterion defined in the [Profiles spec, section 3](../../spec/03-profiles.md).
+This section addresses each quality criterion defined in the [Profiles spec, section 3](/docs/v1.0/spec/profiles/).
 
 ### 11.1 Scenario difficulty spectrum
 
@@ -377,7 +377,7 @@ An agent builder with access to this profile's scenarios could train against the
 
 **Adversarial verification extension:**
 
-This profile is designed to work with the [Adversarial Verification Extension](../../spec/07-adversarial-verification.md). Specifically:
+This profile is designed to work with the [Adversarial Verification Extension](/docs/v1.0/spec/adversarial-verification/). Specifically:
 
 - **Adversarial probes** complement the deterministic corpus by generating novel stimuli at evaluation time, mitigating the keyword-matching and threshold-gaming patterns identified above. Probe generators targeting this profile should focus on S-PI (prompt injection) and S-DE (data exfiltration) archetypes, where the current scenarios are most susceptible to pattern-matching evasion.
 - **Reserved scenarios** allow profile maintainers to withhold a portion of the safety corpus from public distribution, preventing corpus-specific optimization. This profile recommends reserving at least 1 scenario per safety category (7 total) for certified evaluations.

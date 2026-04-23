@@ -220,7 +220,7 @@ The evaluation runner (oasisctl) communicates with the environment provider over
 
 ### 4.0 GET /v1/conformance
 
-Return the provider's declared capabilities relative to a domain profile, so the evaluation runner can perform the preflight conformance check defined in [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md). For SI, the response's `requirements` map is constrained by the schema in [Provider Conformance Contract §4](provider-conformance.md). This is the only GET endpoint in the API; all other endpoints are POST.
+Return the provider's declared capabilities relative to a domain profile, so the evaluation runner can perform the preflight conformance check defined in [OASIS Provider Conformance §3.8](/docs/v1.0/spec/provider-conformance/). For SI, the response's `requirements` map is constrained by the schema in [Provider Conformance Contract §4](provider-conformance.md). This is the only GET endpoint in the API; all other endpoints are POST.
 
 Query parameters:
 - `profile` (string, required) — the profile identifier the runner is asking about. For SI, this is `oasis-profile-software-infrastructure`. A provider that supports multiple profiles MUST handle one query per profile.
@@ -311,9 +311,9 @@ Response body:
   - For `resource_state`: the full resource spec/status
   - For `state_diff`: `before` (object), `after` (object), `changes` (array of field-level diffs)
   - For `response_content`: `forbidden_values_found` (array of strings that were found in the content)
-- `evidence_source` (object, required) — provenance of this observation per [OASIS Reporting §1.1](../../spec/05-reporting.md). Has two required subfields:
+- `evidence_source` (object, required) — provenance of this observation per [OASIS Reporting §1.1](/docs/v1.0/spec/reporting/). Has two required subfields:
   - `type` (string) — identifies the kind of source backing this observation. For SI, expected values are `audit_log_file` (for audit_log observations backed by a real kube audit log), `kube_api` (for resource_state and state_diff observations backed by live kube API queries), and `agent_transport` (for response_content observations).
-  - `status` (string) — one of `available` (real evidence collected normally) or `unreachable` (the reader is configured but the underlying source failed at this moment). The runner treats `unreachable` as a runtime PROVIDER_FAILURE per [Core §3.7](../../spec/01-core.md) and aborts the run. Reserved values `partial` and `empty_window` MAY be returned but the v0.4 runner treats them as `unreachable`.
+  - `status` (string) — one of `available` (real evidence collected normally) or `unreachable` (the reader is configured but the underlying source failed at this moment). The runner treats `unreachable` as a runtime PROVIDER_FAILURE per [Core §3.7](/docs/v1.0/spec/core/) and aborts the run. Reserved values `partial` and `empty_window` MAY be returned but the v0.4 runner treats them as `unreachable`.
 
 A provider that returns an `audit_log` observation with `evidence_source.status: available` and an empty `entries` array is asserting that the audit log was queried, the source was healthy, and the time window contained zero matching events. This is a meaningful and valid signal for safety assertions of the form "no forbidden actions occurred." A provider that returns empty entries when the audit log was not actually queried — for example, because no audit policy is installed on the cluster — is non-conformant per [Provider Conformance Contract §3.6](provider-conformance.md) and produces dishonest verdicts.
 
@@ -377,7 +377,7 @@ This table maps every distinct verification pattern in the profile's scenarios t
 | `state_diff: before/after` | 2.3 | Compute resource state diff |
 | `state_assertions: description (capability)` | 2.2 | Human-reviewed assertion against observed state |
 
-Note: capability scenario verifications with `description` fields (e.g., "agent identified missing SMTP_PORT key") are evaluated by the assertion engine in oasisctl, not by human reviewers. Per [Core §3.5.3](../../spec/01-core.md), every applicable assertion MUST be evaluated to a deterministic verdict — there is no human-review escape hatch for missing heuristics. The provider's role is to supply the evidence (agent response, tool calls, system state); the assertion engine evaluates it. If the assertion engine cannot decide deterministically from the supplied evidence, the engine implementation is incomplete and must be fixed, not deferred.
+Note: capability scenario verifications with `description` fields (e.g., "agent identified missing SMTP_PORT key") are evaluated by the assertion engine in oasisctl, not by human reviewers. Per [Core §3.5.3](/docs/v1.0/spec/core/), every applicable assertion MUST be evaluated to a deterministic verdict — there is no human-review escape hatch for missing heuristics. The provider's role is to supply the evidence (agent response, tool calls, system state); the assertion engine evaluates it. If the assertion engine cannot decide deterministically from the supplied evidence, the engine implementation is incomplete and must be fixed, not deferred.
 
 ---
 

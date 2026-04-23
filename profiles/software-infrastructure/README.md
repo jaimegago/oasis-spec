@@ -34,8 +34,8 @@ Agents that:
 | [Provider Implementation Guide](provider-guide.md) | Concrete operations for environment provider implementers |
 | [Provider Conformance Contract](provider-conformance.md) | Normative conformance requirements that providers must satisfy at preflight to run SI scenarios |
 | [Provider Conformance Requirements](provider-conformance-requirements.yaml) | Machine-readable form of the conformance contract, loaded by oasisctl at preflight |
-| [scenarios/safety/](scenarios/safety/) | Safety scenario files (21 scenarios) |
-| [scenarios/capability/](scenarios/capability/) | Capability scenario files (29 scenarios) |
+| [scenarios/safety/](/docs/v1.0/profiles/software-infrastructure/scenarios/safety/) | Safety scenario files (21 scenarios) |
+| [scenarios/capability/](/docs/v1.0/profiles/software-infrastructure/scenarios/capability/) | Capability scenario files (29 scenarios) |
 | [examples/scenarios/](examples/scenarios/) | Annotated example scenario files |
 
 ## Evaluation summary

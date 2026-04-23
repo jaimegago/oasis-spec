@@ -8,13 +8,13 @@ This document is the normative provider conformance contract for the Software In
 
 This document is the source of truth for SI provider conformance. It is designed to be self-contained: a competent implementer with no other context — explicitly including an LLM-based code generation tool given only this document and the [Provider Implementation Guide](provider-guide.md) — should be able to build a conformant SI provider. If a reader needs to ask questions that this document does not answer, the document is incomplete and should be patched.
 
-For the mechanism by which conformance is declared and checked, see [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md). For the wire-level shape of the SI conformance response, see [Provider Implementation Guide §7](provider-guide.md). This document specifies what each requirement key means and what a provider must do to satisfy it.
+For the mechanism by which conformance is declared and checked, see [OASIS Provider Conformance §3.8](/docs/v1.0/spec/provider-conformance/). For the wire-level shape of the SI conformance response, see [Provider Implementation Guide §7](provider-guide.md). This document specifies what each requirement key means and what a provider must do to satisfy it.
 
 ---
 
 ## 1. Overview
 
-A provider that wishes to claim conformance to the SI profile must satisfy every requirement listed in §3 of this document. Conformance is binary: a provider either satisfies all requirements for a given complexity tier or it does not. There are no provider tiers within SI conformance, only the OASIS environment complexity tiers (1, 2, 3) defined in [Core §5](../../spec/01-core.md), and a provider declares which tier it supports.
+A provider that wishes to claim conformance to the SI profile must satisfy every requirement listed in §3 of this document. Conformance is binary: a provider either satisfies all requirements for a given complexity tier or it does not. There are no provider tiers within SI conformance, only the OASIS environment complexity tiers (1, 2, 3) defined in [Core §5](/docs/v1.0/spec/core/), and a provider declares which tier it supports.
 
 The conformance contract consists of seven requirement keys:
 
@@ -34,15 +34,15 @@ The remainder of this document specifies each requirement in detail.
 
 ## 2. Conformance flow
 
-Before any SI scenarios execute, the evaluation runner performs the preflight conformance check defined in [OASIS Provider Conformance §3.8](../../spec/08-provider-conformance.md):
+Before any SI scenarios execute, the evaluation runner performs the preflight conformance check defined in [OASIS Provider Conformance §3.8](/docs/v1.0/spec/provider-conformance/):
 
 1. The runner issues `GET /v1/conformance?profile=oasis-profile-software-infrastructure` to the provider.
 2. The provider returns a JSON response whose `requirements` map matches the schema in §4 of this document.
 3. The runner validates the response against the schema and checks each requirement key against the values declared in this contract.
-4. If every requirement is satisfied, the runner proceeds to the agent identity query and scenario execution per [Execution §3](../../spec/04-execution.md).
+4. If every requirement is satisfied, the runner proceeds to the agent identity query and scenario execution per [Execution §3](/docs/v1.0/spec/execution/).
 5. If any requirement is unsatisfied, the runner aborts with an error naming the specific gap. No scenarios are executed and no verdict file is produced.
 
-This is the only place SI provider conformance is enforced as a configuration check. Once the runner has accepted the provider's conformance response, it assumes the provider is conformant for the duration of the run. If a runtime fault subsequently prevents independent verification of a scenario, the run aborts with PROVIDER_FAILURE per [Core §3.7](../../spec/01-core.md) — but that is a separate concern from preflight conformance.
+This is the only place SI provider conformance is enforced as a configuration check. Once the runner has accepted the provider's conformance response, it assumes the provider is conformant for the duration of the run. If a runtime fault subsequently prevents independent verification of a scenario, the run aborts with PROVIDER_FAILURE per [Core §3.7](/docs/v1.0/spec/core/) — but that is a separate concern from preflight conformance.
 
 ---
 
@@ -70,7 +70,7 @@ This is the only place SI provider conformance is enforced as a configuration ch
 **Valid values:** `1`, `2`, `3`
 **Required value for SI:** any of the three; the provider declares the highest tier it supports
 
-**What it asserts.** The highest OASIS complexity tier (per [Core §5](../../spec/01-core.md)) that the provider can provision. A provider declaring `2` is asserting it can provision both tier 1 and tier 2 environments. A provider declaring `3` is asserting it can provision all three tiers. A provider declaring `1` is asserting it can only provision the minimal tier.
+**What it asserts.** The highest OASIS complexity tier (per [Core §5](/docs/v1.0/spec/core/)) that the provider can provision. A provider declaring `2` is asserting it can provision both tier 1 and tier 2 environments. A provider declaring `3` is asserting it can provision all three tiers. A provider declaring `1` is asserting it can only provision the minimal tier.
 
 **Why SI requires it.** SI scenarios are tagged with their target complexity tier in the scenario suite. The runner uses the provider's declared tier to filter which scenarios can be run against this provider. A provider that declares tier 1 but is asked to run a tier 2 scenario would either fail at provision time or produce an environment that does not match the scenario's expectations — either way, the verdict would be invalid.
 
@@ -88,13 +88,13 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 **Valid values:** any semver constraint expressing one or more major.minor versions of the OASIS core spec
 **Required value for SI:** must include a version compatible with `>=1.0.0-rc1`
 
-**What it asserts.** The OASIS core spec version (or versions) the provider implements. The provider is declaring "I understand and respect the contracts defined in this version of the core spec" — including the canonical verdict status enumeration ([Core §3.6](../../spec/01-core.md)), the action-first evaluation principle ([Core §3.5](../../spec/01-core.md)), the independent verification mandate ([Core §3.4](../../spec/01-core.md)), and the preflight + runtime conformance model ([Core §3.7](../../spec/01-core.md)).
+**What it asserts.** The OASIS core spec version (or versions) the provider implements. The provider is declaring "I understand and respect the contracts defined in this version of the core spec" — including the canonical verdict status enumeration ([Core §3.6](/docs/v1.0/spec/core/)), the action-first evaluation principle ([Core §3.5](/docs/v1.0/spec/core/)), the independent verification mandate ([Core §3.4](/docs/v1.0/spec/core/)), and the preflight + runtime conformance model ([Core §3.7](/docs/v1.0/spec/core/)).
 
 **Why SI requires it.** SI v0.2 depends on OASIS core spec v1.0 for the conformance handshake mechanism, the PROVIDER_FAILURE verdict status, the run-through Phase 1 model, and the explicit forbidding of NEEDS_REVIEW. A provider implementing an earlier core spec version cannot honestly satisfy SI v0.2's conformance contract because the underlying mechanisms it depends on do not exist there.
 
 **What a satisfying provider does.** The provider returns a list (or single value) of core spec versions it implements. The simplest conformant declaration is `["1.0.0-rc1"]`. A provider that has been kept up to date across multiple core spec versions might declare `["0.4.0", "1.0.0-rc1"]`. A provider MUST NOT declare a version it does not actually implement, and MUST NOT declare future versions.
 
-**Failure modes the runner catches.** If the provider declares only versions older than `1.0.0-rc1`, the runner aborts with `provider implements core spec versions [list]; SI v0.2 requires >=1.0.0-rc1`. If the provider declares `1.0.0-rc1` but its observation responses do not include the required `evidence_source` block per [Reporting §1.1](../../spec/05-reporting.md), the failure surfaces as a runtime PROVIDER_FAILURE on the first scenario whose verification depends on a working observation, and the run aborts then.
+**Failure modes the runner catches.** If the provider declares only versions older than `1.0.0-rc1`, the runner aborts with `provider implements core spec versions [list]; SI v0.2 requires >=1.0.0-rc1`. If the provider declares `1.0.0-rc1` but its observation responses do not include the required `evidence_source` block per [Reporting §1.1](/docs/v1.0/spec/reporting/), the failure surfaces as a runtime PROVIDER_FAILURE on the first scenario whose verification depends on a working observation, and the run aborts then.
 
 **Verification method.** The runner checks the declared versions against the SI profile's required core spec dependency at preflight. Implementation correctness is verified implicitly by scenario execution.
 
@@ -104,11 +104,11 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 **Valid values:** `audit_log`, `resource_state`, `state_diff`, `response_content`
 **Required value for SI:** must include all of `audit_log`, `resource_state`, `response_content`. `state_diff` is optional.
 
-**What it asserts.** The set of observation types the provider can supply with `evidence_source.status: available` per [Reporting §1.1](../../spec/05-reporting.md). An observation type listed here is one the provider has wired up to a real reader and can return real data for. An observation type NOT listed here is one the provider cannot supply at all — it would have to return `unreachable` for every request, which is non-conformant for SI's required types.
+**What it asserts.** The set of observation types the provider can supply with `evidence_source.status: available` per [Reporting §1.1](/docs/v1.0/spec/reporting/). An observation type listed here is one the provider has wired up to a real reader and can return real data for. An observation type NOT listed here is one the provider cannot supply at all — it would have to return `unreachable` for every request, which is non-conformant for SI's required types.
 
 **Why SI requires it.** SI safety scenarios depend on three observation types to produce verdicts:
 
-- **`audit_log`** is required for every safety assertion of the form "the agent did not perform forbidden operation X." Without real audit log evidence, the assertion cannot be verified — and per [Core §3.5.1](../../spec/01-core.md) the spec explicitly forbids treating absence of evidence as positive safety evidence. Empty audit logs from an unconfigured reader are the canonical Goodhart failure mode this contract is designed to prevent.
+- **`audit_log`** is required for every safety assertion of the form "the agent did not perform forbidden operation X." Without real audit log evidence, the assertion cannot be verified — and per [Core §3.5.1](/docs/v1.0/spec/core/) the spec explicitly forbids treating absence of evidence as positive safety evidence. Empty audit logs from an unconfigured reader are the canonical Goodhart failure mode this contract is designed to prevent.
 
 - **`resource_state`** is required for every safety assertion of the form "the agent did not modify resource X" or "the agent left resource X in state Y." This is checked by querying the kube API for the current state of the named resource and comparing it against the scenario's expected post-state.
 
@@ -122,7 +122,7 @@ A provider MUST NOT list an observation type it has not actually wired up. Speci
 
 **Failure modes the runner catches.** If the provider's declared list does not include all of `audit_log`, `resource_state`, `response_content`, the runner aborts with `provider does not supply required SI evidence sources: missing [list]. SI requires audit_log, resource_state, and response_content with available status`. The error message names the specific missing types so the operator knows exactly what to fix.
 
-If the provider declares all required types but at runtime returns `evidence_source.status: unreachable` for one of them, the failure is a runtime PROVIDER_FAILURE on the affected scenario and the run aborts immediately per [Core §3.7](../../spec/01-core.md).
+If the provider declares all required types but at runtime returns `evidence_source.status: unreachable` for one of them, the failure is a runtime PROVIDER_FAILURE on the affected scenario and the run aborts immediately per [Core §3.7](/docs/v1.0/spec/core/).
 
 **Verification method.** The runner checks the declared list at preflight. Whether each declared observation type actually returns real data is verified implicitly by scenario execution — the first observation that returns `unreachable` triggers a runtime abort.
 
@@ -213,7 +213,7 @@ Cloud-managed clusters generally ship with NetworkPolicy-enforcing CNIs by defau
 
 ## 4. Conformance schema
 
-The provider's `requirements` map in the preflight conformance response (per [OASIS Provider Conformance §3.8.2](../../spec/08-provider-conformance.md)) MUST conform to the following JSON Schema for the SI profile:
+The provider's `requirements` map in the preflight conformance response (per [OASIS Provider Conformance §3.8.2](/docs/v1.0/spec/provider-conformance/)) MUST conform to the following JSON Schema for the SI profile:
 
 ```json
 {
@@ -279,7 +279,7 @@ The file [`provider-conformance-requirements.yaml`](provider-conformance-require
 
 ### 5.1 Conformant response
 
-A provider that fully satisfies the SI v0.2 conformance contract for tier 1 returns a response like the following (the surrounding fields are defined by [OASIS Provider Conformance §3.8.2](../../spec/08-provider-conformance.md); the `requirements` map is what this contract specifies):
+A provider that fully satisfies the SI v0.2 conformance contract for tier 1 returns a response like the following (the surrounding fields are defined by [OASIS Provider Conformance §3.8.2](/docs/v1.0/spec/provider-conformance/); the `requirements` map is what this contract specifies):
 
 ```json
 {
@@ -412,4 +412,4 @@ This conformance contract is part of the SI profile and follows the SI profile v
 - **Minor:** Adding a new optional key, expanding the valid values of an existing enum, or clarifying an existing requirement without changing its substance.
 - **Patch:** Editorial improvements, typo fixes, expanded examples.
 
-Provider implementations MUST reference a specific version of this contract via the `profile_version` field in their preflight conformance response per [OASIS Provider Conformance §5.2](../../spec/08-provider-conformance.md). The runner verifies that the declared profile version matches the version it is evaluating.
+Provider implementations MUST reference a specific version of this contract via the `profile_version` field in their preflight conformance response per [OASIS Provider Conformance §5.2](/docs/v1.0/spec/provider-conformance/). The runner verifies that the declared profile version matches the version it is evaluating.

@@ -2,7 +2,7 @@
 
 **Status:** Placeholder — to be completed
 
-This companion document provides detailed guidance for domain profile authors. It supplements the normative requirements in [Profiles spec](../spec/03-profiles.md) with examples, anti-patterns, and templates.
+This companion document provides detailed guidance for domain profile authors. It supplements the normative requirements in [Profiles spec](/docs/v1.0/spec/profiles/) with examples, anti-patterns, and templates.
 
 ---
 

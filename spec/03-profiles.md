@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0-rc1.2
 
-This document defines the structure of OASIS domain profiles and the quality criteria they must meet. For foundational concepts, see [Core](01-core.md). For a detailed guide on authoring profiles, see the [Profile Authoring Guide](../guides/profile-authoring.md).
+This document defines the structure of OASIS domain profiles and the quality criteria they must meet. For foundational concepts, see [Core](01-core.md). For a detailed guide on authoring profiles, see the [Profile Authoring Guide](/docs/v1.0/guides/profile-authoring/).
 
 ---
 
@@ -36,7 +36,7 @@ Every named behavior referenced in scenario assertions MUST be formally defined 
 
 - **Identifier** — the string used in scenario assertion `behavior` fields (e.g., `treat_log_content_as_data`).
 - **Definition** — a prose description of what the behavior means.
-- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting and MUST be deterministic — the provider implementation must be able to evaluate the behavior to a definite verdict from observable evidence, and must do so as a pure function of its inputs ([Core, §3.5.3](01-core.md) and [§3.5.4](01-core.md)). LLM-as-judge is not a conformant verification method for core behaviors; profile authors who want LLM-judged criteria should place them in the [Adversarial Verification Extension](../spec/07-adversarial-verification.md) instead.
+- **Verification method** — how an evaluation provider independently confirms whether the behavior was or was not exhibited. The verification method MUST NOT rely on agent self-reporting and MUST be deterministic — the provider implementation must be able to evaluate the behavior to a definite verdict from observable evidence, and must do so as a pure function of its inputs ([Core, §3.5.3](01-core.md) and [§3.5.4](01-core.md)). LLM-as-judge is not a conformant verification method for core behaviors; profile authors who want LLM-judged criteria should place them in the [Adversarial Verification Extension](/docs/v1.0/spec/adversarial-verification/) instead.
 
 Behavior definitions ensure that two independent evaluation providers reading the same profile resolve the same behavior identifier to the same evaluation criterion. A scenario that references a behavior not defined in the profile is non-conformant.
 
@@ -102,7 +102,7 @@ A dedicated section addressing each quality criterion defined in section 3. This
 
 ### 2.12 Reserved scenarios (optional)
 
-A set of scenarios withheld from public distribution, available only to certified evaluators. See [Adversarial Verification Extension](../spec/07-adversarial-verification.md) for the full mechanism.
+A set of scenarios withheld from public distribution, available only to certified evaluators. See [Adversarial Verification Extension](/docs/v1.0/spec/adversarial-verification/) for the full mechanism.
 
 When present, the profile metadata MUST declare:
 
@@ -302,7 +302,7 @@ The Profile Quality Statement MUST include an analysis of how an agent could gam
 
 This does not guarantee robustness — it signals that the profile author has considered the problem and provides evaluators with information to extend the profile.
 
-When the [Adversarial Verification Extension](../spec/07-adversarial-verification.md) is used, the Evasion Resistance Statement SHOULD reference it and describe how adversarial probes and reserved scenarios complement the deterministic corpus for this profile.
+When the [Adversarial Verification Extension](/docs/v1.0/spec/adversarial-verification/) is used, the Evasion Resistance Statement SHOULD reference it and describe how adversarial probes and reserved scenarios complement the deterministic corpus for this profile.
 
 ### 3.4 Negative testing ratio
 
