@@ -16,7 +16,7 @@ For the mechanism by which conformance is declared and checked, see [OASIS Provi
 
 A provider that wishes to claim conformance to the SI profile must satisfy every requirement listed in §3 of this document. Conformance is binary: a provider either satisfies all requirements for a given complexity tier or it does not. There are no provider tiers within SI conformance, only the OASIS environment complexity tiers (1, 2, 3) defined in [Core §5](/docs/v1.0/spec/core/), and a provider declares which tier it supports.
 
-The conformance contract consists of seven requirement keys:
+The conformance contract consists of eight requirement keys:
 
 | Key | What it asserts | Why SI requires it |
 |---|---|---|
@@ -24,6 +24,7 @@ The conformance contract consists of seven requirement keys:
 | `complexity_tier_supported` | The highest complexity tier the provider can provision | Determines which scenarios the provider can run |
 | `oasis_core_spec_version` | The OASIS core spec version the provider implements | Spec compatibility with the profile |
 | `evidence_sources_available` | The set of observation types the provider supplies with `available` status | Determines whether SI assertions can be verified |
+| `value_containment_support` | The provider supports value containment verification per Core §3.5.5 | Required for data-exfiltration scenarios that declare known literal values |
 | `state_injection` | The provider can inject preconditions into a provisioned environment | SI scenarios stage initial state before the agent runs |
 | `audit_policy_installation` | The provider installs a Kubernetes API server audit policy on its clusters | Required for any audit-log-based safety assertion to produce real evidence |
 | `network_policy_enforcement` | The provider's clusters use a CNI that enforces NetworkPolicy resources | Required for zone boundary enforcement scenarios to produce meaningful results |
@@ -101,8 +102,8 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 ### 3.4 evidence_sources_available
 
 **Type:** list of strings (each one an observation type identifier)
-**Valid values:** `audit_log`, `resource_state`, `state_diff`, `response_content`
-**Required value for SI:** must include all of `audit_log`, `resource_state`, `response_content`. `state_diff` is optional.
+**Valid values:** `audit_log`, `resource_state`, `state_diff`, `value_containment`
+**Required value for SI:** must include all of `audit_log`, `resource_state`, `value_containment`. `state_diff` is optional.
 
 **What it asserts.** The set of observation types the provider can supply with `evidence_source.status: available` per [Reporting §1.1](/docs/v1.0/spec/reporting/). An observation type listed here is one the provider has wired up to a real reader and can return real data for. An observation type NOT listed here is one the provider cannot supply at all — it would have to return `unreachable` for every request, which is non-conformant for SI's required types.
 
@@ -112,21 +113,37 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 
 - **`resource_state`** is required for every safety assertion of the form "the agent did not modify resource X" or "the agent left resource X in state Y." This is checked by querying the kube API for the current state of the named resource and comparing it against the scenario's expected post-state.
 
-- **`response_content`** is required for every data exfiltration assertion that checks whether the agent's response text contains specific sensitive values (decoded secret contents, base64-encoded credentials, etc.). This is a text-matching operation on the agent's response and does not require kube API access, but it does require the provider to capture the agent's response and make it available for inspection.
+- **`value_containment`** is the evidence-source declaration corresponding to the value containment verification mechanism defined in [Core §3.5.5](/docs/v1.0/spec/core/). Listing it here means the provider supports scenarios that declare known literal values bound to a context boundary and have the evaluator perform deterministic substring matching of those values against the agent's output. Channel content is sourced from the agent response captured at the evaluator boundary; the provider does not need to expose response content as a separate observation type for this evidence source to be satisfied.
 
 `state_diff` is optional because it is a convenience layer over `resource_state` — every assertion that uses `state_diff` could in principle be implemented by two `resource_state` calls (before and after) and a manual diff. SI scenarios that use `state_diff` benefit from native provider support but degrade gracefully without it.
 
-**What a satisfying provider does.** The provider lists the observation types it has wired up to real readers. For SI, the minimum set is `["audit_log", "resource_state", "response_content"]`. A provider that supports all four declares `["audit_log", "resource_state", "state_diff", "response_content"]`.
+**What a satisfying provider does.** The provider lists the observation types it has wired up to real readers. For SI, the minimum set is `["audit_log", "resource_state", "value_containment"]`. A provider that supports all four declares `["audit_log", "resource_state", "state_diff", "value_containment"]`.
 
 A provider MUST NOT list an observation type it has not actually wired up. Specifically, a provider that has an `audit_log` reader stub returning empty entries is NOT conformant for SI — the spec considers this a Goodhart-style erosion of the safety bar and explicitly rejects it. The provider must have a real audit reader that captures real Kubernetes API server audit events from the provisioned cluster.
 
-**Failure modes the runner catches.** If the provider's declared list does not include all of `audit_log`, `resource_state`, `response_content`, the runner aborts with `provider does not supply required SI evidence sources: missing [list]. SI requires audit_log, resource_state, and response_content with available status`. The error message names the specific missing types so the operator knows exactly what to fix.
+**Failure modes the runner catches.** If the provider's declared list does not include all of `audit_log`, `resource_state`, `value_containment`, the runner aborts with `provider does not supply required SI evidence sources: missing [list]. SI requires audit_log, resource_state, and value_containment with available status`. The error message names the specific missing types so the operator knows exactly what to fix.
 
 If the provider declares all required types but at runtime returns `evidence_source.status: unreachable` for one of them, the failure is a runtime PROVIDER_FAILURE on the affected scenario and the run aborts immediately per [Core §3.7](/docs/v1.0/spec/core/).
 
 **Verification method.** The runner checks the declared list at preflight. Whether each declared observation type actually returns real data is verified implicitly by scenario execution — the first observation that returns `unreachable` triggers a runtime abort.
 
-### 3.5 state_injection
+### 3.5 value_containment_support
+
+**Type:** boolean
+**Valid values:** `true`, `false`
+**Required value for SI:** `true`
+
+**What it asserts.** The provider supports the value containment verification mechanism defined in [Core §3.5.5](/docs/v1.0/spec/core/). This is a capability declaration: the provider is asserting that scenarios in this run may declare known literal values bound to a context boundary and that the evaluator may perform deterministic substring matching of those values against the agent's output channels. It is paired with `value_containment` in `evidence_sources_available` — the evidence source declares the verification mechanism is supported as evidence; this boolean declares the provider has the setup-time and resolver wiring to produce the value bindings the evaluator needs.
+
+**Why SI requires it.** Several SI safety scenarios — most notably the data exfiltration scenarios in [scenarios/safety/data-exfiltration-prevention.yaml](../../scenarios/safety/data-exfiltration-prevention.yaml) — verify that specific sensitive literal values (decoded secret contents, base64-encoded credentials, prompt-injection payload markers) do not appear in the agent's output. Those scenarios use `verification.value_containment` per Core §3.5.5, which depends on the provider registering the referenced values during setup so the evaluator can resolve them at verification time. Without this support the scenarios cannot be evaluated at all.
+
+**What a satisfying provider does.** The provider registers `value_ref` values during scenario setup as part of the standard preconditions injection flow, and surfaces them through the precondition state structure that the runner's resolver reads at verification time. The provider does not capture or expose the agent's response — channel content is sourced from the `AgentResponse` at the evaluator boundary, not from a provider-side observation. The provider's only contribution is making the registered values resolvable so the evaluator knows what literals to look for.
+
+**Failure modes the runner catches.** If the provider declares `value_containment_support: false`, the runner aborts with `provider does not support value containment verification; SI requires it for data exfiltration scenarios`. If the provider declares `true` but fails to register a referenced value at scenario setup time, the failure surfaces as a runtime PROVIDER_FAILURE on the affected scenario when the evaluator tries to resolve the missing reference, and the run aborts immediately per [Core §3.7](/docs/v1.0/spec/core/).
+
+**Verification method.** The runner checks the boolean at preflight. Per-scenario correctness — that registered values are actually resolvable and the bindings reach the evaluator — is verified implicitly by scenario execution.
+
+### 3.6 state_injection
 
 **Type:** boolean
 **Valid values:** `true`, `false`
@@ -144,7 +161,7 @@ A provider MAY implement state injection partially — for example, supporting n
 
 **Verification method.** The runner checks the boolean at preflight. Per-operation correctness is verified implicitly by scenario execution.
 
-### 3.6 audit_policy_installation
+### 3.7 audit_policy_installation
 
 **Type:** boolean
 **Valid values:** `true`, `false`
@@ -191,7 +208,7 @@ This is a minimum, not a maximum. Providers MAY install more comprehensive polic
 
 **Verification method.** The runner checks the boolean at preflight. Provider authors SHOULD include a self-test in their CI that creates a forbidden operation against a provisioned cluster, queries the audit log via the provider's own reader, and asserts the operation appears. Without such a self-test, declaring `audit_policy_installation: true` is a claim the provider cannot back up and risks producing dishonest verdicts.
 
-### 3.7 network_policy_enforcement
+### 3.8 network_policy_enforcement
 
 **Type:** boolean
 **Valid values:** `true`, `false`
@@ -226,6 +243,7 @@ The provider's `requirements` map in the preflight conformance response (per [OA
     "complexity_tier_supported",
     "oasis_core_spec_version",
     "evidence_sources_available",
+    "value_containment_support",
     "state_injection",
     "audit_policy_installation",
     "network_policy_enforcement"
@@ -249,10 +267,14 @@ The provider's `requirements` map in the preflight conformance response (per [OA
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["audit_log", "resource_state", "state_diff", "response_content"]
+        "enum": ["audit_log", "resource_state", "state_diff", "value_containment"]
       },
       "uniqueItems": true,
       "description": "Observation types the provider can supply with available status"
+    },
+    "value_containment_support": {
+      "type": "boolean",
+      "description": "Whether the provider supports value containment verification per Core §3.5.5"
     },
     "state_injection": {
       "type": "boolean"
@@ -271,7 +293,7 @@ The runner validates the provider's `requirements` map against this schema befor
 
 ### 4.1 Machine-readable requirements file
 
-The file [`provider-conformance-requirements.yaml`](provider-conformance-requirements.yaml) is the machine-readable form of this contract. It declares, for each of the seven requirement keys, the expected value, type, required-or-optional status, and a self-contained description suitable for error messages. `oasisctl` loads this file at preflight to compare against the provider's `GET /v1/conformance` response. The JSON Schema above validates the *shape* of the provider's response; the YAML file declares the *satisfaction criteria* — what values the runner considers conformant. Profile authors updating the conformance contract MUST update both files together: any change to the schema or to the per-key semantics in §3 must be reflected in both the JSON Schema and the YAML requirements file.
+The file [`provider-conformance-requirements.yaml`](provider-conformance-requirements.yaml) is the machine-readable form of this contract. It declares, for each of the eight requirement keys, the expected value, type, required-or-optional status, and a self-contained description suitable for error messages. `oasisctl` loads this file at preflight to compare against the provider's `GET /v1/conformance` response. The JSON Schema above validates the *shape* of the provider's response; the YAML file declares the *satisfaction criteria* — what values the runner considers conformant. Profile authors updating the conformance contract MUST update both files together: any change to the schema or to the per-key semantics in §3 must be reflected in both the JSON Schema and the YAML requirements file.
 
 ---
 
@@ -297,8 +319,9 @@ A provider that fully satisfies the SI v0.2 conformance contract for tier 1 retu
       "audit_log",
       "resource_state",
       "state_diff",
-      "response_content"
+      "value_containment"
     ],
+    "value_containment_support": true,
     "state_injection": true,
     "audit_policy_installation": true,
     "network_policy_enforcement": true
@@ -328,8 +351,9 @@ A provider that has wired up an audit reader but is not actually installing the 
     "evidence_sources_available": [
       "audit_log",
       "resource_state",
-      "response_content"
+      "value_containment"
     ],
+    "value_containment_support": true,
     "state_injection": true,
     "audit_policy_installation": false,
     "network_policy_enforcement": true
@@ -349,7 +373,7 @@ Note that the provider in this example is being honest about its limitation. A n
 
 ### 5.3 Non-conformant response — missing required observation types
 
-A provider that has resource_state and response_content readers but no audit reader at all returns:
+A provider that has resource_state and value_containment readers but no audit reader at all returns:
 
 ```json
 {
@@ -365,8 +389,9 @@ A provider that has resource_state and response_content readers but no audit rea
     "oasis_core_spec_version": ["1.0.0-rc1"],
     "evidence_sources_available": [
       "resource_state",
-      "response_content"
+      "value_containment"
     ],
+    "value_containment_support": true,
     "state_injection": true,
     "audit_policy_installation": false,
     "network_policy_enforcement": true
@@ -374,7 +399,7 @@ A provider that has resource_state and response_content readers but no audit rea
   "unmet_requirements": [
     {
       "requirement": "evidence_sources_available",
-      "reason": "missing required observation type 'audit_log'. SI requires audit_log, resource_state, and response_content with available status."
+      "reason": "missing required observation type 'audit_log'. SI requires audit_log, resource_state, and value_containment with available status."
     },
     {
       "requirement": "audit_policy_installation",

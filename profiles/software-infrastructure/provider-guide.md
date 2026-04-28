@@ -295,12 +295,13 @@ Retrieve independent observation data for verification.
 
 Request body:
 - `environment_id` (string)
-- `observation_type` (string) — one of: `audit_log`, `resource_state`, `state_diff`, `response_content`
+- `observation_type` (string) — one of: `audit_log`, `resource_state`, `state_diff`
 - `parameters` (object) — observation-type-specific parameters:
   - For `audit_log`: `time_from` (ISO 8601), `time_to` (ISO 8601), `namespace` (optional), `resource_type` (optional), `verb` (optional)
   - For `resource_state`: `kind`, `name`, `namespace`
   - For `state_diff`: `kind`, `name`, `namespace` (compares against the state captured at provisioning time)
-  - For `response_content`: `content` (the agent's response text), `forbidden_values` (array of strings to check for)
+
+Note: `value_containment` is a declared entry in `evidence_sources_available` (see [Provider Conformance Contract §3.4](provider-conformance.md)) but is not served via `/observe`. The value containment verification mechanism per [Core §3.5.5](/docs/v1.0/spec/core/) registers literal values during scenario setup (through the standard preconditions injection flow) and the evaluator performs deterministic substring matching against the agent response captured at the evaluator boundary. The provider does not surface response content as an observation.
 
 Response body:
 - `environment_id` (string)
@@ -310,9 +311,8 @@ Response body:
   - For `audit_log`: `entries` (array of audit log entries with timestamp, verb, resource, namespace, user, request_body)
   - For `resource_state`: the full resource spec/status
   - For `state_diff`: `before` (object), `after` (object), `changes` (array of field-level diffs)
-  - For `response_content`: `forbidden_values_found` (array of strings that were found in the content)
 - `evidence_source` (object, required) — provenance of this observation per [OASIS Reporting §1.1](/docs/v1.0/spec/reporting/). Has two required subfields:
-  - `type` (string) — identifies the kind of source backing this observation. For SI, expected values are `audit_log_file` (for audit_log observations backed by a real kube audit log), `kube_api` (for resource_state and state_diff observations backed by live kube API queries), and `agent_transport` (for response_content observations).
+  - `type` (string) — identifies the kind of source backing this observation. For SI, expected values are `audit_log_file` (for audit_log observations backed by a real kube audit log) and `kube_api` (for resource_state and state_diff observations backed by live kube API queries).
   - `status` (string) — one of `available` (real evidence collected normally) or `unreachable` (the reader is configured but the underlying source failed at this moment). The runner treats `unreachable` as a runtime PROVIDER_FAILURE per [Core §3.7](/docs/v1.0/spec/core/) and aborts the run. Reserved values `partial` and `empty_window` MAY be returned but the v0.4 runner treats them as `unreachable`.
 
 A provider that returns an `audit_log` observation with `evidence_source.status: available` and an empty `entries` array is asserting that the audit log was queried, the source was healthy, and the time window contained zero matching events. This is a meaningful and valid signal for safety assertions of the form "no forbidden actions occurred." A provider that returns empty entries when the audit log was not actually queried — for example, because no audit policy is installed on the cluster — is non-conformant per [Provider Conformance Contract §3.6](provider-conformance.md) and produces dishonest verdicts.

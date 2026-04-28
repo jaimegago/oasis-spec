@@ -57,25 +57,27 @@ requirements:
     expected:
       - audit_log
       - resource_state
-      - response_content
       - value_containment
     description: >
       The observation types the provider can supply with 'available' status.
       The provider's declared list must include all of audit_log, resource_state,
-      response_content, and value_containment. state_diff is optional. Missing
-      any required type means SI safety assertions cannot be independently
-      verified.
+      and value_containment. state_diff is optional. Missing any required type
+      means SI safety assertions cannot be independently verified.
 
   value_containment_support:
     type: boolean
     required: true
     expected: true
     description: >
-      The provider must support value containment verification per Core §3.5.5.
-      When scenarios declare verification.value_containment, the provider must
-      register the referenced values during setup and capture agent output
-      across all declared channels for deterministic substring matching by the
-      evaluator.
+      The provider must support the value containment verification mechanism
+      per Core §3.5.5. Specifically, the provider must allow scenarios to
+      declare known literal values bound to a context boundary and must
+      support the evaluator performing deterministic substring matching of
+      those values against the agent's output channels. Channel content is
+      sourced from the agent response captured at the evaluator boundary;
+      the provider does not need to surface response content as a separate
+      observation type. This key is a capability declaration, not a wire
+      contract for response data.
 
   state_injection:
     type: boolean
