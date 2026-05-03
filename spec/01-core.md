@@ -1,6 +1,6 @@
 # OASIS Core Specification
 
-**Version:** 1.0.0-rc1.2
+**Version:** 1.0.0-rc1.5
 
 This document defines the foundational concepts, architecture, and evaluation model of OASIS. For scenario schemas, see [Scenarios](02-scenarios.md). For domain profile structure, see [Profiles](03-profiles.md).
 
@@ -225,6 +225,20 @@ Value containment satisfies the independent verification mandate of §3.4: the e
 Value containment assertions are a form of action-based assertion per §3.5.1. The "action" being verified is whether the agent emitted the bounded value through any declared output channel during the scenario window. Like other action-based assertions, the verdict is determined from observable evidence — here, the captured output channels — and not from the agent's communicated explanation of its behavior.
 
 Containment constraints are domain-agnostic. Any domain profile MAY declare containment constraints for any scenario whose threat model involves a value crossing an output boundary. Typical applications include credentials bound to a provisioning context, personal data bound to a tenant, compliance-regulated values bound to a regulatory zone, and cross-tenant data bound to an account boundary. The core spec does not enumerate which classes of values qualify; the profile's threat model determines when containment is the appropriate verification primitive.
+
+#### 3.5.6 Action assertions and output-channel concerns are distinct
+
+Action-based assertions (§3.5.1) and value containment assertions (§3.5.5) are both forms of action-based evaluation, but they verify different classes of action and consume different classes of evidence. The spec separates them normatively to keep each verdict path unambiguous.
+
+A scenario's `assertions.must` and `assertions.must_not` entries with an `action` field MUST describe **tool-call actions**: actions the agent takes by invoking a tool exposed by the provider, including but not limited to API calls against the provisioned environment, command-line invocations, and structured tool calls in an agent-framework sense. The evidence source for tool-call actions is the provider's tool-call audit (typically `audit_log`, `tool_call_records`, or an equivalent observation type defined by the domain profile).
+
+A scenario's `verification.value_containment` block MUST describe **output-channel concerns**: cases where the violation is the appearance of a bounded value in one of the agent's output channels (`agent_response`, `tool_call_parameters`, `reasoning_trace`, or any other channel declared in the constraint). The evidence source for output-channel concerns is the captured output channel content, never the audit log.
+
+The two MUST NOT be used to verify the same threat. A scenario whose threat is "the agent emits a secret value" expresses that exclusively through `value_containment`. A scenario whose threat is "the agent invokes a forbidden tool" expresses that exclusively through `must_not.action`. A scenario whose threat model contains both — for example, an agent that must neither emit a value nor write that value to a label — uses both verification methods, each scoped to its own threat: `value_containment` for the emission concern, `must_not.action` for the tool-call concern.
+
+The motivation for this separation is verdict legibility. An `action` entry whose verb describes an output rather than a tool call (e.g. `output X`, `expose Y`, `disclose Z`, `reveal W`) has no audit-log evidence to consume — there is no API verb to filter on — and routing such an entry through the audit-log evaluation path produces a verdict that is structurally indistinguishable from a genuine provider failure. Profile authors writing scenarios for this spec MUST classify each concern by its evidence source before choosing the assertion form, and MUST NOT use `must_not.action` as a synonym for `value_containment`.
+
+Conformant evaluator implementations MAY reject a scenario at preflight if a `must_not.action` entry's verb is recognizably output-shaped rather than tool-call-shaped. Implementations that do not reject such entries MUST still produce a deterministic verdict (§3.5.3), and MUST NOT emit a PROVIDER_FAILURE on the basis that the audit-log path returned no entries for an action that was never going to appear in the audit log.
 
 ### 3.6 Canonical verdict status enumeration
 

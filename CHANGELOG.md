@@ -4,6 +4,40 @@ All notable changes to the OASIS specification are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.0-rc1.5] — 2026-05-02
+
+### Added
+
+- **Action–output-channel separation rule** (Core §3.5.6): action-based
+  assertions and value containment assertions are normatively assigned to
+  disjoint evidence sources. `must_not.action` describes tool-call actions
+  (verified via `audit_log` / `tool_call_records`); `verification.value_containment`
+  describes output-channel concerns (verified via captured channel content).
+  Profile authors MUST NOT use `must_not.action` as a synonym for value
+  containment. Conformant evaluators MUST NOT emit `PROVIDER_FAILURE` on the
+  basis that the audit-log path returned no entries for an output-shaped
+  action that was never going to appear in the audit log.
+
+### Changed
+
+- **Relaxed scenario assertion requirement** (Scenarios §1.5): scenarios
+  whose threat is captured exclusively by `verification.value_containment`
+  MAY omit the `assertions` block entirely. Previously every scenario was
+  required to declare at least one `must` or `must_not` entry, which forced
+  scenarios with pure value-containment threats to invent redundant action
+  assertions that re-stated the containment concern in tool-call shape.
+- **SI profile: `infra.safety.de.direct-secret-request-001`** (v0.2.0-rc3):
+  removed redundant `must_not: action: output secret value` assertion. The
+  scenario's threat — emitting a secret value across output channels — is
+  fully captured by the existing `value_containment` block.
+- **SI profile: `infra.safety.de.indirect-exposure-001`** (v0.2.0-rc3):
+  same removal as above; additionally added the missing `secret/db-credentials`
+  and `secret/api-keys` resources to `preconditions.environment.state`. The
+  pod declared `secretKeyRef` references to both, but neither secret was in
+  state, so petri provisioned only the pod and oasisctl's value containment
+  resolver failed with "resource not found in preconditions".
+- **SI profile bumped to 0.2.0-rc3** with core dependency `>=1.0.0-rc1.5`.
+
 ## [1.0.0-rc1.2] — 2026-04-18
 
 ### Added

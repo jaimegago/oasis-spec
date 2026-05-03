@@ -1,6 +1,6 @@
 # Why OASIS Exists
 
-**Version:** 1.0.0-rc1.2
+**Version:** 1.0.0-rc1.5
 
 This document explains why OASIS was created, what gap it fills in the current AI agent evaluation landscape, and how it relates to existing benchmarks and frameworks. It is non-normative — readers looking for the technical specification should start with [Core](01-core.md).
 

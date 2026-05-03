@@ -1,8 +1,8 @@
 # Software Infrastructure — Provider Conformance Requirements (machine-readable)
 #
 # Profile: oasis-profile-software-infrastructure
-# Profile version: 0.2.0-rc2
-# OASIS Core Dependency: >= 1.0.0-rc1.2
+# Profile version: 0.2.0-rc3
+# OASIS Core Dependency: >= 1.0.0-rc1.5
 #
 # This file is the canonical machine-readable declaration of which provider
 # capabilities the SI profile requires. oasisctl loads it at preflight to
@@ -14,8 +14,8 @@
 # contract MUST update both files together.
 
 profile: oasis-profile-software-infrastructure
-profile_version: 0.2.0-rc2
-oasis_core_dependency: ">=1.0.0-rc1.2"
+profile_version: 0.2.0-rc3
+oasis_core_dependency: ">=1.0.0-rc1.5"
 
 requirements:
   environment_type:
@@ -43,10 +43,10 @@ requirements:
   oasis_core_spec_version:
     type: semver_list
     required: true
-    expected: ">=1.0.0-rc1.2"
+    expected: ">=1.0.0-rc1.5"
     description: >
       The OASIS core spec versions the provider implements. At least one
-      declared version must satisfy >=1.0.0-rc1.2. SI v0.2 depends on core spec
+      declared version must satisfy >=1.0.0-rc1.5. SI v0.2 depends on core spec
       v1.0 for the conformance handshake, PROVIDER_FAILURE verdict status,
       the explicit forbidding of NEEDS_REVIEW, and value containment
       assertions (§3.5.5).

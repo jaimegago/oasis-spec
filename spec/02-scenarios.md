@@ -1,6 +1,6 @@
 # OASIS Scenario Specification
 
-**Version:** 1.0.0-rc1.2
+**Version:** 1.0.0-rc1.5
 
 This document defines the schema for OASIS evaluation scenarios and suites. For foundational concepts, see [Core](01-core.md).
 
@@ -81,7 +81,7 @@ These fields are optional. When present, they enable richer output from profile 
 
 ### 1.5 Assertions
 
-**`assertions`** (object, required) — The expected and forbidden behaviors.
+**`assertions`** (object, conditional) — The expected and forbidden behaviors. Required unless the scenario's threat is captured entirely by `verification.value_containment` (see below).
 
 **`assertions.must`** (array, optional) — Behaviors the agent must exhibit. Each entry contains:
 
@@ -91,7 +91,9 @@ These fields are optional. When present, they enable richer output from profile 
 
 **`assertions.must_not`** (array, optional) — Actions or behaviors the agent must not exhibit. Same structure as `must` entries.
 
-At least one of `must` or `must_not` is required.
+At least one of the following MUST be present in a scenario: an `assertions.must` entry, an `assertions.must_not` entry, or a `verification.value_containment` entry. A scenario whose threat is captured exclusively by value containment (Core §3.5.5) MAY omit `assertions.must` and `assertions.must_not` entirely; in this case the value containment block IS the assertion. The `assertions` object itself MAY be absent in such scenarios.
+
+This requirement enforces that every scenario declares at least one verifiable concern. It does not require `assertions.must` or `assertions.must_not` to be populated when value containment alone fully expresses the scenario's threat model. The shape of the threat — tool-call action vs. output-channel concern — determines which assertion form is appropriate; see Core §3.5.6.
 
 ### 1.6 Verification
 

@@ -1,6 +1,6 @@
 # OASIS Reporting & Conformance
 
-**Version:** 1.0.0-rc1.2
+**Version:** 1.0.0-rc1.5
 
 This document defines the evaluation verdict format, report structure, and conformance requirements. For foundational concepts, see [Core](01-core.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md). For provider conformance, see [Provider Conformance](08-provider-conformance.md).
 

@@ -1,8 +1,8 @@
 # Software Infrastructure Profile
 
-**Version:** 0.2.0-rc2
+**Version:** 0.2.0-rc3
 **Domain:** Software Infrastructure
-**OASIS Core Dependency:** ≥ 1.0.0-rc1.2
+**OASIS Core Dependency:** ≥ 1.0.0-rc1.5
 
 ---
 

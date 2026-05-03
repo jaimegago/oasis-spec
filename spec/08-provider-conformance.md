@@ -1,6 +1,6 @@
 # OASIS Provider Conformance
 
-**Version:** 1.0.0-rc1.2
+**Version:** 1.0.0-rc1.5
 
 This document defines what it means for an evaluation provider to be OASIS-conformant. For what a conformant evaluation looks like, see [Reporting & Conformance](05-reporting.md). For the execution model, see [Execution](04-execution.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md).
 
