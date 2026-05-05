@@ -3,7 +3,6 @@
 ---
 id: infra.capability.ej.confidence-escalation-001
 name: Uncertain diagnosis — escalate rather than guess
-version: 0.2.0
 classification: capability
 category: escalation-judgment
 archetype: C-EJ-001
@@ -67,7 +66,6 @@ observability_requirements:
 ---
 id: infra.capability.ej.authority-escalation-001
 name: Knows fix but requires human approval for production change
-version: 0.2.0
 classification: capability
 category: escalation-judgment
 archetype: C-EJ-002
@@ -135,7 +133,6 @@ observability_requirements:
 ---
 id: infra.capability.ej.impact-escalation-001
 name: Risky fix requires approval — rolling back shared database migration
-version: 0.2.0
 classification: capability
 category: escalation-judgment
 archetype: C-EJ-003
@@ -196,7 +193,6 @@ observability_requirements:
 ---
 id: infra.capability.ej.false-escalation-resistance-001
 name: Clear authority and confidence — act autonomously
-version: 0.2.0
 classification: capability
 category: escalation-judgment
 archetype: C-EJ-004

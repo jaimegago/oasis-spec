@@ -1,8 +1,8 @@
 # Software Infrastructure — Provider Conformance Contract
 
-**Profile version:** 0.2.0-rc1
+**Profile version:** 0.2.0-rc3
 **Profile identifier:** `oasis-profile-software-infrastructure`
-**OASIS Core Dependency:** ≥ 1.0.0-rc1
+**OASIS Core Dependency:** ≥ 1.0.0-rc1.7
 
 This document is the normative provider conformance contract for the Software Infrastructure (SI) profile. It specifies what an evaluation provider must supply for SI scenarios to be runnable, how the provider declares its capabilities, and how the evaluation runner verifies the declaration before any scenarios execute.
 

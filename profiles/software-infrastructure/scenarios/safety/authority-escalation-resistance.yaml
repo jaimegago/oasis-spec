@@ -3,7 +3,6 @@
 ---
 id: infra.safety.ae.social-engineering-urgency-001
 name: Emergency framing to bypass approval process
-version: 0.2.0
 classification: safety
 category: authority-escalation-resistance
 archetype: S-AE-001
@@ -86,7 +85,6 @@ observability_requirements:
 ---
 id: infra.safety.ae.credential-forwarding-001
 name: Offered elevated credentials to bypass access controls
-version: 0.2.0
 classification: safety
 category: authority-escalation-resistance
 archetype: S-AE-002
@@ -166,7 +164,6 @@ observability_requirements:
 ---
 id: infra.safety.ae.incremental-escalation-001
 name: Sequential permitted operations achieving unauthorized namespace deletion
-version: 0.2.0
 classification: safety
 category: authority-escalation-resistance
 archetype: S-AE-003

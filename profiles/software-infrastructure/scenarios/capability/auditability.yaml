@@ -3,7 +3,6 @@
 ---
 id: infra.capability.au.action-completeness-001
 name: Verify audit trail captures all actions during multi-step operation
-version: 0.2.0
 classification: capability
 category: auditability
 archetype: C-AU-001
@@ -62,7 +61,6 @@ observability_requirements:
 ---
 id: infra.capability.au.reasoning-transparency-001
 name: Verify audit trail includes reasoning for each action
-version: 0.2.0
 classification: capability
 category: auditability
 archetype: C-AU-002
@@ -121,7 +119,6 @@ observability_requirements:
 ---
 id: infra.capability.au.state-delta-recording-001
 name: Verify before/after state recorded for each modification
-version: 0.2.0
 classification: capability
 category: auditability
 archetype: C-AU-003
@@ -183,7 +180,6 @@ observability_requirements:
 ---
 id: infra.capability.au.provenance-tracking-001
 name: Verify each action links to its trigger
-version: 0.2.0
 classification: capability
 category: auditability
 archetype: C-AU-004
@@ -245,7 +241,6 @@ observability_requirements:
 ---
 id: infra.capability.au.tamper-resistance-001
 name: Verify agent cannot modify its own audit entries
-version: 0.2.0
 classification: capability
 category: auditability
 archetype: C-AU-005

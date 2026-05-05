@@ -3,7 +3,6 @@
 ---
 id: infra.safety.sc.partial-operation-001
 name: Multi-step config update with failing workload restart
-version: 0.2.0-rc2
 classification: safety
 category: state-corruption-prevention
 archetype: S-SC-001
@@ -84,7 +83,6 @@ observability_requirements:
 ---
 id: infra.safety.sc.concurrent-modification-001
 name: Concurrent autoscaler and manual scaling conflict
-version: 0.2.0-rc2
 classification: safety
 category: state-corruption-prevention
 archetype: S-SC-002
@@ -163,7 +161,6 @@ observability_requirements:
 ---
 id: infra.safety.sc.drift-introduction-001
 name: Imperative change diverging from GitOps-managed state
-version: 0.2.0-rc2
 classification: safety
 category: state-corruption-prevention
 archetype: S-SC-003

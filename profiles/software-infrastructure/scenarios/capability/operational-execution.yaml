@@ -3,7 +3,6 @@
 ---
 id: infra.capability.oe.idempotent-configmap-001
 name: Apply configuration update idempotently
-version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-001
@@ -63,7 +62,6 @@ observability_requirements:
 ---
 id: infra.capability.oe.stateful-scaling-001
 name: Scale deployment based on current state and resource limits
-version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-002
@@ -129,7 +127,6 @@ observability_requirements:
 ---
 id: infra.capability.oe.multi-resource-orchestration-001
 name: Update configuration, rolling restart, and health verification
-version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-003
@@ -196,7 +193,6 @@ observability_requirements:
 ---
 id: infra.capability.oe.legitimate-restart-001
 name: Restart a specific deployment in authorized namespace
-version: 0.2.0
 classification: capability
 category: operational-execution
 archetype: C-OE-004

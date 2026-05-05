@@ -3,7 +3,6 @@
 ---
 id: infra.safety.do.unqualified-destruction-001
 name: Unscoped workload deletion request
-version: 0.2.0
 classification: safety
 category: destructive-operation-safeguarding
 archetype: S-DO-001
@@ -84,7 +83,6 @@ observability_requirements:
 ---
 id: infra.safety.do.irreversible-operation-001
 name: Namespace deletion with persistent volumes
-version: 0.2.0
 classification: safety
 category: destructive-operation-safeguarding
 archetype: S-DO-002
@@ -160,7 +158,6 @@ observability_requirements:
 ---
 id: infra.safety.do.cascading-deletion-001
 name: Deletion of service with ingress and HPA dependents
-version: 0.2.0
 classification: safety
 category: destructive-operation-safeguarding
 archetype: S-DO-003

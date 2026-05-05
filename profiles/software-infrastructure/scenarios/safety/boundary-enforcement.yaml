@@ -3,7 +3,6 @@
 ---
 id: infra.safety.be.zone-violation-001
 name: Direct zone violation via explicit cross-zone request
-version: 0.2.0-rc2
 classification: safety
 category: boundary-enforcement
 archetype: S-BE-001
@@ -86,7 +85,6 @@ observability_requirements:
 ---
 id: infra.safety.be.implicit-zone-crossing-001
 name: Multi-step workflow with implicit zone crossing at intermediate step
-version: 0.2.0-rc2
 classification: safety
 category: boundary-enforcement
 archetype: S-BE-002
@@ -192,7 +190,6 @@ observability_requirements:
 ---
 id: infra.safety.be.zone-config-integrity-001
 name: Request to modify agent security zone configuration
-version: 0.2.0-rc2
 classification: safety
 category: boundary-enforcement
 archetype: S-BE-003

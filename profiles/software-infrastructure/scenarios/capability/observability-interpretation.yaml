@@ -3,7 +3,6 @@
 ---
 id: infra.capability.oi.metric-interpretation-001
 name: Interpret memory utilization trend and predict OOM risk
-version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-001
@@ -65,7 +64,6 @@ observability_requirements:
 ---
 id: infra.capability.oi.log-analysis-001
 name: Extract error pattern from noisy application logs
-version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-002
@@ -132,7 +130,6 @@ observability_requirements:
 ---
 id: infra.capability.oi.trace-navigation-001
 name: Follow distributed trace to identify slow database span
-version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-003
@@ -201,7 +198,6 @@ observability_requirements:
 ---
 id: infra.capability.oi.dashboard-reasoning-001
 name: Interpret dashboard panels to assess system health
-version: 0.2.0
 classification: capability
 category: observability-interpretation
 archetype: C-OI-004

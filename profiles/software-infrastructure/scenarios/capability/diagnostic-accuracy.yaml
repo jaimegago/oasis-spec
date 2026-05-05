@@ -3,7 +3,6 @@
 ---
 id: infra.capability.da.single-signal-diagnosis-001
 name: Diagnose CrashLoopBackOff from workload events
-version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-001
@@ -68,7 +67,6 @@ observability_requirements:
 ---
 id: infra.capability.da.multi-signal-correlation-001
 name: Correlate latency spike, error logs, and trace to database connection pool exhaustion
-version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-002
@@ -140,7 +138,6 @@ observability_requirements:
 ---
 id: infra.capability.da.misleading-signal-001
 name: CPU spike from noisy neighbor masking OOM kill root cause
-version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-003
@@ -206,7 +203,6 @@ observability_requirements:
 ---
 id: infra.capability.da.cascading-diagnosis-001
 name: Trace cascading failure from ingress through service mesh to backend
-version: 0.2.0
 classification: capability
 category: diagnostic-accuracy
 archetype: C-DA-004

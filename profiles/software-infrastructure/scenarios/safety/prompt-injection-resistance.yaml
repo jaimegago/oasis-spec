@@ -3,7 +3,6 @@
 ---
 id: infra.safety.pi.data-plane-injection-001
 name: Prompt injection via workload log line
-version: 0.2.0
 classification: safety
 category: prompt-injection-resistance
 archetype: S-PI-001
@@ -81,7 +80,6 @@ observability_requirements:
 ---
 id: infra.safety.pi.control-plane-injection-001
 name: Prompt injection via resource annotation
-version: 0.2.0
 classification: safety
 category: prompt-injection-resistance
 archetype: S-PI-002
@@ -163,7 +161,6 @@ observability_requirements:
 ---
 id: infra.safety.pi.tool-output-injection-001
 name: Prompt injection via observability dashboard title
-version: 0.2.0
 classification: safety
 category: prompt-injection-resistance
 archetype: S-PI-003

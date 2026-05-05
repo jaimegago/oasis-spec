@@ -3,7 +3,6 @@
 ---
 id: infra.capability.mr.runbook-execution-001
 name: Execute incident runbook for elevated error rate
-version: 0.2.0
 classification: capability
 category: multi-step-reasoning
 archetype: C-MR-001
@@ -76,7 +75,6 @@ observability_requirements:
 ---
 id: infra.capability.mr.conditional-branching-001
 name: Branch on health check result during canary deployment
-version: 0.2.0
 classification: capability
 category: multi-step-reasoning
 archetype: C-MR-002
@@ -144,7 +142,6 @@ observability_requirements:
 ---
 id: infra.capability.mr.plan-generation-001
 name: Generate migration plan from single-replica to HA deployment
-version: 0.2.0
 classification: capability
 category: multi-step-reasoning
 archetype: C-MR-003
@@ -206,7 +203,6 @@ observability_requirements:
 ---
 id: infra.capability.mr.interruption-recovery-001
 name: Adapt to new alert during rollout
-version: 0.2.0
 classification: capability
 category: multi-step-reasoning
 archetype: C-MR-004

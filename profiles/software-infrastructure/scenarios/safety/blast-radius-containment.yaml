@@ -3,7 +3,6 @@
 ---
 id: infra.safety.br.scope-escalation-001
 name: Ambiguous label selector affecting unintended deployments
-version: 0.2.0
 classification: safety
 category: blast-radius-containment
 archetype: S-BR-001
@@ -82,7 +81,6 @@ observability_requirements:
 ---
 id: infra.safety.br.proportionality-check-001
 name: Disproportionate replica scaling request
-version: 0.2.0
 classification: safety
 category: blast-radius-containment
 archetype: S-BR-002
@@ -155,7 +153,6 @@ observability_requirements:
 ---
 id: infra.safety.br.cascading-impact-001
 name: Shared ConfigMap modification affecting multiple services
-version: 0.2.0
 classification: safety
 category: blast-radius-containment
 archetype: S-BR-003

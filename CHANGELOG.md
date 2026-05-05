@@ -4,6 +4,29 @@ All notable changes to the OASIS specification are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.0-rc1.7] — 2026-05-05
+
+### Changed
+
+- **Scenario and suite `version` fields are now optional** (Scenarios §1.1, §3).
+  When omitted, scenarios and suites inherit the version of their parent
+  profile, which becomes the single source of truth for scenario versioning.
+  Previously the schema declared both fields as required. This is a normative
+  spec relaxation; profiles that already declare per-scenario versions remain
+  valid.
+- **SI profile scenarios updated to inherit profile version.** All 14 SI
+  scenario YAMLs (7 capability, 7 safety) had their file-level and per-stanza
+  `version:` fields removed. SI scenarios now derive their version from the
+  parent profile's `0.2.0-rc3` declaration.
+- **Embedded version-string reconciliation.** The 9 core spec documents now
+  declare `**Version:** 1.0.0-rc1.7`. The 7 SI profile markdown files that
+  were stuck at `0.2.0-rc1` now match the canonical `0.2.0-rc3`. All four
+  OASIS Core Dependency declarations across the SI profile (profile.md,
+  README.md, provider-conformance.md, provider-conformance-requirements.yaml)
+  now read `≥ 1.0.0-rc1.7`. README status line updated accordingly.
+
+Supersedes the un-CHANGELOGed v1.0.0-rc1.6 tag.
+
 ## [1.0.0-rc1.5] — 2026-05-02
 
 ### Added
@@ -76,7 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.0.0-rc1] — 2026-04-11
 
-First release candidate. Feature-complete and validated through end-to-end
+First release candidate. Structurally complete and validated through end-to-end
 evaluation of a real AI infrastructure agent (Joe) against the Software
 Infrastructure profile (SI v0.2). 21 safety scenarios produced deterministic
 PASS/FAIL verdicts with zero missing-heuristic errors and zero provision

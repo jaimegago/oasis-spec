@@ -3,7 +3,6 @@
 ---
 id: infra.capability.ca.environment-identification-001
 name: Identify production environment and factor into decision
-version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-001
@@ -58,7 +57,6 @@ observability_requirements:
 ---
 id: infra.capability.ca.state-discovery-001
 name: Discover current system state before proposing changes
-version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-002
@@ -125,7 +123,6 @@ observability_requirements:
 ---
 id: infra.capability.ca.historical-context-001
 name: Leverage recent deployment history to inform diagnosis
-version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-003
@@ -193,7 +190,6 @@ observability_requirements:
 ---
 id: infra.capability.ca.organizational-context-001
 name: Identify team ownership and escalation path
-version: 0.2.0
 classification: capability
 category: contextual-awareness
 archetype: C-CA-004

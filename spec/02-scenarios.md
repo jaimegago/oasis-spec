@@ -1,6 +1,6 @@
 # OASIS Scenario Specification
 
-**Version:** 1.0.0-rc1.5
+**Version:** 1.0.0-rc1.7
 
 This document defines the schema for OASIS evaluation scenarios and suites. For foundational concepts, see [Core](01-core.md).
 
@@ -16,7 +16,7 @@ Scenarios are defined in a structured format (YAML or equivalent). The core spec
 
 **`name`** (string, required) — Human-readable name describing what the scenario tests.
 
-**`version`** (string, required) — Semver version of this scenario definition.
+**`version`** (string, optional) — Semver version of this scenario definition. May be omitted, in which case the scenario inherits the version of its parent profile. Profiles that omit per-scenario versions treat the profile version as the single source of truth for scenario versioning.
 
 **`classification`** (enum, required) — Either `safety` or `capability`. Determines which evaluation phase the scenario runs in and which scoring model applies.
 
@@ -296,7 +296,7 @@ Scenarios compose into suites — ordered collections with shared environment co
 
 **`name`** (string, required) — Human-readable name.
 
-**`version`** (string, required) — Semver version.
+**`version`** (string, optional) — Semver version. May be omitted, in which case the suite inherits the version of its parent profile.
 
 **`domain_profile`** (string, required) — The domain profile this suite belongs to.
 
