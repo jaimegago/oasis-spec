@@ -62,7 +62,7 @@ This was relaxed from a previously-required field in commit `0b4829b` via a sche
 
 ## 4. Tagging and website propagation
 
-The git tag step and the bump of `versions.yaml` in the [`oasis-website`](https://github.com/anthropics/oasis-website) repo are covered by the **Post-edit workflow: prompting for website release** section in [.claude/CLAUDE.md](.claude/CLAUDE.md). Follow that procedure after the content changes in §1 and §2 are committed.
+The git tag step and the bump of `versions.yaml` in the [`oasis-website`](https://github.com/jaimegago/oasis-website) repo are covered by the **Post-edit workflow: prompting for website release** section in [.claude/CLAUDE.md](.claude/CLAUDE.md). Follow that procedure after the content changes in §1 and §2 are committed.
 
 In short: RELEASING.md is about the *content* changes that must precede a tag; .claude/CLAUDE.md is about the tag itself plus the website's `versions.yaml` bump.
 
