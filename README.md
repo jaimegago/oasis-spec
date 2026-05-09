@@ -2,6 +2,8 @@
 
 OASIS is an open standard for evaluating AI agents that operate in real-world systems. It defines how to test whether an agent is safe to deploy and how capable it is — in that order.
 
+The rendered specification lives at **[oasis-spec.dev](https://oasis-spec.dev)**. This repository is the canonical source.
+
 ## The problem
 
 AI agents are gaining access to production infrastructure, financial systems, databases, and physical devices. Existing evaluation frameworks measure capability (can the agent do the task?) but treat safety as an afterthought — one score among many.
