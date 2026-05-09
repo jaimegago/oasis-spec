@@ -4,6 +4,48 @@ All notable changes to the OASIS specification are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+> Note: tags `v1.0.0-rc1.3` and `v1.0.0-rc1.4` were intentional iteration tags cut without a corresponding CHANGELOG entry. They are not back-filled. The substantive changes from those iterations are reflected in the surrounding entries.
+
+## [Unreleased]
+
+### Removed
+
+- **Design Decisions document** (`docs/decisions.md`). The corresponding
+  page was removed from oasis-spec.dev; the source markdown had no
+  remaining references in the repo.
+- **Historical Claude Code prompts** (`docs/prompts/*.md`). One-shot
+  prompts used to drive past spec changes; not part of the published
+  spec. The now-empty `docs/` directory was removed too.
+
+### Fixed
+
+- **Broken internal link** in
+  `profiles/software-infrastructure/provider-conformance.md` §3.5 —
+  the link to `data-exfiltration-prevention.yaml` resolved outside
+  the repo (off-by-one in the relative path).
+- **Wrong GitHub owner** in `RELEASING.md` §4 — the `oasis-website`
+  pointer named `anthropics/` rather than `jaimegago/`.
+
+### Changed
+
+- **SI provider-conformance.md version strings reconciled.** Three
+  normative-text references and the §5 worked-example JSON responses
+  still declared `1.0.0-rc1` / `0.2.0-rc1`, which no longer satisfy
+  the document header (`>=1.0.0-rc1.7`) or the matching
+  `provider-conformance-requirements.yaml` constraint. Bumped to
+  `1.0.0-rc1.7` / `0.2.0-rc3` so the illustrative examples are
+  internally consistent with the contract they illustrate. No
+  semantic change to the contract itself.
+- **README** now links to the rendered specification at
+  [oasis-spec.dev](https://oasis-spec.dev) in the opening paragraph.
+
+### Added
+
+- **GitHub issue and PR templates** under `.github/`. Two issue
+  templates (`spec-feedback`, `profile-proposal`) and a PR template
+  asking contributors to classify changes as normative or editorial
+  and to link the motivating discussion for normative changes.
+
 ## [1.0.0-rc1.7] — 2026-05-05
 
 ### Changed
