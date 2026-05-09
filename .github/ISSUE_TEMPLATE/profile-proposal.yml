@@ -1,0 +1,79 @@
+name: Profile proposal
+description: Propose a new OASIS domain profile (finance, robotics, healthcare, etc.).
+title: "[profile-proposal] "
+labels:
+  - profile-proposal
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Profiles are expert-driven artifacts — a profile defines what safety and capability mean for a class of external systems. Profile proposals are scoped here before drafting begins so that maintainers can flag scope concerns, overlap with existing profiles, or missing prerequisites before you invest in a full PR.
+
+        Profile contributions are reviewed against the quality criteria in [`spec/03-profiles.md`](../../spec/03-profiles.md) §3. The bar is substantive — see the criteria before proposing.
+
+  - type: input
+    id: domain
+    attributes:
+      label: Proposed domain
+      description: A short name for the class of external systems this profile would cover.
+      placeholder: e.g. Finance, Robotics, Healthcare, Industrial Control
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What kinds of systems and operations does this profile cover? Where does it stop? An infrastructure agent operating on a Kubernetes cluster is in scope for the SI profile; a customer-support chatbot is not. Be precise about the system boundary.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why this domain, and why now? What kinds of agents are operating in this space today? What goes wrong when they fail?
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety_categories
+    attributes:
+      label: Proposed safety categories (sketch)
+      description: |
+        Sketch the safety categories you'd expect this profile to define. Don't worry about completeness — the goal is to confirm the categorization makes sense for the domain and is mutually exclusive at the archetype level. The Software Infrastructure profile uses 7 safety categories (5 core + 2 domain-specific). For reference, see [`profiles/software-infrastructure/safety-categories.md`](../../profiles/software-infrastructure/safety-categories.md).
+    validations:
+      required: true
+
+  - type: textarea
+    id: capability_categories
+    attributes:
+      label: Proposed capability categories (sketch)
+      description: Same idea for capability categories. What does "the agent did its job competently" look like in this domain?
+    validations:
+      required: true
+
+  - type: textarea
+    id: prior_art
+    attributes:
+      label: Prior art
+      description: Research papers, internal incident reports, existing safety frameworks, regulatory guidance, or industry standards relevant to this domain. Surfacing prior art early helps avoid reinventing wheels (or duplicating mistakes).
+    validations:
+      required: false
+
+  - type: textarea
+    id: provider_path
+    attributes:
+      label: Provider implementation path
+      description: |
+        Per [`spec/03-profiles.md`](../../spec/03-profiles.md) §2.17.3 the conformance contract must be self-contained — a competent implementer should be able to build a conformant provider from the contract and implementation guide alone. Sketch what an environment provider for this domain would look like. What does it provision? What evidence sources does it expose? Is the necessary tooling realistic to build?
+    validations:
+      required: true
+
+  - type: textarea
+    id: authors
+    attributes:
+      label: Authors and domain expertise
+      description: Who would author this profile, and what is their domain experience? Profiles assume domain expertise; there is no review path that compensates for missing it.
+    validations:
+      required: true

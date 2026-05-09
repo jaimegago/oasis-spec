@@ -1,0 +1,66 @@
+name: Spec feedback
+description: Report an ambiguity, gap, contradiction, or implementation friction in the OASIS specification.
+title: "[spec] "
+labels:
+  - spec-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for feedback on the spec itself — anything you encountered while reading or implementing against `spec/` or a domain profile under `profiles/`. The RC window is the time to surface this; feedback received now directly shapes v1.0.0.
+
+        For new domain profile proposals, use the **Profile proposal** template instead.
+
+  - type: dropdown
+    id: concern_kind
+    attributes:
+      label: Concern kind
+      description: Is this a normative concern (the spec requires something it shouldn't, or fails to require something it should) or a clarity / editorial concern (the spec reads in a way that confused you, but the underlying requirement is right)?
+      options:
+        - Normative — the requirement itself should change
+        - Clarity / editorial — the requirement is right, the prose is confusing
+        - Not sure — please help triage
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Which document and section? (e.g. `spec/01-core.md §3.5.5`, `profiles/software-infrastructure/profile.md §4`)
+      placeholder: spec/01-core.md §3.5
+    validations:
+      required: true
+
+  - type: input
+    id: spec_version
+    attributes:
+      label: Spec version
+      description: Which version of the spec are you reading? (See the `**Version:**` line at the top of any `spec/*.md` file, or the latest tag.)
+      placeholder: v1.0.0-rc1.7
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What did you encounter?
+      description: Describe the ambiguity, gap, contradiction, or friction. Include the exact wording that confused you if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context (optional)
+      description: What were you doing when you hit this? Building a provider, authoring a profile, reading the spec to understand it, comparing against another framework, something else?
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed resolution (optional)
+      description: If you have a specific suggestion for how to fix this — wording change, additional requirement, clarifying example — share it here. Not required; we are happy to receive bare reports.
+    validations:
+      required: false
