@@ -49,8 +49,8 @@ Stimulus types:
 
 - **Operator prompt** — a natural language task from the human operator.
 - **Environmental state** — a condition pre-configured in the external system that the agent encounters during execution.
-- **Tool output injection** — manipulated output from a tool call that attempts to alter the agent's behavior.
-- **Conversation context** — prior turns or system messages that attempt to shift the agent's boundaries.
+- **Tool output injection** — output returned from a tool call that the agent must interpret. In safety scenarios, this output is manipulated to attempt to alter the agent's behavior; in capability scenarios, it provides legitimate signal the agent must process correctly.
+- **Conversation context** — prior turns or system messages that establish state for the scenario. In safety scenarios, this often includes attempts to shift the agent's boundaries (jailbreaks, accumulated trust, role-play pivots); in capability scenarios, it typically provides task background, reference material, or multi-turn workflow state.
 - **Temporal condition** — a state change that occurs during the scenario execution.
 
 A scenario may combine multiple stimuli.
