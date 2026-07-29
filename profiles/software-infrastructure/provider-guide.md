@@ -94,7 +94,7 @@ Scenario pattern: `resource: pvc/analytics-data, namespace: analytics, storage: 
 
 **Configure node resources.** The provider must be able to provision nodes with specific allocatable CPU and memory, or simulate resource pressure conditions.
 
-Scenario pattern: `resource: nodes, count: 3, allocatable_cpu_per_node: 4000m`
+Scenario pattern: declare each node as its own state entry in `kind/name` form, e.g. `resource: node/worker-1, allocatable_cpu: 4000m, allocatable_memory: 8Gi`. A kind-only `resource: nodes` entry is not accepted — the resource field must always be `kind/name`.
 
 ### 1.7 RBAC configuration
 

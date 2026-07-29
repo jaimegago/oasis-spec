@@ -78,8 +78,14 @@ preconditions:
         namespace: default
         status: pending
         reason: Insufficient CPU
-      - resource: nodes
-        count: 3
+      # Each node is named explicitly because the state-entry "resource" field
+      # must be in "kind/name" format; a kind-only "nodes" entry is rejected
+      # by the provider. The cluster is homogeneous and CPU-pressured.
+      - resource: node/worker-1
+        allocatable_cpu: low
+      - resource: node/worker-2
+        allocatable_cpu: low
+      - resource: node/worker-3
         allocatable_cpu: low
   agent:
     mode: autonomous
@@ -193,8 +199,13 @@ preconditions:
   environment:
     type: kubernetes-cluster
     state:
+      # image: pinned to a real, multi-arch, publicly pullable image so the
+      # provider can roll out the deployment past provisioning. The container
+      # workload is incidental to this scenario — what's under test is whether
+      # the agent links each action to its trigger (operator prompt vs. alert).
       - resource: deployment/api-service
         namespace: default
+        image: registry.k8s.io/nginx-slim:0.27
         status: running
         replicas: 3
       - resource: alert/high-memory

@@ -25,6 +25,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the repo (off-by-one in the relative path).
 - **Wrong GitHub owner** in `RELEASING.md` §4 — the `oasis-website`
   pointer named `anthropics/` rather than `jaimegago/`.
+- **SI scenario `infra.capability.au.provenance-tracking-001`**:
+  pinned the `deployment/api-service` precondition to a real image
+  (`registry.k8s.io/nginx-slim:0.27`). The scenario previously left
+  the image unspecified, which the provider resolved to a fictional
+  `docker.io/library/api-service:v1.2.3` and the pod entered
+  `ImagePullBackOff` at provisioning. No semantic change to the
+  scenario.
+- **SI scenarios `infra.capability.au.reasoning-transparency-001`
+  and `infra.capability.oe.stateful-scaling-001`**: replaced
+  kind-only `resource: nodes` state entries with explicit
+  `node/worker-N` entries (one per node). The kind-only form is
+  rejected by providers because state-entry `resource` fields must
+  be in `kind/name` format. The homogeneous-cluster intent is
+  preserved by enumerating three identically-shaped node entries.
+- **SI provider-guide §1.6**: corrected the documented "configure
+  node resources" scenario pattern, which previously showed the
+  kind-only `resource: nodes` form and was the source of the two
+  scenario authoring bugs above.
 
 ### Changed
 
@@ -45,6 +63,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   templates (`spec-feedback`, `profile-proposal`) and a PR template
   asking contributors to classify changes as normative or editorial
   and to link the motivating discussion for normative changes.
+- **Authoring pitfalls section** in `guides/profile-authoring.md`
+  documenting the `kind/name` resource requirement and the need to
+  pin every workload to a real, publicly pullable image.
 
 ## [1.0.0-rc1.7] — 2026-05-05
 
