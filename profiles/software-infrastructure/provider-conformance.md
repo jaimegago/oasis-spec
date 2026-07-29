@@ -1,8 +1,8 @@
 # Software Infrastructure — Provider Conformance Contract
 
-**Profile version:** 0.2.0-rc3
-**Profile identifier:** `oasis-profile-software-infrastructure`
-**OASIS Core Dependency:** ≥ 1.0.0-rc1.7
+- **Profile version:** 0.2.0-rc3
+- **Profile identifier:** `oasis-profile-software-infrastructure`
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.7
 
 This document is the normative provider conformance contract for the Software Infrastructure (SI) profile. It specifies what an evaluation provider must supply for SI scenarios to be runnable, how the provider declares its capabilities, and how the evaluation runner verifies the declaration before any scenarios execute.
 
@@ -51,9 +51,9 @@ This is the only place SI provider conformance is enforced as a configuration ch
 
 ### 3.1 environment_type
 
-**Type:** string (enum)
-**Valid values:** `kubernetes-cluster`
-**Required value for SI:** `kubernetes-cluster`
+- **Type:** string (enum)
+- **Valid values:** `kubernetes-cluster`
+- **Required value for SI:** `kubernetes-cluster`
 
 **What it asserts.** The provider provisions Kubernetes clusters as the environment type for scenarios. SI scenarios are written entirely against Kubernetes resources (Deployments, ConfigMaps, Secrets, Services, Ingresses, NetworkPolicies, RBAC, etc.) and require a real or realistically-simulated Kubernetes API server, kubectl-compatible client interface, and the resource lifecycle semantics of a kube cluster.
 
@@ -67,9 +67,9 @@ This is the only place SI provider conformance is enforced as a configuration ch
 
 ### 3.2 complexity_tier_supported
 
-**Type:** integer
-**Valid values:** `1`, `2`, `3`
-**Required value for SI:** any of the three; the provider declares the highest tier it supports
+- **Type:** integer
+- **Valid values:** `1`, `2`, `3`
+- **Required value for SI:** any of the three; the provider declares the highest tier it supports
 
 **What it asserts.** The highest OASIS complexity tier (per [Core §5](/docs/v1.0/spec/core/)) that the provider can provision. A provider declaring `2` is asserting it can provision both tier 1 and tier 2 environments. A provider declaring `3` is asserting it can provision all three tiers. A provider declaring `1` is asserting it can only provision the minimal tier.
 
@@ -85,9 +85,9 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 
 ### 3.3 oasis_core_spec_version
 
-**Type:** string (semver constraint)
-**Valid values:** any semver constraint expressing one or more major.minor versions of the OASIS core spec
-**Required value for SI:** must include a version compatible with `>=1.0.0-rc1.7`
+- **Type:** string (semver constraint)
+- **Valid values:** any semver constraint expressing one or more major.minor versions of the OASIS core spec
+- **Required value for SI:** must include a version compatible with `>=1.0.0-rc1.7`
 
 **What it asserts.** The OASIS core spec version (or versions) the provider implements. The provider is declaring "I understand and respect the contracts defined in this version of the core spec" — including the canonical verdict status enumeration ([Core §3.6](/docs/v1.0/spec/core/)), the action-first evaluation principle ([Core §3.5](/docs/v1.0/spec/core/)), the independent verification mandate ([Core §3.4](/docs/v1.0/spec/core/)), and the preflight + runtime conformance model ([Core §3.7](/docs/v1.0/spec/core/)).
 
@@ -101,9 +101,9 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 
 ### 3.4 evidence_sources_available
 
-**Type:** list of strings (each one an observation type identifier)
-**Valid values:** `audit_log`, `resource_state`, `state_diff`, `value_containment`
-**Required value for SI:** must include all of `audit_log`, `resource_state`, `value_containment`. `state_diff` is optional.
+- **Type:** list of strings (each one an observation type identifier)
+- **Valid values:** `audit_log`, `resource_state`, `state_diff`, `value_containment`
+- **Required value for SI:** must include all of `audit_log`, `resource_state`, `value_containment`. `state_diff` is optional.
 
 **What it asserts.** The set of observation types the provider can supply with `evidence_source.status: available` per [Reporting §1.1](/docs/v1.0/spec/reporting/). An observation type listed here is one the provider has wired up to a real reader and can return real data for. An observation type NOT listed here is one the provider cannot supply at all — it would have to return `unreachable` for every request, which is non-conformant for SI's required types.
 
@@ -129,9 +129,9 @@ If the provider declares all required types but at runtime returns `evidence_sou
 
 ### 3.5 value_containment_support
 
-**Type:** boolean
-**Valid values:** `true`, `false`
-**Required value for SI:** `true`
+- **Type:** boolean
+- **Valid values:** `true`, `false`
+- **Required value for SI:** `true`
 
 **What it asserts.** The provider supports the value containment verification mechanism defined in [Core §3.5.5](/docs/v1.0/spec/core/). This is a capability declaration: the provider is asserting that scenarios in this run may declare known literal values bound to a context boundary and that the evaluator may perform deterministic substring matching of those values against the agent's output channels. It is paired with `value_containment` in `evidence_sources_available` — the evidence source declares the verification mechanism is supported as evidence; this boolean declares the provider has the setup-time and resolver wiring to produce the value bindings the evaluator needs.
 
@@ -145,9 +145,9 @@ If the provider declares all required types but at runtime returns `evidence_sou
 
 ### 3.6 state_injection
 
-**Type:** boolean
-**Valid values:** `true`, `false`
-**Required value for SI:** `true`
+- **Type:** boolean
+- **Valid values:** `true`, `false`
+- **Required value for SI:** `true`
 
 **What it asserts.** The provider can inject preconditions into a provisioned environment via the `/v1/inject-state` endpoint defined in [Provider Implementation Guide §4.4](provider-guide.md). State injection is used for scenarios where the initial state must be staged after provisioning but before the agent receives its prompt — for example, creating Deployments in specific failure states (CrashLoopBackOff, OOMKilled), seeding ConfigMaps with prompt injection payloads in annotations, or inserting log lines into pod stdout.
 
@@ -163,9 +163,9 @@ A provider MAY implement state injection partially — for example, supporting n
 
 ### 3.7 audit_policy_installation
 
-**Type:** boolean
-**Valid values:** `true`, `false`
-**Required value for SI:** `true`
+- **Type:** boolean
+- **Valid values:** `true`, `false`
+- **Required value for SI:** `true`
 
 **What it asserts.** The provider installs a Kubernetes API server audit policy on every cluster it provisions, configured to capture API operations at sufficient detail (RequestResponse level for write operations, Metadata level for reads at minimum), and routes the audit log output to a location the provider's audit reader can query. The audit policy MUST capture all operations relevant to SI safety assertions: write operations on Deployments, ConfigMaps, Secrets, Services, Pods, Namespaces, NetworkPolicies, RBAC resources, and any other resource type referenced in scenario verifications.
 
@@ -210,9 +210,9 @@ This is a minimum, not a maximum. Providers MAY install more comprehensive polic
 
 ### 3.8 network_policy_enforcement
 
-**Type:** boolean
-**Valid values:** `true`, `false`
-**Required value for SI:** `true`
+- **Type:** boolean
+- **Valid values:** `true`, `false`
+- **Required value for SI:** `true`
 
 **What it asserts.** The provider's clusters use a Container Network Interface (CNI) plugin that actually enforces Kubernetes NetworkPolicy resources. When a scenario creates a NetworkPolicy that, for example, blocks ingress from namespace A to namespace B, an agent action that attempts to send traffic from a pod in A to a pod in B must actually fail.
 
