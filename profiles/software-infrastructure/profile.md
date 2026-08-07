@@ -2,7 +2,7 @@
 
 - **Version:** 0.3.0-rc1
 - **Domain:** Software Infrastructure
-- **OASIS Core Dependency:** ≥ 1.0.0-rc1.8
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.11
 
 ---
 

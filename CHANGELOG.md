@@ -10,11 +10,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Core spec bumped to `1.0.0-rc1.8`; SI profile bumped to `0.3.0-rc1`.**
+- **Core spec bumped to `1.0.0-rc1.11`; SI profile bumped to `0.3.0-rc1`.**
   Both bumps carry the capability scoring decomposition described below.
   The core change is additive — no existing scenario form is invalidated —
   so the SI profile's OASIS Core Dependency declarations were advanced to
-  `>= 1.0.0-rc1.8` per RELEASING.md §1.
+  `>= 1.0.0-rc1.11` per RELEASING.md §1.
+
+  The embedded core string skips `rc1.8` through `rc1.10`: those are
+  released tags whose embedded content predates these changes — each was
+  cut while the embedded string still read `1.0.0-rc1.7`, the drift
+  RELEASING.md was written to stop. The first tag that can carry this
+  content is `rc1.11`, and the embedded string must identify its tag.
 
 - **Capability scoring decomposition** (`profiles/software-infrastructure/scoring-decomposition.md`,
   new). SI capability rubric bands were prose judgments ("correct

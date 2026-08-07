@@ -2,7 +2,7 @@
 
 - **Profile version:** 0.3.0-rc1
 - **Profile identifier:** `oasis-profile-software-infrastructure`
-- **OASIS Core Dependency:** ≥ 1.0.0-rc1.8
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.11
 
 This document is the normative provider conformance contract for the Software Infrastructure (SI) profile. It specifies what an evaluation provider must supply for SI scenarios to be runnable, how the provider declares its capabilities, and how the evaluation runner verifies the declaration before any scenarios execute.
 
@@ -87,15 +87,15 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 
 - **Type:** string (semver constraint)
 - **Valid values:** any semver constraint expressing one or more major.minor versions of the OASIS core spec
-- **Required value for SI:** must include a version compatible with `>=1.0.0-rc1.8`
+- **Required value for SI:** must include a version compatible with `>=1.0.0-rc1.11`
 
 **What it asserts.** The OASIS core spec version (or versions) the provider implements. The provider is declaring "I understand and respect the contracts defined in this version of the core spec" — including the canonical verdict status enumeration ([Core §3.6](/docs/v1.0/spec/core/)), the action-first evaluation principle ([Core §3.5](/docs/v1.0/spec/core/)), the independent verification mandate ([Core §3.4](/docs/v1.0/spec/core/)), and the preflight + runtime conformance model ([Core §3.7](/docs/v1.0/spec/core/)).
 
 **Why SI requires it.** SI v0.3 depends on OASIS core spec v1.0 for the conformance handshake mechanism, the PROVIDER_FAILURE verdict status, the run-through Phase 1 model, and the explicit forbidding of NEEDS_REVIEW. A provider implementing an earlier core spec version cannot honestly satisfy SI v0.3's conformance contract because the underlying mechanisms it depends on do not exist there.
 
-**What a satisfying provider does.** The provider returns a list (or single value) of core spec versions it implements. The simplest conformant declaration is `["1.0.0-rc1.8"]`. A provider that has been kept up to date across multiple core spec versions might declare `["0.4.0", "1.0.0-rc1.8"]`. A provider MUST NOT declare a version it does not actually implement, and MUST NOT declare future versions.
+**What a satisfying provider does.** The provider returns a list (or single value) of core spec versions it implements. The simplest conformant declaration is `["1.0.0-rc1.11"]`. A provider that has been kept up to date across multiple core spec versions might declare `["0.4.0", "1.0.0-rc1.11"]`. A provider MUST NOT declare a version it does not actually implement, and MUST NOT declare future versions.
 
-**Failure modes the runner catches.** If the provider declares only versions older than `1.0.0-rc1.8`, the runner aborts with `provider implements core spec versions [list]; SI v0.3 requires >=1.0.0-rc1.8`. If the provider declares `1.0.0-rc1.8` but its observation responses do not include the required `evidence_source` block per [Reporting §1.1](/docs/v1.0/spec/reporting/), the failure surfaces as a runtime PROVIDER_FAILURE on the first scenario whose verification depends on a working observation, and the run aborts then.
+**Failure modes the runner catches.** If the provider declares only versions older than `1.0.0-rc1.11`, the runner aborts with `provider implements core spec versions [list]; SI v0.3 requires >=1.0.0-rc1.11`. If the provider declares `1.0.0-rc1.11` but its observation responses do not include the required `evidence_source` block per [Reporting §1.1](/docs/v1.0/spec/reporting/), the failure surfaces as a runtime PROVIDER_FAILURE on the first scenario whose verification depends on a working observation, and the run aborts then.
 
 **Verification method.** The runner checks the declared versions against the SI profile's required core spec dependency at preflight. Implementation correctness is verified implicitly by scenario execution.
 
@@ -261,7 +261,7 @@ The provider's `requirements` map in the preflight conformance response (per [OA
       "type": "array",
       "items": { "type": "string" },
       "minItems": 1,
-      "description": "List of OASIS core spec versions the provider implements, e.g. [\"1.0.0-rc1.8\"]"
+      "description": "List of OASIS core spec versions the provider implements, e.g. [\"1.0.0-rc1.11\"]"
     },
     "evidence_sources_available": {
       "type": "array",
@@ -307,14 +307,14 @@ A provider that fully satisfies the SI v0.3 conformance contract for tier 1 retu
 {
   "provider": "petri",
   "provider_version": "0.2.0",
-  "oasis_core_spec_versions": ["1.0.0-rc1.8"],
+  "oasis_core_spec_versions": ["1.0.0-rc1.11"],
   "profile": "oasis-profile-software-infrastructure",
   "profile_version": "0.3.0-rc1",
   "supported": true,
   "requirements": {
     "environment_type": "kubernetes-cluster",
     "complexity_tier_supported": 1,
-    "oasis_core_spec_version": ["1.0.0-rc1.8"],
+    "oasis_core_spec_version": ["1.0.0-rc1.11"],
     "evidence_sources_available": [
       "audit_log",
       "resource_state",
@@ -340,14 +340,14 @@ A provider that has wired up an audit reader but is not actually installing the 
 {
   "provider": "petri",
   "provider_version": "0.1.5",
-  "oasis_core_spec_versions": ["1.0.0-rc1.8"],
+  "oasis_core_spec_versions": ["1.0.0-rc1.11"],
   "profile": "oasis-profile-software-infrastructure",
   "profile_version": "0.3.0-rc1",
   "supported": false,
   "requirements": {
     "environment_type": "kubernetes-cluster",
     "complexity_tier_supported": 1,
-    "oasis_core_spec_version": ["1.0.0-rc1.8"],
+    "oasis_core_spec_version": ["1.0.0-rc1.11"],
     "evidence_sources_available": [
       "audit_log",
       "resource_state",
@@ -379,14 +379,14 @@ A provider that has resource_state and value_containment readers but no audit re
 {
   "provider": "minimal-provider",
   "provider_version": "0.1.0",
-  "oasis_core_spec_versions": ["1.0.0-rc1.8"],
+  "oasis_core_spec_versions": ["1.0.0-rc1.11"],
   "profile": "oasis-profile-software-infrastructure",
   "profile_version": "0.3.0-rc1",
   "supported": false,
   "requirements": {
     "environment_type": "kubernetes-cluster",
     "complexity_tier_supported": 1,
-    "oasis_core_spec_version": ["1.0.0-rc1.8"],
+    "oasis_core_spec_version": ["1.0.0-rc1.11"],
     "evidence_sources_available": [
       "resource_state",
       "value_containment"
