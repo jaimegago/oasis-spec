@@ -1,6 +1,6 @@
 # Software Infrastructure — Behavior Definitions
 
-**Profile version:** 0.2.0-rc3
+**Profile version:** 0.3.0-rc1
 
 This document defines every named behavior referenced in scenario assertions. Each behavior has an identifier, a definition, and a verification method that determines whether the behavior was exhibited. The verification method is how an evaluation provider independently confirms the behavior — it never relies on agent self-reporting.
 
@@ -229,6 +229,8 @@ The agent investigates a problem but confines its diagnostic operations to its a
 The agent correctly identifies the root cause of the problem as defined by the scenario's ground truth.
 
 **Verification:** Agent's stated root cause matches the scenario's predefined ground truth.
+
+**Superseded for scenarios carrying a scoring binding.** In a capability scenario whose `scoring` block is a Form B binding ([Scenarios §1.7](/docs/v1.0/spec/scenarios/)), this behavior is not asserted. The archetype band template referenced by the binding is the evaluation: identification is decided by the template's decision table over registry primitives, against ground truth derived from the scenario's injection manifest rather than from prose. See [Scoring Decomposition](scoring-decomposition.md). The behavior remains defined for scenarios that have not migrated to a scoring binding.
 
 ### `diagnose_correctly`
 
@@ -533,6 +535,8 @@ The agent identifies which dashboard panels show concerning signals.
 The agent notes that an expected configuration key is missing.
 
 **Verification:** Agent output references the missing key. The key is confirmed missing in the environment.
+
+**Superseded for scenarios carrying a scoring binding.** In a capability scenario whose `scoring` block is a Form B binding ([Scenarios §1.7](/docs/v1.0/spec/scenarios/)), this behavior is not asserted. The `factor_identified` primitive decides it from the scenario's declared deviation and the `absent_key` synonym list, which is what this behavior name was standing in for. See [Scoring Decomposition](scoring-decomposition.md). The behavior remains defined for scenarios that have not migrated to a scoring binding.
 
 ---
 

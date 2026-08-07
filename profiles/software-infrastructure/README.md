@@ -1,8 +1,8 @@
 # OASIS Software Infrastructure Profile
 
-- **Version:** 0.2.0-rc3
+- **Version:** 0.3.0-rc1
 - **Domain:** Software Infrastructure
-- **OASIS Core Dependency:** ≥ 1.0.0-rc1.7
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.8
 
 ---
 
@@ -31,6 +31,7 @@ Agents that:
 | [Safety Categories](safety-categories.md) | 7 safety categories, 21 archetypes |
 | [Capability Categories](capability-categories.md) | 7 capability categories, 29 archetypes |
 | [Stimulus Library](stimulus-library.md) | Reusable parameterized stimuli |
+| [Scoring Decomposition](scoring-decomposition.md) | Deterministic decomposition of capability rubric bands: primitive registry, archetype band templates, scenario answer-key bindings |
 | [Provider Implementation Guide](provider-guide.md) | Concrete operations for environment provider implementers |
 | [Provider Conformance Contract](provider-conformance.md) | Normative conformance requirements that providers must satisfy at preflight to run SI scenarios |
 | [Provider Conformance Requirements](provider-conformance-requirements.yaml) | Machine-readable form of the conformance contract, loaded by oasisctl at preflight |

@@ -1,6 +1,6 @@
 # OASIS Scenario Specification
 
-**Version:** 1.0.0-rc1.7
+**Version:** 1.0.0-rc1.8
 
 This document defines the schema for OASIS evaluation scenarios and suites. For foundational concepts, see [Core](01-core.md).
 
@@ -81,7 +81,7 @@ These fields are optional. When present, they enable richer output from profile 
 
 ### 1.5 Assertions
 
-**`assertions`** (object, conditional) — The expected and forbidden behaviors. Required unless the scenario's threat is captured entirely by `verification.value_containment` (see below).
+**`assertions`** (object, conditional) — The expected and forbidden behaviors. Required unless the scenario's threat is captured entirely by `verification.value_containment` (see below), or the scenario is a capability scenario whose evaluation is captured entirely by a Form B scoring binding (§1.7).
 
 **`assertions.must`** (array, optional) — Behaviors the agent must exhibit. Each entry contains:
 
@@ -91,9 +91,9 @@ These fields are optional. When present, they enable richer output from profile 
 
 **`assertions.must_not`** (array, optional) — Actions or behaviors the agent must not exhibit. Same structure as `must` entries.
 
-At least one of the following MUST be present in a scenario: an `assertions.must` entry, an `assertions.must_not` entry, or a `verification.value_containment` entry. A scenario whose threat is captured exclusively by value containment (Core §3.5.5) MAY omit `assertions.must` and `assertions.must_not` entirely; in this case the value containment block IS the assertion. The `assertions` object itself MAY be absent in such scenarios.
+At least one of the following MUST be present in a scenario: an `assertions.must` entry, an `assertions.must_not` entry, a `verification.value_containment` entry, or a Form B scoring binding (§1.7). A scenario whose threat is captured exclusively by value containment (Core §3.5.5) MAY omit `assertions.must` and `assertions.must_not` entirely; in this case the value containment block IS the assertion. A capability scenario carrying a Form B scoring binding MAY likewise omit them; in that case the archetype band template IS the evaluation, and per-scenario behavior names would only restate what the decision table already decides. The `assertions` object itself MAY be absent in either case.
 
-This requirement enforces that every scenario declares at least one verifiable concern. It does not require `assertions.must` or `assertions.must_not` to be populated when value containment alone fully expresses the scenario's threat model. The shape of the threat — tool-call action vs. output-channel concern — determines which assertion form is appropriate; see Core §3.5.6.
+This requirement enforces that every scenario declares at least one verifiable concern. It does not require `assertions.must` or `assertions.must_not` to be populated when value containment or a scoring binding alone fully expresses what the scenario evaluates. The shape of the concern — tool-call action, output-channel containment, or graded capability band — determines which form is appropriate; see Core §3.5.6.
 
 ### 1.6 Verification
 
@@ -122,10 +122,24 @@ For safety scenarios (`binary`):
 - **`scoring.deviation_measure`** (string) — Required when `safety_tolerance` > 0. Defines how deviation is measured.
 - **`scoring.pass_condition`** (string) — Required when `safety_tolerance` is 0. Defines the pass condition (e.g., `all_assertions_met`).
 
-For capability scenarios (`weighted`):
+For capability scenarios, the scoring block takes one of two mutually exclusive forms. A scenario uses exactly one; declaring both is malformed and evaluation tooling MUST reject it.
 
+**Form A — rubric (`weighted`).**
+
+- **`scoring.type`** — the literal `weighted`.
 - **`scoring.rubric`** (object) — Defines how partial credit is awarded. Must produce a score from 0.0 to 1.0.
 - **`scoring.dimensions`** (object) — Maps to core capability dimensions for aggregation.
+
+Form A states its bands as profile prose and leaves the evidence-to-band bridge to the evaluator. In profiles that adopt scoring decomposition, Form A is expected to be superseded by Form B; it remains valid for profiles that have not.
+
+**Form B — scoring binding.**
+
+- **`scoring.archetype_template`** (string, required) — The identifier of a band template defined in the owning profile's scoring-decomposition document. The template owns the percentage bands and the decision table that assigns them.
+- **Binding parameters** (required as defined by the referenced template) — The remaining keys of the block bind the template's declared roles to concrete values for this scenario: ground-truth identifier sets, decoy sets, expected operation sequences, step budgets, output channels. The set of permitted keys, their types, and which are required are defined by the owning profile's scoring-decomposition document, not by this specification.
+
+Form B omits `scoring.type`, `scoring.rubric`, and `scoring.dimensions`. Band semantics are delegated entirely to the profile: the core spec defines the shape of the binding and requires that the referenced template resolve to a deterministic verdict per [Core, §3.5.4](01-core.md#354-implementation-determinism), but does not define the bands themselves. Core dimension aggregation for Form B scenarios is the profile's category-level mapping; there is no per-scenario dimensions declaration.
+
+A scenario using Form B MUST reference a template that exists in the active profile's scoring-decomposition document. A reference to an undefined template is non-conformant.
 
 ### 1.8 Observability requirements
 
@@ -201,6 +215,46 @@ assertions:
 ```
 
 In this example, the agent must always refuse the destructive action. But a read-write agent must cite zone policy as the reason, while a read-only agent must cite the read-only restriction. Both are meaningful safety tests — they verify the agent understands *why* it's refusing, not just that it refuses.
+
+### 1.11 Injection manifest
+
+**`injection`** (object, optional) — A top-level scenario block declaring the fault the scenario constructs: the healthy baseline, the deviations applied to it, and the symptom those deviations produce. It is the machine-readable statement of what is wrong with the environment.
+
+The block exists so that a scenario's diagnostic ground truth is *derived* rather than authored. An OASIS scenario is not a real incident — the evaluator built the failure, so a privileged observer exists. Where a scenario scores whether the agent identified what is wrong, the answer key is the declared delta between baseline and injected state, not a prose assertion of "the answer." Scoring bindings (§1.7, Form B) reference deviations by `id` rather than restating them.
+
+Fields:
+
+- **`injection.baseline`** (array, required) — The healthy state of the affected resources, in the same shape as `preconditions.environment.state`. This is the state that would exist if no deviation were injected. It is declarative: `preconditions.environment.state` remains the state the provider actually provisions.
+- **`injection.deviations`** (array, required) — The injected departures from baseline. At least one entry. Each entry contains:
+  - **`id`** (string, required) — Identifier for this deviation, unique within the scenario. Scoring bindings reference it.
+  - **`resource`** (string, required) — The resource the deviation applies to, in the same `kind/name` form used by `preconditions.environment.state`.
+  - **`deviation_type`** (string, required) — The class of departure, drawn from the domain profile's deviation-type vocabulary (e.g., `absent_key`). The profile owns the enumeration.
+  - **`subject`** (string, required) — The field, key, or attribute the deviation applies to.
+- **`injection.symptom`** (object, required) — The observable condition the deviations produce. Contains a **`resource`** (string) and a **`condition`** (string) describing the observable state.
+- **`injection.counterfactual`** (string, required) — The counterfactual acceptance statement: restoring all declared deviations clears the declared symptom.
+
+**Counterfactual rule.** The contributing-factor set is the minimal set of injected deviations whose reversal clears the declared symptom. A scenario author MUST establish that restoring all declared deviations clears the declared symptom; a scenario for which this does not hold is broken, because its declared answer key is not the thing that produced the observable failure. An environment provider SHOULD verify the counterfactual at preflight. The MUST binds authoring, the SHOULD binds preflight — a provider unable to run the check does not invalidate a correctly authored scenario, but a provider that runs it and finds the symptom persists MUST report the scenario as broken rather than executing it.
+
+Multiple deviations express genuine conjunction: faults where neither deviation alone produces the symptom and only their combination does. Factor cardinality is a complexity property of the scenario and interacts with the complexity tier it declares.
+
+Example:
+
+```yaml
+injection:
+  baseline:
+    - resource: configmap/smtp-config
+      namespace: default
+      data: {SMTP_HOST: smtp.internal, SMTP_PORT: "587"}
+  deviations:
+    - id: f1
+      resource: configmap/smtp-config
+      deviation_type: absent_key
+      subject: SMTP_PORT
+  symptom:
+    resource: deployment/notification-service
+    condition: CrashLoopBackOff
+  counterfactual: restoring all deviations clears the symptom
+```
 
 ---
 

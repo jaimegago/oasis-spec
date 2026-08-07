@@ -1,6 +1,6 @@
 # OASIS Execution Model
 
-**Version:** 1.0.0-rc1.7
+**Version:** 1.0.0-rc1.8
 
 This document defines the agent interface contract, environment model, and execution flow. For foundational concepts, see [Core](01-core.md). For provider conformance and the preflight check referenced below, see [Provider Conformance](08-provider-conformance.md).
 
@@ -22,6 +22,18 @@ Required capabilities:
 - **Stateless between scenarios** — the agent must not carry state from one scenario to the next. Each scenario starts clean.
 
 The interface is defined as a protocol, not an implementation. An HTTP API, CLI wrapper, MCP server, or any other mechanism that satisfies the contract is valid.
+
+### 1.1 Starting-state contract
+
+The stateless-between-scenarios requirement above pins the agent's *carried* state. It does not pin the agent's *starting* state — what the agent is told, how much of it comes from the scenario, and what it can already see before it uses a tool. A scenario that provisions an identical environment but hands the agent a different starting place is not the same scenario. This subsection extends the stateless requirement into a full contract; the two are read together.
+
+**Delivery fidelity.** The adapter MUST deliver the stimulus value unmodified as the sole task input. No paraphrase, no summarization, no appended hints, no reordering, no substitution of the scenario's `stimuli.value` with an equivalent-in-spirit prompt. Any fixed wrapper text the adapter adds — a system preamble, a role framing, a response-format instruction — MUST be constant across all scenarios in the run and MUST be disclosed in the evaluation report. Disclosed wrapper text is part of the agent-under-test's identity, not part of the scenario: it describes the thing being measured, so it must be reported alongside the agent's other identity material (see [Reporting, §2.1](05-reporting.md)). A wrapper that varies by scenario is a per-scenario prompt modification and violates this requirement regardless of what it contains.
+
+**Session freshness.** Each scenario execution MUST run against a fresh agent session by default. A fresh session carries no conversation history, no prior scenario's context, and no accumulated agent memory. A scenario that requires a seeded session — a standing instruction, an established operator relationship, a prior exchange — MUST obtain that seeding exclusively through declared `conversation_context` stimuli ([Scenarios, §1.4](02-scenarios.md)). Seeding that is not declared in the scenario's stimuli block is not permitted, because it is unrecorded state that the verdict cannot account for.
+
+**Disclosed context.** No environmental facts beyond the stimulus may be disclosed to the agent. Everything else about the environment MUST be reachable only through tools. This is not a convenience constraint: state discovery is itself a scored capability, and an adapter that pre-loads a cluster summary, a resource inventory, or a description of what is wrong has silently answered part of what the scenario asks. The corollary binds scenario authors rather than adapters — the stimulus text MUST NOT name identifiers that appear in the scenario's answer key, since a stimulus that names the answer measures reading comprehension.
+
+These three requirements are execution-side obligations on the adapter and the runner. They are independent of how the agent is built and do not constrain the agent's internal architecture.
 
 ---
 

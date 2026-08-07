@@ -8,6 +8,91 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Core spec bumped to `1.0.0-rc1.8`; SI profile bumped to `0.3.0-rc1`.**
+  Both bumps carry the capability scoring decomposition described below.
+  The core change is additive — no existing scenario form is invalidated —
+  so the SI profile's OASIS Core Dependency declarations were advanced to
+  `>= 1.0.0-rc1.8` per RELEASING.md §1.
+
+- **Capability scoring decomposition** (`profiles/software-infrastructure/scoring-decomposition.md`,
+  new). SI capability rubric bands were prose judgments ("correct
+  subsystem, wrong component = 50%") with no bridge to observable
+  evidence, which left evaluators nothing conformant to implement and
+  produced "evaluator does not implement heuristic" capability failures
+  in end-to-end runs. Core §3.5.4 requires such criteria to be decomposed
+  into deterministically scorable questions; this document is that
+  decomposition. It defines a three-layer architecture (profile primitive
+  registry, archetype band templates, scenario answer-key bindings), the
+  primitive registry v1 (`named_in_output`, `factor_identified`,
+  `within_step_budget`), the ratified matching constants (identifier
+  matching, sentence splitting, the `absent_key` synonym list, step budget
+  semantics), the efficiency stance, and the C-DA-001 band template as a
+  decision table.
+
+- **Injection manifest** (`spec/02-scenarios.md` §1.11, new). A scenario
+  block declaring the healthy baseline, the injected deviations, the
+  resulting symptom, and the counterfactual acceptance statement. It
+  exists so a scenario's diagnostic ground truth is derived from the
+  declared delta rather than authored as prose. The counterfactual —
+  restoring all deviations clears the symptom — is a MUST at scenario
+  authoring time and a SHOULD at provider preflight.
+
+- **Starting-state contract** (`spec/04-execution.md` §1.1, new). Normative
+  requirements extending the existing stateless-between-scenarios rule:
+  the adapter MUST deliver the stimulus value unmodified as the sole task
+  input, with any fixed wrapper text constant across the run and disclosed
+  in the report as part of agent identity; each scenario execution MUST run
+  against a fresh agent session by default, with seeding only via declared
+  `conversation_context` stimuli; no environmental facts beyond the
+  stimulus may be disclosed, everything else being reachable only through
+  tools.
+
+- **Agent identity declaration and evidence artifacts**
+  (`spec/05-reporting.md` §1.2, new). The report header MUST carry a
+  run-wide agent identity declaration (binary version and SHA, config hash,
+  system-prompt hash, declared model and provider, disclosed wrapper text);
+  each scenario record MUST carry the observed model, and an observed model
+  differing from the declared one on any scenario REQUIRES a heterogeneity
+  flag on the run. The evaluator MUST persist, per scenario, an
+  `evidence-<scenario-id>.json` artifact sufficient to replay the
+  evaluation as a pure function, referenced from the scenario record by
+  relative path.
+
+### Changed
+
+- **Capability scoring block admits two forms** (`spec/02-scenarios.md`
+  §1.7). The existing rubric-plus-dimensions form (Form A) is joined by a
+  scoring binding form (Form B): `archetype_template` plus binding
+  parameters defined by the owning profile's scoring-decomposition
+  document. A scenario uses exactly one form. Form B delegates band
+  semantics entirely to the profile and carries no per-scenario
+  `dimensions` block, which conflicted with the profile-level category-to-
+  dimension mapping anyway. Form A remains valid and is expected to be
+  superseded in profiles that adopt scoring decomposition. §1.5 was
+  amended in consequence: a Form B scoring binding now satisfies the
+  at-least-one-verifiable-concern rule, alongside `assertions.must`,
+  `assertions.must_not`, and `verification.value_containment`.
+
+- **SI scenario `infra.capability.da.single-signal-diagnosis-001`**
+  migrated to the scoring binding form — the first and, in this release,
+  only scenario to carry one. It gains an `injection` block declaring the
+  `absent_key` deviation on `configmap/smtp-config`; its `assertions` and
+  rubric `scoring` blocks are replaced by a binding to the C-DA-001 band
+  template (step budget 15, `agent_response` channel only,
+  `exclude_tool_echo` on); its per-scenario `dimensions` block is removed.
+  Preconditions, stimuli, verification, and observability requirements are
+  unchanged. Every other scenario is untouched and remains on the rubric
+  form.
+
+- **Behaviors `identify_root_cause` and `reference_missing_config_key`**
+  (`profiles/software-infrastructure/behavior-definitions.md`) are noted as
+  superseded for scenarios carrying a scoring binding, where the archetype
+  decision table is the evaluation. Both remain defined for scenarios that
+  have not migrated. `diagnose_correctly` inherits the note through its
+  existing equivalence to `identify_root_cause`.
+
 ### Removed
 
 - **Design Decisions document** (`docs/decisions.md`). The corresponding

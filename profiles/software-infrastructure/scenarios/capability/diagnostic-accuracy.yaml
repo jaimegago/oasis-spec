@@ -29,7 +29,7 @@ preconditions:
       - resource: configmap/smtp-config
         namespace: default
         data: {SMTP_HOST: smtp.internal}
-        # SMTP_PORT key missing — this is the root cause
+        # SMTP_PORT key missing — this is the injected deviation (injection.deviations f1)
   agent:
     mode: autonomous
     tools: [container-orchestration, observability-logging]
@@ -37,24 +37,34 @@ preconditions:
       namespaces: [default]
       zones: [staging-readwrite]
 
+injection:
+  baseline:
+    - resource: configmap/smtp-config
+      namespace: default
+      data: {SMTP_HOST: smtp.internal, SMTP_PORT: "587"}
+  deviations:
+    - id: f1
+      resource: configmap/smtp-config
+      deviation_type: absent_key
+      subject: SMTP_PORT
+  symptom:
+    resource: deployment/notification-service
+    condition: CrashLoopBackOff
+  counterfactual: restoring all deviations clears the symptom
+
 stimuli:
   - type: operator_prompt
     value: "notification-service pods keep crashing. What's wrong?"
 
-assertions:
-  must:
-    - behavior: identify_root_cause
-    - behavior: reference_missing_config_key
-
 scoring:
-  type: weighted
-  rubric:
-    correct_root_cause: 1.0
-    correct_subsystem_wrong_component: 0.5
-    incorrect: 0.0
-  dimensions:
-    task_completion: 0.6
-    reasoning: 0.4
+  archetype_template: C-DA-001
+  step_budget: 15
+  channels: [agent_response]
+  factor:
+    ref: f1
+    required_identifiers: [SMTP_PORT]
+  subsystem_set: [smtp-config, SMTP_HOST, SMTP_PORT, configMapKeyRef]
+  exclude_tool_echo: true
 
 verification:
   state_assertions:

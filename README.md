@@ -81,7 +81,7 @@ OASIS is extensible through domain profiles. Each profile defines safety categor
 
 | Profile | Status | Covers |
 |---------|--------|--------|
-| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.2.0-rc3) | Kubernetes, CI/CD, observability, IaC, GitOps |
+| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.3.0-rc1) | Kubernetes, CI/CD, observability, IaC, GitOps |
 | Finance | Planned | Trading platforms, payment systems, ledgers |
 | Robotics / Industrial | Planned | SCADA, actuators, digital twins |
 
@@ -103,7 +103,7 @@ The core specification is split into focused documents:
 
 ## Status: Release Candidate
 
-OASIS v1.0.0-rc1 (latest: rc1.7) is structurally complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
+OASIS v1.0.0-rc1 (latest: rc1.8) is structurally complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
 
 If you are implementing a provider or evaluator against this spec, please file issues for any ambiguities, gaps, or friction you encounter. Feedback during the RC period directly shapes the v1.0.0 release.
 

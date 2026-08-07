@@ -1,6 +1,6 @@
 # OASIS Reporting & Conformance
 
-**Version:** 1.0.0-rc1.7
+**Version:** 1.0.0-rc1.8
 
 This document defines the evaluation verdict format, report structure, and conformance requirements. For foundational concepts, see [Core](01-core.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md). For provider conformance, see [Provider Conformance](08-provider-conformance.md).
 
@@ -57,6 +57,19 @@ verdict:
   metadata:
     agent: [agent name — from adapter identity report]
     agent_version: [version — from adapter identity report]
+    agent_identity:              # run-wide declaration — see §1.2
+      binary_version: [string]
+      binary_sha: [string]
+      config_hash: [string]
+      system_prompt_hash: [string]
+      declared_model: [string]
+      declared_provider: [string]
+      fixed_wrapper_text: [string or null]   # per Execution §1.1, constant across the run
+      heterogeneous: true | false            # true if observed ≠ declared on any scenario
+      heterogeneity_detail:                  # present when heterogeneous = true
+        - scenario_id: "..."
+          declared_model: [string]
+          observed_model: [string]
     agent_configuration:
       [dimension]: [value]
       # ... one entry per dimension in the profile's agent configuration schema
@@ -132,6 +145,43 @@ The status enum reserves two additional values for future use, which MAY be retu
 
 There is no `unconfigured` status. A provider that is not configured to supply a required observation type fails the preflight conformance check ([Provider Conformance, §3.8](08-provider-conformance.md)) and the run does not start. By the time observations are being collected, every observation type the profile requires MUST be configured.
 
+### 1.2 Agent identity and the scenario record
+
+The agent's system prompt, model, and settings are part of what is being measured. OASIS does not dictate them; it requires that they be pinned and reported, because a capability score is a property of a recorded run of an *identified* agent configuration. This splits into a run-wide declaration and a per-scenario observation.
+
+**Run-wide declaration.** The report header MUST carry an agent identity declaration, stated once for the run: the agent binary version and SHA, the configuration hash, the system-prompt hash, the declared model, and the declared provider. Any fixed wrapper text the adapter applies to stimuli ([Execution, §1.1](04-execution.md)) is disclosed here, because a constant wrapper is part of the agent's identity rather than part of any scenario.
+
+**Per-scenario observation.** Provider layers can fall back mid-run — a rate limit, a capacity event, or a routing policy can silently substitute a different model between one scenario and the next. Each scenario record MUST therefore carry the **observed** model for that execution. This is a conformance check rather than a metadata request: the observed model is already present in the evidence a conformant run collects (agent transcripts and the agent's own LLM-usage records), so reporting it costs nothing beyond reading what was captured.
+
+**Heterogeneity flag.** If the observed model differs from the declared model on any scenario, the report MUST flag the run as heterogeneous and list the affected scenarios with both values. Flagging is mandatory; deciding whether a heterogeneous run's scores are publishable is an organizational threshold decision, consistent with the spec's position that OASIS does not set thresholds.
+
+**Evidence artifact.** For each executed scenario, the evaluator MUST persist an evidence artifact sufficient to replay the evaluation as a pure function. The artifact is named `evidence-<scenario-id>.json`, written into the run output directory, and contains:
+
+- the agent's final answer;
+- the agent's reasoning trace;
+- all tool calls, with parameters and full response bodies;
+- the observation set collected for the scenario, in the shape defined in §1.1;
+- the observed model for the execution.
+
+The scenario record in the verdict MUST reference the artifact by relative path. Tool response bodies are required in full, not summarized: evaluation predicates may be defined over their contents — an evaluator that excludes text echoed from a tool response cannot run without them — and a truncated artifact cannot reproduce the verdict. Replaying an artifact through the same evaluator MUST yield the same result, per [Core, §3.5.4](01-core.md#354-implementation-determinism).
+
+**Non-scoring metadata.** Each scenario record additionally carries step count, duration, and token usage as **non-scoring** metadata. These values MUST NOT be inputs to any score. They are reported so that organizations can set their own thresholds over them, exactly as they set their own capability thresholds. Wall-clock duration in particular measures provider latency and load, not capability, and using it as a score input would break run-to-run comparability against the determinism requirement.
+
+```yaml
+scenario_record:
+  scenario_id: "..."
+  result: PASS | FAIL | PROVIDER_FAILURE | [score 0.0-1.0]
+  observed_model: [string]
+  evidence_artifact: "evidence-<scenario-id>.json"   # relative to the run output directory
+  session_id: [string]        # provenance join key: verdict → transcript → agent audit trail
+  non_scoring_metadata:
+    steps: N
+    duration: [seconds]
+    tokens: N
+```
+
+The `session_id` is per-scenario provenance, not configuration: it is the join key from the verdict to the transcript to the agent's own audit trail. It does not participate in the identity declaration.
+
 ---
 
 ## 2. Evaluation report
@@ -141,6 +191,8 @@ An OASIS-compliant evaluation report must contain the following sections. The re
 ### 2.1 Report metadata
 
 - Agent under test: name, version — sourced from the agent adapter's identity report, not manual input
+- Agent identity declaration (run-wide, per §1.2): binary version and SHA, configuration hash, system-prompt hash, declared model, declared provider, and any fixed wrapper text applied to stimuli
+- Heterogeneity flag: whether the observed model differed from the declared model on any scenario, with the affected scenarios listed when it did
 - Agent configuration: the effective configuration values reported by the agent adapter, including any defaults applied from the profile schema
 - Evaluator: organization or individual
 - Date of evaluation
@@ -208,6 +260,9 @@ For each executed scenario:
 - Agent behavior observed (reasoning trace, tool calls, actions)
 - Independent verification results, including the `evidence_source` of every observation used
 - Result: PASS, FAIL, or PROVIDER_FAILURE (safety) or score (capability)
+- Observed model for the execution (per §1.2)
+- Relative path to the scenario's evidence artifact, `evidence-<scenario-id>.json`
+- Non-scoring metadata: step count, duration, token usage — reported, never scored
 
 ### 2.7 Adversarial verification (optional)
 

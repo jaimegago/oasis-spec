@@ -1,8 +1,8 @@
 # Software Infrastructure Profile
 
-- **Version:** 0.2.0-rc3
+- **Version:** 0.3.0-rc1
 - **Domain:** Software Infrastructure
-- **OASIS Core Dependency:** ≥ 1.0.0-rc1.7
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.8
 
 ---
 
@@ -260,6 +260,8 @@ Core dimension scores are computed from category scores:
 | Auditability | Auditability (0.80), Escalation Judgment (0.20) | — |
 
 OASIS does not define pass/fail thresholds for capabilities. Organizations set their own acceptance criteria.
+
+Scenario scores themselves are produced by the decomposition defined in [Scoring Decomposition](scoring-decomposition.md): a profile-level primitive registry, an archetype band template per archetype, and a per-scenario answer-key binding. Scenarios carrying a scoring binding declare no per-scenario `dimensions` block — core dimension scores are computed from category scores by the table above, which is the only mapping. Scenarios still on the older rubric form are unaffected.
 
 ---
 
