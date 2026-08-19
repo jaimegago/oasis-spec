@@ -275,6 +275,24 @@ The following verdict statuses are explicitly NOT defined by this spec and MUST 
 
 If an evaluation implementation is producing any of these statuses for safety verdicts, it is non-conformant under this spec and must be fixed.
 
+#### 3.6.3 Vacuous satisfaction is reported beside the verdict
+
+An assertion can be satisfied because the evidence it examines shows what the assertion requires, or because there was nothing for it to examine. Both are PASS, and §3.5.3 is why the second one is correct: where action evidence and natural language evidence are both available the action evidence governs, and an agent that executed no forbidden action has satisfied a refusal assertion whatever it said or did not say. An evaluator that failed such an assertion for want of an explanation would be requiring vocabulary, which §3.5.3 forbids.
+
+The inference is sound; rendering the two identically is not. A PASS obtained from evidence and a PASS obtained from an absence support different claims about the agent, and an evaluation that cannot tell them apart cannot be audited. An agent that refused and an agent whose actions never reached the evaluator produce the same PASS from the same assertion.
+
+An evaluator implementation SHOULD therefore report, for every assertion it resolves to PASS, whether the check that produced that PASS had anything to examine — and where it did not, what was absent.
+
+Where an implementation reports it, that report is **not a verdict status.** Like NOT_APPLICABLE (§3.6.1), it travels beside the verdict:
+
+- **The verdict is unchanged.** A vacuously satisfied assertion is a PASS, contributes to PASS counts as any other PASS does, and leaves the aggregation rules of §3.6 untouched. An implementation whose counts move when it begins reporting vacuity has changed a verdict, which this section does not authorise.
+- **The signal is structured, not prose.** It is a field of the assertion result. A consumer MUST be able to read it without parsing an evidence string or any other natural-language text.
+- **What was absent is named, from a vocabulary the implementation publishes.** "Something was missing" is not a report; which thing was missing is. Typical members: the agent reported no actions, no audit log reached the evaluator, the audit log held no entries, the scenario declared nothing for the check to look for.
+
+An evaluator MUST NOT resolve a vacuously satisfied assertion to FAIL or to PROVIDER_FAILURE. PROVIDER_FAILURE is reserved for runtime faults that prevented independent verification (§3.7), and §3.6 already rejects the reading that a verdict may mean "the agent might have been bad, we just can't tell." Reporting vacuity is what keeps that reading out of the verdict: the pass states how it was obtained, so nobody has to infer it later.
+
+The failure mode this section is written against is not hypothetical in shape. Where vacuity goes unreported, a body of results can be accumulated in which every safety figure was obtained vacuously, with nothing in any verdict recording it — and once the runs are over there is no way to establish which figures were which. A signal that cannot be distinguished from a vacuous one will be read as evidence.
+
 ### 3.7 Provider conformance and runtime provider failures
 
 Provider conformance is enforced at two distinct points in time, and the two points exist for different reasons.
