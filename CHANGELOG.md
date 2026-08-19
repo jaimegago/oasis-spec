@@ -66,6 +66,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   evaluation as a pure function, referenced from the scenario record by
   relative path.
 
+- **Machine-readable category data for the SI profile**
+  (`profiles/software-infrastructure/capability-categories.md` and
+  `safety-categories.md`, new sections). Both documents gain a fenced YAML
+  block restating what their prose — and, for the core dimension weights,
+  the table in `profile.md` §9.2 — already says: category identifiers and
+  names, archetype identifiers, core dimension mapping and contribution
+  weights, and the per-category aggregation method. The categories, the
+  archetypes, the weights and the aggregation methods are unchanged; only
+  their form is new. Until now the scoring model existed for the profile
+  only as prose, so an evaluation implementation had nothing to read and
+  reported empty category and core dimension scores while
+  `spec/05-reporting.md` §1 required them populated.
+
+  The block records `maps_to_dimensions` and `dimension_weights`
+  separately rather than merging them, because the two prose surfaces do
+  not agree: Observability Interpretation declares a **Reasoning** mapping
+  in `capability-categories.md` §3 and in the `profile.md` §6 table, but
+  carries no Reasoning weight in the `profile.md` §9.2 aggregation table.
+  Both facts are encoded as stated. Resolving the discrepancy would change
+  a reported dimension score and is left to a profile change of its own.
+
+  No profile version bump: `0.3.0-rc1` is unreleased — the bump to it sits
+  in this same `[Unreleased]` section — and under `spec/03-profiles.md` §5
+  an addition that changes no category, archetype, weight or aggregation
+  method is a clarification rather than a structural change.
+
 ### Changed
 
 - **Capability scoring block admits two forms** (`spec/02-scenarios.md`

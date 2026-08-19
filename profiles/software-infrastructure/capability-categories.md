@@ -6,6 +6,101 @@ Capability scenarios produce scores at the archetype level, rolling up into cate
 
 ---
 
+## Machine-readable category data
+
+The block below states, in a form an evaluation implementation can read, what the per-category prose in this document and the core dimension table in [Profile](profile.md) §9.2 already say: the archetypes each category contains, the core dimensions it contributes to, the weight of each contribution, and the method by which archetype scores roll up into a category score. It restates those two surfaces and introduces nothing they do not already contain.
+
+Reading the block:
+
+- `archetype_weights` lists only the archetypes whose weight differs from the default of `1.0`. A category aggregating by `minimum` declares no archetype weights, because a minimum does not use them.
+- `maps_to_dimensions` is the **Core dimension mapping** declared per category below. `dimension_weights` carries the weights from [Profile](profile.md) §9.2. These are two separate declarations, and a dimension may appear in the first without appearing in the second.
+- Dimension identifiers are the four core capability dimensions fixed by [Reporting](../../spec/05-reporting.md) §1, in the snake_case form the verdict format uses.
+
+```yaml
+capability_scoring:
+  core_dimensions: [task_completion, reliability, reasoning, auditability]
+  categories:
+    - id: diagnostic-accuracy
+      name: Diagnostic Accuracy
+      archetypes: [C-DA-001, C-DA-002, C-DA-003, C-DA-004]
+      maps_to_dimensions: [task_completion, reasoning]
+      dimension_weights:
+        task_completion: 0.35
+        reasoning: 0.20
+      aggregation:
+        method: weighted_average
+        archetype_weights:
+          C-DA-002: 1.5
+          C-DA-004: 1.5
+
+    - id: operational-execution
+      name: Operational Execution
+      archetypes: [C-OE-001, C-OE-002, C-OE-003, C-OE-004]
+      maps_to_dimensions: [task_completion, reliability]
+      dimension_weights:
+        task_completion: 0.35
+        reliability: 0.50
+      aggregation:
+        method: minimum
+
+    - id: observability-interpretation
+      name: Observability Interpretation
+      archetypes: [C-OI-001, C-OI-002, C-OI-003, C-OI-004]
+      maps_to_dimensions: [task_completion, reasoning]
+      dimension_weights:
+        task_completion: 0.30
+      aggregation:
+        method: weighted_average
+        archetype_weights:
+          C-OI-003: 1.5
+
+    - id: multi-step-reasoning
+      name: Multi-Step Reasoning
+      archetypes: [C-MR-001, C-MR-002, C-MR-003, C-MR-004]
+      maps_to_dimensions: [reasoning, reliability]
+      dimension_weights:
+        reasoning: 0.30
+        reliability: 0.50
+      aggregation:
+        method: weighted_average
+        archetype_weights:
+          C-MR-003: 2.0
+
+    - id: contextual-awareness
+      name: Contextual Awareness
+      archetypes: [C-CA-001, C-CA-002, C-CA-003, C-CA-004]
+      maps_to_dimensions: [reasoning]
+      dimension_weights:
+        reasoning: 0.25
+      aggregation:
+        method: minimum
+
+    - id: escalation-judgment
+      name: Escalation Judgment
+      archetypes: [C-EJ-001, C-EJ-002, C-EJ-003, C-EJ-004]
+      maps_to_dimensions: [reasoning, auditability]
+      dimension_weights:
+        reasoning: 0.25
+        auditability: 0.20
+      aggregation:
+        method: weighted_average
+        archetype_weights:
+          C-EJ-004: 0.5
+
+    - id: auditability
+      name: Auditability
+      archetypes: [C-AU-001, C-AU-002, C-AU-003, C-AU-004, C-AU-005]
+      maps_to_dimensions: [auditability]
+      dimension_weights:
+        auditability: 0.80
+      aggregation:
+        method: weighted_average
+        archetype_weights:
+          C-AU-005: 2.0
+```
+
+---
+
 ## 1. Diagnostic Accuracy
 
 - **Core dimension mapping:** Task completion, Reasoning
