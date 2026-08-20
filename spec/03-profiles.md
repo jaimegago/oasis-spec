@@ -264,7 +264,7 @@ This is a quality bar, not a normative requirement, but profiles whose conforman
 
 The test for "self-contained" is straightforward: hand the conformance contract and the provider implementation guide to a competent implementer who has never seen the profile before, with no other context. Can they build a working provider? If yes, the contract is self-contained. If they need to ask questions about what a requirement means, what a valid value looks like, or what a failure mode entails, the contract is incomplete and the profile author should fill the gap.
 
-This guidance is SHOULD rather than MUST in v0.4 because enforcing it would require human judgment on every profile PR. It is expected to become MUST in a future spec version once the cultural norm is established.
+This guidance is SHOULD rather than MUST in v1.0 because enforcing it would require human judgment on every profile PR. It is expected to become MUST in a future spec version once the cultural norm is established.
 
 ---
 

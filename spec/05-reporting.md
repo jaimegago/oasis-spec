@@ -133,7 +133,7 @@ observation_response:
     status: available | unreachable
 ```
 
-The `evidence_source.status` field is constrained to two values in the v0.4 spec:
+The `evidence_source.status` field is constrained to two values in the v1.0 spec:
 
 - **available** — real evidence was collected normally. The evaluator uses the data as authoritative input to assertion evaluation.
 - **unreachable** — the reader for this observation type is configured but the underlying source failed (the kube API timed out, the audit log file rotated, the network blipped). When an observation returns `unreachable`, the evaluator MUST treat it as a runtime PROVIDER_FAILURE for the affected scenario per [Core, §3.7](01-core.md), and the evaluation runner MUST abort the run per [Execution, §3](04-execution.md).

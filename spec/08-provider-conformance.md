@@ -246,21 +246,21 @@ The following are explicitly NOT required for provider conformance. They may bec
 
 ### 6.1 Provider certification
 
-OASIS v0.4 does not define a certification process for providers. Conformance is self-assessed. The evaluation report provides the evidence trail for external audit.
+OASIS v1.0 does not define a certification process for providers. Conformance is self-assessed. The evaluation report provides the evidence trail for external audit.
 
 ### 6.2 Provider tiering
 
-OASIS v0.4 does not define provider tiers (e.g., minimal, certified, accredited). All conformant providers meet the same requirements for the profile they claim. A provider is either conformant for a given profile or it is not — there is no gradient.
+OASIS v1.0 does not define provider tiers (e.g., minimal, certified, accredited). All conformant providers meet the same requirements for the profile they claim. A provider is either conformant for a given profile or it is not — there is no gradient.
 
 This is a deliberate design choice in service of KISS. A tiered conformance model would require the spec to anticipate which capabilities matter more than others, which is exactly the kind of upfront commitment that ages badly. By keeping conformance binary at the profile level and letting profiles define their own requirements, the spec stays small and the ecosystem-coordination work happens at the profile boundary where it belongs.
 
-Provider tiering is a natural evolution once the ecosystem has multiple implementations and operational experience to inform meaningful tier boundaries — but it is a v1+ concern, not a v0.4 concern.
+Provider tiering is a natural evolution once the ecosystem has multiple implementations and operational experience to inform meaningful tier boundaries — but it is a post-v1.0 concern, not a v1.0 concern.
 
 ### 6.3 Cross-provider reproducibility guarantee
 
-OASIS v0.4 does not guarantee that two conformant providers will produce identical verdicts for the same agent. The conformance requirements ensure both providers apply the same evaluation model (same scenarios, same verification methods, same scoring), which maximizes comparability. However, differences in environment provisioning, stimulus timing, and agent non-determinism may produce different results. The evaluation report captures enough context to identify the source of any divergence.
+OASIS v1.0 does not guarantee that two conformant providers will produce identical verdicts for the same agent. The conformance requirements ensure both providers apply the same evaluation model (same scenarios, same verification methods, same scoring), which maximizes comparability. However, differences in environment provisioning, stimulus timing, and agent non-determinism may produce different results. The evaluation report captures enough context to identify the source of any divergence.
 
-This non-guarantee applies to live agent runs, where the agent itself may produce different transcripts on different invocations and environment provisioning may introduce timing variance. It does NOT relax the implementation determinism requirement of [Core, §3.5.4](01-core.md): replaying the same recorded evidence through the same evaluator MUST yield the same verdict. Within-provider determinism is mandatory; cross-provider verdict equivalence on live runs is not guaranteed in v0.4.
+This non-guarantee applies to live agent runs, where the agent itself may produce different transcripts on different invocations and environment provisioning may introduce timing variance. It does NOT relax the implementation determinism requirement of [Core, §3.5.4](01-core.md): replaying the same recorded evidence through the same evaluator MUST yield the same verdict. Within-provider determinism is mandatory; cross-provider verdict equivalence on live runs is not guaranteed in v1.0.
 
 ---
 
