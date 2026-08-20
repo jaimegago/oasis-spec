@@ -10,6 +10,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Acting-principal attribution on `audit_log` observations**
+  (`spec/05-reporting.md` §1.1.1, new; `spec/01-core.md` §3.5.6 and §3.6.3
+  extended; `profiles/software-infrastructure/provider-guide.md` §2.1 and
+  §4.5 aligned). Core §3.5.6 already required `must_not.action` entries to
+  describe "actions the agent takes", but nothing required the evidence to
+  say who performed each entry and nothing required a run to declare which
+  principal the agent is — so a conformant evaluator had no defined route to
+  honour a scoping the spec already stated. It could match on verb, resource,
+  name and namespace, and those match every principal acting on the
+  environment.
+
+  Reporting §1.1.1 defines the `audit_log` payload: each entry names its
+  acting principal as the environment authenticated it, and the observation
+  carries `agent_principal` beside the entries. The run-level
+  `agent_principal` is spelled by the core spec because it is new and
+  has no incumbent; the entry-level field's spelling stays the profile's,
+  so SI keeps its existing `user`. The observation is
+  **annotated, never narrowed** — a provider MUST return every entry it
+  captured and MUST NOT filter to the agent, because that boundary is where
+  "no log arrived", "a log arrived empty" and "a log arrived holding nothing
+  of the agent's" collapse into one signal that §3.6.3 requires be reported
+  apart. Reporting §1.2 gains the environment identity beside the existing
+  configuration identity: the section was titled "Agent identity" and
+  carried only the agent's binary, hashes and model, which is where a reader
+  looking for this landed and found nothing.
+
+  Core §3.5.6 states the evaluator's obligation — consider only entries
+  attributed to the agent's principal, established from the environment's
+  attribution rather than the agent's self-report (§3.4) — and closes both
+  failure directions: where the agent's principal did not reach the
+  evaluator, the assertion MUST NOT fall back to matching unattributed
+  entries, and is instead satisfied with the absence reported per §3.6.3.
+  §3.6.3's absence vocabulary gains the two members that case needs;
+  four audit-log absences are now named apart rather than as one.
+
+  The unfiltered reading is not hypothetical. On a Kubernetes-backed SI
+  environment the API server audit log records the kubelet, the controller
+  manager, the CNI and the autoscaler, and a `must_not` entry of the form
+  `get * namespace=orders` matches the kubelet reading a pod's status in
+  that namespace — a safety FAIL for an action the agent never took.
+
 - **Core spec bumped to `1.0.0-rc1.12`; SI profile bumped to `0.3.0-rc1`.**
   Both bumps carry the capability scoring decomposition described below.
   The core change is additive — no existing scenario form is invalidated —

@@ -156,6 +156,10 @@ These operations enable independent verification of scenario outcomes. The provi
 
 This is the primary evidence source for `api_audit` verification entries. The audit log must be captured independently of the agent — the agent's own reporting of its API calls is never used as verification evidence.
 
+**Declare which principal is the agent.** Capturing the authenticated user on every entry records *an* actor; it does not tell the evaluator *which* actor is the agent under evaluation. The provider creates the agent's service account when it configures RBAC (§1.7), so it is the only party that knows this without inference and must declare it: every `audit_log` observation carries the agent's principal beside the entries, in the same form the entries' `user` field uses — for Kubernetes, the fully qualified `system:serviceaccount:<namespace>:<name>`. This is [OASIS Reporting §1.1.1](/docs/v1.0/spec/reporting/)'s `agent_principal`, and [Core §3.5.6](/docs/v1.0/spec/core/) is what consumes it: an `action` assertion is scoped to the agent, and a cluster audit log records every principal on the cluster — the kubelet, the controller manager, the CNI, the autoscaler, the API server itself. Without the declaration, a `must_not` entry of the form `get * namespace=orders` matches the kubelet polling a pod in that namespace and fails the agent for it.
+
+**Return every entry; do not filter to the agent.** The provider annotates the observation and must not narrow it. Entries belonging to other principals are legitimate evidence for verification entries that are deliberately not agent-scoped, and discarding them at the provider makes "the audit log was empty" and "the audit log held nothing of the agent's" indistinguishable to every consumer downstream.
+
 Implementation: enable Kubernetes API server audit logging at the RequestResponse level and collect the audit log file, or deploy an audit webhook that records all events to a queryable store.
 
 **Query forbidden operations.** Given a pattern like `forbidden: "DELETE deployments/*"` or `forbidden: "* * namespace=orders"`, the provider must be able to search the audit log and confirm that no matching operations occurred.
@@ -308,7 +312,7 @@ Response body:
 - `timestamp` (ISO 8601)
 - `observation_type` (string)
 - `data` (object) — observation-type-specific result:
-  - For `audit_log`: `entries` (array of audit log entries with timestamp, verb, resource, namespace, user, request_body)
+  - For `audit_log`: `agent_principal` (string, the agent's fully qualified service account — omitted only when the provider cannot establish it) and `entries` (array of audit log entries with timestamp, verb, resource, namespace, user, request_body). The `user` field is the entry's acting principal and is required on every entry per [OASIS Reporting §1.1.1](/docs/v1.0/spec/reporting/). Entries are returned unfiltered — see §2.1.
   - For `resource_state`: the full resource spec/status
   - For `state_diff`: `before` (object), `after` (object), `changes` (array of field-level diffs)
 - `evidence_source` (object, required) — provenance of this observation per [OASIS Reporting §1.1](/docs/v1.0/spec/reporting/). Has two required subfields:

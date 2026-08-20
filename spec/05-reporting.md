@@ -145,11 +145,40 @@ The status enum reserves two additional values for future use, which MAY be retu
 
 There is no `unconfigured` status. A provider that is not configured to supply a required observation type fails the preflight conformance check ([Provider Conformance, §3.8](08-provider-conformance.md)) and the run does not start. By the time observations are being collected, every observation type the profile requires MUST be configured.
 
+#### 1.1.1 `audit_log` payload and acting-principal attribution
+
+[Core, §3.5.6](01-core.md) requires an `action` assertion to be about actions the agent takes, and requires an evaluator to resolve one against entries attributed to the agent's principal. This section is the evidence contract that makes that resolvable: the observation says who performed each entry, and the run says which principal is the agent.
+
+For an observation whose `observation_type` is `audit_log`, `data` MUST carry the captured entries under `entries` and MUST attribute each of them. Every entry MUST carry a field naming its **acting principal** — the identity the provisioned environment authenticated for that action, in the form the environment recorded it. The principal is the environment's own attribution and never the agent's account of itself; [Core, §3.4](01-core.md)'s independence mandate governs the attribution exactly as it governs the entry it is attached to.
+
+The observation MUST also carry `agent_principal`: the acting-principal value identifying the agent under evaluation, stated in the same form the entries use, so an evaluator compares two values rather than interpreting one. Where the provider cannot establish it, the field is absent — never guessed, never defaulted to a value that matches everything — and the consequence for any assertion resting on the observation is [Core, §3.6.3](01-core.md)'s.
+
+```yaml
+data:
+  agent_principal: [string]   # omitted when the provider cannot establish it
+  entries:
+    - <acting principal>      # field name fixed by the domain profile
+      timestamp: [ISO 8601]
+      # remaining entry fields are defined by the domain profile
+```
+
+**`agent_principal` is spelled by this section; the entry's principal field is spelled by the profile.** The run-level declaration is new and has no incumbent, so fixing its name here costs nothing and buys a consumer one field to read across profiles. An entry's fields are the profile's — the Software Infrastructure profile carries the acting principal as the entry's `user`, matching what a Kubernetes audit event records — and this section requires that some field carry it, not that every profile rename what it already has. What a profile MUST NOT do is define an `audit_log` entry with no acting principal on it at all.
+
+**The observation is annotated, never narrowed.** A provider MUST return every entry its query captured and MUST NOT filter the entries to the agent's principal before returning them. Scoping is an act each consumer performs and declares for itself.
+
+Narrowing at the provider is forbidden because information destroyed at that boundary cannot be recovered by anything past it. Three states stay distinguishable only while every entry reaches the evaluator: no audit log arrived, an audit log arrived holding nothing, and an audit log arrived holding nothing of the agent's. §3.6.3 requires those absences to be named apart, and a provider that decides what the evaluator may see has already collapsed them. It also silently rescopes every consumer at once — an audit observation feeds assertions that are deliberately not agent-scoped as well as ones that are, and a filter at the boundary answers for all of them.
+
 ### 1.2 Agent identity and the scenario record
 
 The agent's system prompt, model, and settings are part of what is being measured. OASIS does not dictate them; it requires that they be pinned and reported, because a capability score is a property of a recorded run of an *identified* agent configuration. This splits into a run-wide declaration and a per-scenario observation.
 
 **Run-wide declaration.** The report header MUST carry an agent identity declaration, stated once for the run: the agent binary version and SHA, the configuration hash, the system-prompt hash, the declared model, and the declared provider. Any fixed wrapper text the adapter applies to stimuli ([Execution, §1.1](04-execution.md)) is disclosed here, because a constant wrapper is part of the agent's identity rather than part of any scenario.
+
+**Environment identity.** The declaration above identifies the agent's *configuration* — what was run. It does not identify the agent to the systems it acted on, and those are different facts: an evaluator asking "did the agent delete this?" needs the identity the environment authenticated, not the hash of the prompt. The report header MUST therefore also carry, for each provisioned environment, the **principal the agent authenticates as** against it — the same value §1.1.1 requires an `audit_log` observation to declare as `agent_principal`, in the same form the environment's audit entries use.
+
+The provider mints the agent's credential during provisioning, so the provider is the only party that knows this without inference and MUST be the party that declares it. It MUST NOT be derived from anything the agent reports about itself, which would put the agent's self-report underneath every audit-backed verdict and defeat [Core, §3.4](01-core.md).
+
+Where an environment's agent principal cannot be established, the report states that rather than omitting the environment, and every assertion resolved against that environment's audit evidence carries the corresponding vacuity report ([Core, §3.6.3](01-core.md)). A run in which no audit-backed assertion examined anything is a publishable fact about the run; a run in which that is true and unrecorded is the failure §3.6.3 is written against.
 
 **Per-scenario observation.** Provider layers can fall back mid-run — a rate limit, a capacity event, or a routing policy can silently substitute a different model between one scenario and the next. Each scenario record MUST therefore carry the **observed** model for that execution. This is a conformance check rather than a metadata request: the observed model is already present in the evidence a conformant run collects (agent transcripts and the agent's own LLM-usage records), so reporting it costs nothing beyond reading what was captured.
 
