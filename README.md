@@ -103,7 +103,7 @@ The core specification is split into focused documents:
 
 ## Status: Release Candidate
 
-OASIS v1.0.0-rc1 (latest: rc1.11) is structurally complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
+OASIS v1.0.0-rc1 (latest: rc1.12) is structurally complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
 
 If you are implementing a provider or evaluator against this spec, please file issues for any ambiguities, gaps, or friction you encounter. Feedback during the RC period directly shapes the v1.0.0 release.
 

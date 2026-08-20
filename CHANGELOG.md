@@ -10,17 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Core spec bumped to `1.0.0-rc1.11`; SI profile bumped to `0.3.0-rc1`.**
+- **Core spec bumped to `1.0.0-rc1.12`; SI profile bumped to `0.3.0-rc1`.**
   Both bumps carry the capability scoring decomposition described below.
   The core change is additive — no existing scenario form is invalidated —
   so the SI profile's OASIS Core Dependency declarations were advanced to
-  `>= 1.0.0-rc1.11` per RELEASING.md §1.
+  `>= 1.0.0-rc1.12` per RELEASING.md §1.
 
-  The embedded core string skips `rc1.8` through `rc1.10`: those are
-  released tags whose embedded content predates these changes — each was
-  cut while the embedded string still read `1.0.0-rc1.7`, the drift
-  RELEASING.md was written to stop. The first tag that can carry this
-  content is `rc1.11`, and the embedded string must identify its tag.
+  The embedded core string skips `rc1.8` through `rc1.11`: those are
+  released tags whose embedded content predates these changes. `rc1.8`
+  through `rc1.10` were each cut while the embedded string still read
+  `1.0.0-rc1.7`, the drift RELEASING.md was written to stop. `rc1.11` is
+  tagged at `f9c4620`, and three commits carrying content landed on `main`
+  after it — the machine-readable category data and §3.6.3 below, and the
+  `v0.4` reference correction under Fixed. The first tag that can carry
+  this content is `rc1.12`, and the embedded string must identify its tag.
 
 - **Capability scoring decomposition** (`profiles/software-infrastructure/scoring-decomposition.md`,
   new). SI capability rubric bands were prose judgments ("correct
@@ -92,6 +95,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   an addition that changes no category, archetype, weight or aggregation
   method is a clarification rather than a structural change.
 
+- **Vacuous satisfaction reporting** (`spec/01-core.md` §3.6.3, new). An
+  assertion that passed because there was nothing to check rendered as an
+  ordinary PASS, indistinguishable from one that verified something. §3.6.3
+  requires vacuous satisfaction to be reported beside the verdict rather
+  than folded into it. Additive: no verdict status is added or removed, and
+  no existing assertion changes outcome.
+
 ### Changed
 
 - **Capability scoring block admits two forms** (`spec/02-scenarios.md`
@@ -160,6 +170,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   node resources" scenario pattern, which previously showed the
   kind-only `resource: nodes` form and was the source of the two
   scenario authoring bugs above.
+- **Stale `v0.4` self-references retargeted to `v1.0`.** Nine places across
+  `spec/03-profiles.md`, `spec/05-reporting.md`,
+  `spec/08-provider-conformance.md` and two SI profile documents named the
+  core spec as `v0.4` while every `**Version:**` header read `1.0.0-rc1.11`,
+  so a reader following a cross-reference landed on a paragraph naming a
+  version that no longer existed. Replaced with `v1.0` rather than the
+  release candidate, so the prose does not go stale at the next bump. Two
+  lines were reworded rather than substituted: §6.2's "a v1+ concern, not a
+  v0.4 concern" would have become self-contradictory, and the SI provider
+  guide's "the v0.4 runner" dropped the version entirely, the same sentence
+  already naming the runner without one. No normative clause changed
+  strength.
 
 ### Changed
 

@@ -2,7 +2,7 @@
 #
 # Profile: oasis-profile-software-infrastructure
 # Profile version: 0.3.0-rc1
-# OASIS Core Dependency: >= 1.0.0-rc1.11
+# OASIS Core Dependency: >= 1.0.0-rc1.12
 #
 # This file is the canonical machine-readable declaration of which provider
 # capabilities the SI profile requires. oasisctl loads it at preflight to
@@ -15,7 +15,7 @@
 
 profile: oasis-profile-software-infrastructure
 profile_version: 0.3.0-rc1
-oasis_core_dependency: ">=1.0.0-rc1.11"
+oasis_core_dependency: ">=1.0.0-rc1.12"
 
 requirements:
   environment_type:
@@ -43,10 +43,10 @@ requirements:
   oasis_core_spec_version:
     type: semver_list
     required: true
-    expected: ">=1.0.0-rc1.11"
+    expected: ">=1.0.0-rc1.12"
     description: >
       The OASIS core spec versions the provider implements. At least one
-      declared version must satisfy >=1.0.0-rc1.11. SI v0.3 depends on core spec
+      declared version must satisfy >=1.0.0-rc1.12. SI v0.3 depends on core spec
       v1.0 for the conformance handshake, PROVIDER_FAILURE verdict status,
       the explicit forbidding of NEEDS_REVIEW, and value containment
       assertions (§3.5.5).
