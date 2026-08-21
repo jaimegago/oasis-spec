@@ -27,7 +27,7 @@ The provider must also support namespaces with team labels, criticality labels, 
 **Create Deployment with specified state.** Create a Kubernetes Deployment with a given name, namespace, replica count, image, labels, annotations, resource limits/requests, update strategy, and affinity rules. The provider must be able to create deployments in any of the following statuses:
 
 - `running` — all pods healthy and available
-- `CrashLoopBackOff` — pods failing to start. Achieved by referencing a missing ConfigMap key, an invalid image, or a failing readiness probe
+- `CrashLoopBackOff` — pods repeatedly failing after start. Achieved by a container that exits non-zero on startup. Note that a *required* reference to a missing ConfigMap key does not achieve it: the kubelet refuses to create the container and the pod settles in `CreateContainerConfigError`; an invalid image yields `ImagePullBackOff` (the `error` status). A CrashLoopBackOff whose cause is a missing key is achieved by declaring a fault (below), so the application reads the key and fails on its absence
 - `degraded` — some pods unhealthy. Achieved by setting one replica's readiness probe to fail
 - `OOMKilled` — pods being killed for exceeding memory limits. Achieved by setting a low memory limit and running a memory-consuming process
 - `pending` — pods unable to schedule. Achieved by requesting more resources than available on nodes
@@ -69,6 +69,40 @@ Scenario pattern:
 The requirement is scoped to statuses whose container runs the scenario's image — `running`, `CrashLoopBackOff`, `degraded`, `pending`. The remaining statuses (`OOMKilled`, `error`, `elevated_error_rate`) are achieved by a container the provider synthesises, and a required ConfigMap reference injected there would stop that container before it could fail the way the status names. A provider that cannot render a declared environment for a given status MUST reject the state entry rather than provision it with the environment dropped.
 
 Other `containers` sub-fields appearing in profile scenarios — `resources`, `last_state`, and `init_containers` status and logs — are **not** covered by this requirement and are not yet specified. The distinction is that `env` and `resources` are manifest inputs a provider sets, while `last_state` and init-container status are outcomes the runtime produces and a provider can only cause.
+
+**Declare a fault.** A deployment state entry whose status is the *symptom* of a cause the scenario scores the agent on diagnosing MAY declare that cause as a `fault`, and MUST then also declare `expect`, the symptom the provider verifies before readiness. The status vocabulary above names what the workload looks like; `fault` names why.
+
+- **`fault`** (object) — `type` names a fault class from the vocabulary below; the remaining fields are that class's parameters.
+- **`expect`** (object) — `status`: the workload status the provider MUST observe on every pod of the Deployment before reporting the environment ready. It is matched against the pod's container state — for `CrashLoopBackOff`, the condition the kubelet itself uses: a container restarted after a failed termination, whether the reported reason at the moment of observation is `CrashLoopBackOff` or the `Error` termination it alternates with.
+
+Fault classes:
+
+- **`config.missing-key`** — `configMap` (string) and `key` (string). The key is absent from the named ConfigMap, which the container reads, and the application fails its own startup because it requires the key. Symptom: `CrashLoopBackOff`. The scenario's `configmap/*` entry MUST declare the ConfigMap without the key, and the entry's declared `containers[].env` MUST read it; a provider MUST reject a fault that contradicts either.
+
+Three rules follow from a declared fault, and each exists so that the cause is something the agent diagnoses rather than reads:
+
+1. **The provider materialises the fault through an application that genuinely fails on it.** The misconfiguration is a plausible one with the semantics a real application would give it — a required setting absent — and the failure is the application's own, in its own log, naming what it required. A provider MUST NOT substitute a container whose purpose is to fail, and the `image` field MUST NOT be declared beside `fault`: the provider selects the application.
+2. **A `configMapKeyRef` on a faulted entry renders as an optional reference**, reversing the rule above for this case only. A required reference lets the kubelet refuse the container before the application runs, and the evidence is then a kubelet message about a reference the provider wrote rather than the application's own failure. The agent still finds the key named in the pod spec; what changes is whose failure it reads.
+3. **The provider verifies `expect` and refuses readiness without it.** An application that does not produce the declared symptom is a provision-time error, never an environment an agent is scored against. This is the provider-side half of the counterfactual rule in [Scenarios §1.11](/docs/v1.0/spec/scenarios/): the scenario-level `injection` manifest is the answer key, and `fault`/`expect` on the state entry is how a provider is told to construct and check it. A scenario declaring both MUST keep them consistent — the fault's `key` is the deviation's `subject`, and `expect.status` is `injection.symptom.condition`.
+
+Nothing a provider renders for a faulted entry may name the mechanism — no annotation, label, image name, command line or log line that says the failure was injected, simulated or constructed. The evidence may be fully visible; the evidence is the cause itself, never a caption about it.
+
+Scenario pattern (`single-signal-diagnosis-001`):
+
+```yaml
+- resource: deployment/notification-service
+  namespace: default
+  status: CrashLoopBackOff
+  fault: {type: config.missing-key, configMap: smtp-config, key: SMTP_PORT}
+  expect: {status: CrashLoopBackOff}
+  containers:
+    - name: notification-service
+      env:
+        - name: SMTP_HOST
+          valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_HOST}}
+        - name: SMTP_PORT
+          valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_PORT}}
+```
 
 ### 1.3 ConfigMap and Secret management
 
@@ -358,14 +392,15 @@ This table maps every distinct precondition pattern in the profile's scenarios t
 | `namespace/* with zone` | 1.1 | Create namespace with zone label |
 | `namespace/* with team/env labels` | 1.1 | Create namespace with metadata labels |
 | `deployment/* status: running` | 1.2 | Create Deployment with healthy pods |
-| `deployment/* status: CrashLoopBackOff` | 1.2 | Create Deployment referencing missing ConfigMap key or invalid image |
+| `deployment/* status: CrashLoopBackOff` | 1.2 | Create Deployment whose container exits non-zero on startup |
 | `deployment/* status: degraded` | 1.2 | Create Deployment with partial readiness failure |
 | `deployment/* status: OOMKilled` | 1.2 | Create Deployment with low memory limit and memory-consuming process |
 | `deployment/* status: pending` | 1.2 | Create Deployment requesting more CPU/memory than available |
 | `deployment/* status: error` | 1.2 | Create Deployment with startup failure |
 | `deployment/* status: elevated_error_rate` | 1.2 | Create Deployment with error-producing container |
 | `deployment/* managed_by: gitops` | 1.2 | Create Deployment with GitOps metadata annotation |
-| `deployment/* with containers[].env` | 1.2 | Render declared container environment; `configMapKeyRef` as a required reference |
+| `deployment/* with containers[].env` | 1.2 | Render declared container environment; `configMapKeyRef` as a required reference (optional when the entry declares a `fault`) |
+| `deployment/* with fault + expect` | 1.2 | Run an application that genuinely fails on the declared misconfiguration; verify `expect` on every pod before readiness |
 | `deployment/* with init_containers` | 1.2 | Create Deployment with failing init container |
 | `deployment/* with canary` | 1.2 | Create second Deployment with -canary suffix |
 | `configmap/* with data` | 1.3 | Create ConfigMap with specified key-value pairs |

@@ -10,6 +10,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Declared faults on SI deployment state entries**
+  (`profiles/software-infrastructure/provider-guide.md` §1.2, new subsection
+  "Declare a fault"; §5 mapping table, new row;
+  `scenarios/capability/diagnostic-accuracy.yaml`, `single-signal-diagnosis-001`).
+  A deployment entry whose status is the symptom of a cause the agent is scored
+  on diagnosing MAY declare that cause as `fault` and MUST then declare
+  `expect`, the symptom the provider verifies on every pod before readiness.
+  One class this release: `config.missing-key` (`configMap`, `key`), symptom
+  `CrashLoopBackOff`.
+
+  The motivating failure, again `single-signal-diagnosis-001`: with the key
+  names declared, a provider rendered a container that existed in order to
+  fail, and the agent read its command line — `CrashLoopBackOff simulation` —
+  and reported that. The scenario declared a state; nothing declared the cause,
+  so nothing obliged the provider to construct it.
+
+  Three rules follow from a declared fault. The provider materialises it
+  through an application that genuinely fails on the misconfiguration, in its
+  own log, and may not substitute a container built to fail nor accept `image`
+  beside `fault`. A `configMapKeyRef` on a faulted entry renders *optional*,
+  reversing the declared-environment rule for this case only: a required
+  reference lets the kubelet refuse the container before the application runs
+  (`CreateContainerConfigError`, measured), and the evidence is then a kubelet
+  message rather than the application's failure. And the provider verifies
+  `expect` and refuses readiness without it — the provider-side half of the
+  §1.11 counterfactual rule; `fault`/`expect` on the entry is how a provider is
+  told to construct and check what the scenario-level `injection` manifest
+  declares as the answer key. Nothing rendered may name the mechanism.
+
+  The `CrashLoopBackOff` bullet in §1.2's status list no longer claims that a
+  missing ConfigMap key or an invalid image achieves it: measured on a live
+  cluster, the first settles in `CreateContainerConfigError` and the second in
+  `ImagePullBackOff`. `expect.status: CrashLoopBackOff` is matched on the
+  kubelet's own condition — a container restarted after a failed termination —
+  because the reported reason alternates between `CrashLoopBackOff` and
+  `Error` for the life of the pod.
+
 - **Declared container environment in SI deployment state entries**
   (`profiles/software-infrastructure/provider-guide.md` §1.2, new subsection;
   §5 mapping table, new row). Three capability scenarios already declare a

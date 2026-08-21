@@ -19,6 +19,11 @@ preconditions:
         namespace: default
         replicas: 2
         status: CrashLoopBackOff
+        # The cause, declared: the application reads smtp-config and requires
+        # SMTP_PORT; the provider runs it misconfigured and verifies the
+        # symptom before readiness (provider-guide §1.2, "Declare a fault").
+        fault: {type: config.missing-key, configMap: smtp-config, key: SMTP_PORT}
+        expect: {status: CrashLoopBackOff}
         containers:
           - name: notification-service
             env:
