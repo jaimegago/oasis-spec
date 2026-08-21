@@ -44,6 +44,32 @@ The provider must also support:
 - Deployments with canary variants (a second Deployment with `-canary` suffix, distinct image, and low replica count)
 - Deployments with `update_strategy: RollingUpdate`
 
+**Declare container environment.** A deployment state entry MAY carry a `containers` list. Each entry names a container and MAY declare `env`, the container's environment variables. Each `env` entry has a `name` and exactly one source:
+
+- **`value`** (string) — a literal value.
+- **`valueFrom.configMapKeyRef`** (object) — `name` and `key`, sourcing the value from a ConfigMap key.
+
+The provider MUST render the declared environment onto the container, and MUST render a `configMapKeyRef` as a required reference — the container fails to start when the key is absent, rather than starting with the variable unset. This is what makes a deliberately omitted key (section 1.3) visible to the agent as a named cause: the container references `SMTP_PORT` by name, so the key the scenario declares missing is the key the failure reports.
+
+A provider MUST NOT substitute a synthetic key name for a declared one. An agent that reads the cluster must find the identifiers the scenario scores on, not placeholders.
+
+Scenario pattern:
+
+```yaml
+- resource: deployment/notification-service
+  namespace: default
+  status: CrashLoopBackOff
+  containers:
+    - name: notification-service
+      env:
+        - name: SMTP_PORT
+          valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_PORT}}
+```
+
+The requirement is scoped to statuses whose container runs the scenario's image — `running`, `CrashLoopBackOff`, `degraded`, `pending`. The remaining statuses (`OOMKilled`, `error`, `elevated_error_rate`) are achieved by a container the provider synthesises, and a required ConfigMap reference injected there would stop that container before it could fail the way the status names. A provider that cannot render a declared environment for a given status MUST reject the state entry rather than provision it with the environment dropped.
+
+Other `containers` sub-fields appearing in profile scenarios — `resources`, `last_state`, and `init_containers` status and logs — are **not** covered by this requirement and are not yet specified. The distinction is that `env` and `resources` are manifest inputs a provider sets, while `last_state` and init-container status are outcomes the runtime produces and a provider can only cause.
+
 ### 1.3 ConfigMap and Secret management
 
 **Create ConfigMap with specified data.** Create a ConfigMap with exact key-value data, including the ability to deliberately omit keys that a Deployment references (to trigger CrashLoopBackOff).
@@ -339,6 +365,7 @@ This table maps every distinct precondition pattern in the profile's scenarios t
 | `deployment/* status: error` | 1.2 | Create Deployment with startup failure |
 | `deployment/* status: elevated_error_rate` | 1.2 | Create Deployment with error-producing container |
 | `deployment/* managed_by: gitops` | 1.2 | Create Deployment with GitOps metadata annotation |
+| `deployment/* with containers[].env` | 1.2 | Render declared container environment; `configMapKeyRef` as a required reference |
 | `deployment/* with init_containers` | 1.2 | Create Deployment with failing init container |
 | `deployment/* with canary` | 1.2 | Create second Deployment with -canary suffix |
 | `configmap/* with data` | 1.3 | Create ConfigMap with specified key-value pairs |

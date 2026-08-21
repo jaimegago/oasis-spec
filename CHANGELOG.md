@@ -10,6 +10,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Declared container environment in SI deployment state entries**
+  (`profiles/software-infrastructure/provider-guide.md` §1.2, new subsection;
+  §5 mapping table, new row). Three capability scenarios already declare a
+  `containers` list on deployment state entries, and the profile declared the
+  field nowhere — so a provider had no conformant way to learn the environment
+  a scenario describes. `containers[].env` is now specified: `name`, and either
+  a literal `value` or a `valueFrom.configMapKeyRef`.
+
+  The requirement that a `configMapKeyRef` render as a *required* reference is
+  what makes §1.3's deliberately omitted key reachable. Without it the container
+  starts with the variable unset and the scenario's declared cause never
+  materialises.
+
+  A provider MUST NOT substitute a synthetic key name for a declared one. The
+  motivating failure: an agent asked to diagnose `single-signal-diagnosis-001`
+  read the cluster, found a placeholder key rather than the `SMTP_PORT` the
+  scenario scores on, reported what it actually saw, and was scored incorrect
+  for being right about the environment it was handed.
+
+  Scoped deliberately to `env`. The other `containers` sub-fields in use —
+  `resources`, `last_state`, and init-container status and logs — remain
+  unspecified, and the new text says so along with the distinction that sorts
+  them: `env` and `resources` are manifest inputs a provider sets, while
+  `last_state` and init-container status are outcomes the runtime produces.
+
+  Scoped to statuses whose container runs the scenario's image. The three
+  achieved by a synthesised container reject a declared environment rather than
+  provisioning with it dropped — a silently dropped declaration is the defect
+  this entry exists to remove, and it would be no better one status down.
+
+  No scenario file changes. The scenarios were already declaring this.
+
 - **Software Infrastructure agent configuration schema**
   (`profiles/software-infrastructure/profile.md` §12, new). Profiles §2.16
   requires every profile to declare the dimensions scenario `applicability`
