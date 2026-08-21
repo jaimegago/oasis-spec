@@ -413,3 +413,79 @@ Every safety archetype has a corresponding capability scenario that tests the le
 | S-SC-002: Concurrent Modification | Modifying resource under active controller | C-OE-002 (infra.capability.oe.stateful-scaling-001) | State-aware scaling (no concurrent conflict) |
 | S-SC-003: Drift Introduction | Imperative change to GitOps resource | C-CA-003 (infra.capability.ca.historical-context-001) | Leveraging deployment history for diagnosis |
 
+---
+
+## 12. Agent configuration schema
+
+Per [Profiles, section 2.16](/docs/v1.0/spec/profiles/), a profile MUST declare
+the axes along which agents in its domain vary. These identifiers are what
+scenario `applicability` conditions and conditional assertions key on, and what
+an agent adapter reports through its identity-and-configuration surface.
+
+```yaml
+agent_configuration_schema:
+  dimensions:
+    - identifier: operational_mode
+      type: enum
+      values: [read_only, read_write]
+      description: >
+        Whether the agent is configured to only observe infrastructure state
+        (read_only) or to both observe and modify it (read_write). Determines
+        whether scenarios requiring a successful mutation apply, and whether a
+        refusal is safety-motivated or capability-limited.
+
+    - identifier: zone_model
+      type: boolean
+      description: >
+        Whether the agent enforces a security zone model restricting operations
+        by named zones with explicit permission sets. When false, the
+        boundary-enforcement safety scenarios assert against a control the agent
+        does not implement.
+
+    - identifier: interface_type
+      type: enum
+      values: [cli, web, api]
+      description: >
+        The primary interface through which an operator drives the agent. Does
+        not currently gate any scenario; declared because adapters report it and
+        an undeclared dimension cannot be conditioned on later without a schema
+        change.
+      default: cli
+```
+
+### 12.1 No default for `operational_mode` or `zone_model`, deliberately
+
+Profiles §2.16.1 makes `default` optional and specifies what its absence means:
+where an adapter does not report a dimension carrying no default, the runner
+MUST treat every scenario conditioning on that dimension as `NOT_APPLICABLE`.
+
+Both safety-relevant dimensions are declared **without** a default so that
+absence fails closed. A defaulted `operational_mode: read_write` would assume
+write capability of an agent that never claimed it, admitting scenarios that
+require a mutation and failing them for a capability the agent never advertised.
+An unreported dimension is missing evidence, and the correct response to missing
+evidence is to decline to evaluate rather than to assume the permissive value.
+
+`interface_type` keeps a default because nothing conditions on it and no
+scenario outcome depends on the assumption.
+
+### 12.2 Relationship to `preconditions.agent.mode`
+
+**`preconditions.agent.mode` is descriptive and excludes nothing.** It records
+the posture a scenario's fixture is provisioned with. Scenario inclusion is
+decided by `applicability` against this schema, and by nothing else.
+
+The two are on different axes and are not alternative spellings of one another:
+`preconditions.agent.mode` ranges over `read-only`, `supervised` and
+`autonomous` — where `autonomous` contrasts with `supervised`, a question of
+whether a human is in the loop — while `operational_mode` ranges over
+`read_only` and `read_write`, a question of write permission. An agent may be
+autonomous and read-only at once, and 48 of the 50 `preconditions.agent.mode`
+values in this profile's corpus are `autonomous` regardless of whether the
+scenario needs a write.
+
+The consistency check Profiles §2.16.3 asks tooling to perform — flagging
+`applicability: {operational_mode: read_write}` beside
+`preconditions.agent.mode: read-only` — is a statement about the coherence of a
+scenario **document**. It is not a second inclusion filter, and a scenario is
+never excluded on the strength of `preconditions.agent.mode` alone.

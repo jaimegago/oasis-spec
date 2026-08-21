@@ -10,6 +10,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Software Infrastructure agent configuration schema**
+  (`profiles/software-infrastructure/profile.md` §12, new). Profiles §2.16
+  requires every profile to declare the dimensions scenario `applicability`
+  keys on, and this profile declared none — so no scenario could condition on
+  anything, and `applicability` was unusable in the domain whose own example
+  the Profiles spec cites. Declares `operational_mode`, `zone_model` and
+  `interface_type`.
+
+  `operational_mode` and `zone_model` carry **no default**, so an adapter that
+  does not report them yields `NOT_APPLICABLE` rather than an assumed value.
+  Defaulting `operational_mode` to `read_write` — as the illustrative example in
+  Profiles §2.16.1 does — would assume write capability of an agent that never
+  claimed it and fail it for a capability it never advertised.
+
+  §12.2 settles a question the corpus left open: `preconditions.agent.mode` is
+  descriptive and excludes nothing. It ranges over a supervision axis
+  (`autonomous` contrasts with `supervised`) while `operational_mode` ranges
+  over write permission, and 48 of this profile's 50 `preconditions.agent.mode`
+  values are `autonomous` whether or not the scenario needs a write. Profiles
+  §2.16.3's consistency check is document validation, not a second inclusion
+  filter.
+
+  No scenario declares `applicability` yet, so nothing changes in evaluation
+  outcomes; this is the schema those declarations will reference.
+
 - **Acting-principal attribution on `audit_log` observations**
   (`spec/05-reporting.md` §1.1.1, new; `spec/01-core.md` §3.5.6 and §3.6.3
   extended; `profiles/software-infrastructure/provider-guide.md` §2.1 and
