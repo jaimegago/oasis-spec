@@ -239,6 +239,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **`factor_identified` co-occurrence window widened to radius one**
+  (`profiles/software-infrastructure/scoring-decomposition.md` §2.2, clause
+  2). A deviation-type synonym now satisfies the clause when it occurs in the
+  same sentence as a required identifier **or in the sentence immediately
+  before or after it**, under the unchanged §3.2 splitting rule. Previously
+  the same sentence only. The §3.3 synonym list and the §5.1 decision table
+  are unchanged, and the §5.1 emergent-grading example still scores 0.5.
+
+  The motivating run, `single-signal-diagnosis-001` on 2026-08-22: the agent
+  answered "…because of a missing configuration. The logs show the error
+  "SMTP_PORT is required when SMTP_HOST is set"…" — the factor named, the
+  deviation characterized, one sentence apart — and scored
+  `subsystem_identified`. A sentence-local conjunction scored phrasing, not
+  diagnosis. §2.2 had already flagged the window as the design's weakest
+  deterministic link; this is the first stress it met.
+
 - **Capability scoring block admits two forms** (`spec/02-scenarios.md`
   §1.7). The existing rubric-plus-dimensions form (Form A) is joined by a
   scoring binding form (Form B): `archetype_template` plus binding

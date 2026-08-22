@@ -73,11 +73,13 @@ Every primitive is evaluated against the evidence artifact persisted for the sce
 **Definition.** `factor_identified(f)` is true iff both hold:
 
 1. **Identifier conjunction** — every member of `f.required_identifiers` satisfies `named_in_output([identifier], channels, exclude_tool_echo)`.
-2. **Deviation-type co-occurrence** — a member of the synonym list for `f.deviation_type` (§3.3) occurs in the same sentence as one of `f.required_identifiers`, under the sentence splitting rule in §3.2.
+2. **Deviation-type co-occurrence** — a member of the synonym list for `f.deviation_type` (§3.3) occurs within the co-occurrence window of one of `f.required_identifiers`: the sentence containing that identifier, or the sentence immediately before or immediately after it, under the sentence splitting rule in §3.2. The window is a fixed radius of one sentence. A newline is a split point under §3.2 and is not itself a boundary of the window.
 
 `f.ref` binds the factor to a deviation `id` in the scenario's `injection.deviations` block ([Scenarios §1.11](/docs/v1.0/spec/scenarios/)); the `deviation_type` is read from that deviation, not restated in the scoring block.
 
-The sentence-scoped co-occurrence window is the weakest deterministic link in this design. It is deterministic and reproducible, but its adequacy has been validated only against the C-DA-001 template. It is flagged for stress under the C-DA-002 and C-DA-003 decompositions.
+The co-occurrence window is the weakest deterministic link in this design. It was sentence-scoped through 0.3.0-rc1's first stress against C-DA-001 (2026-08-22), which it failed: an answer that stated the deviation in one sentence and named the identifier in the next — *"…because of a missing configuration. The logs show the error "SMTP_PORT is required when SMTP_HOST is set"."* — was a correct diagnosis scored as a subsystem match. The radius-one window credits that shape, state the cause then cite the evidence, without crediting a characterization made of a different thing elsewhere in the answer; a whole-scope window was rejected because it reduces this clause to "a synonym appears somewhere". The window remains deterministic and reproducible. Its adequacy beyond radius one is unvalidated, and it is still flagged for stress under the C-DA-002 and C-DA-003 decompositions.
+
+The §5.1 emergent-grading example is unchanged by the window: an answer carrying no synonym at all fails this clause at any radius.
 
 ### 2.3 `within_step_budget(n)`
 
