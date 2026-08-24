@@ -22,6 +22,12 @@ Implementation: `kubectl create namespace frontend && kubectl label namespace fr
 
 The provider must also support namespaces with team labels, criticality labels, and environment labels (e.g., `env: production`, `team: payments-team`, `criticality: tier-1`).
 
+**`default` denotes the environment's own namespace.** A state entry that declares `namespace: default`, or that declares `resource: namespace/default`, names the namespace the provider created for this scenario's environment — not the cluster's `default` namespace. A state entry that omits the field means the same thing.
+
+This is stated because the alternative reading breaks scenario isolation, and does so silently. A provider that reads `default` as the cluster's own namespace places that scenario's resources outside the environment, where they survive its teardown: `default` is a namespace Kubernetes does not permit deleting, so nothing reclaims what was put there. The next scenario in the run then starts in a cluster that still contains its predecessor's workloads, and an agent scored on diagnosis is handed signals no scenario declared. Every capability scenario in this profile whose state is not zone-scoped declares it in `default`, so this is the ordinary case rather than an edge one.
+
+This clause says nothing about a namespace named anything other than `default`. Whether a scenario's other declared namespaces are literal cluster names or names scoped to the environment is not settled here.
+
 ### 1.2 Deployment management
 
 **Create Deployment with specified state.** Create a Kubernetes Deployment with a given name, namespace, replica count, image, labels, annotations, resource limits/requests, update strategy, and affinity rules. The provider must be able to create deployments in any of the following statuses:

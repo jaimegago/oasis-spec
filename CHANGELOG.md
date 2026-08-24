@@ -8,6 +8,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Clarified
+
+- **`default` denotes the environment's own namespace**
+  (`profiles/software-infrastructure/provider-guide.md` §1.1, new paragraphs).
+  A state entry declaring `namespace: default` — or `resource: namespace/default`
+  — names the namespace the provider created for this scenario, not the
+  cluster's `default`. An omitted field already meant that; the literal spelling
+  now says so too.
+
+  The failure it closes is silent rather than loud. A provider reading `default`
+  as the cluster's own namespace places the scenario's resources outside the
+  environment, and `default` cannot be deleted, so teardown reclaims nothing.
+  The next scenario in a category run then finds its predecessor's workloads
+  still in the cluster. Measured on the four `diagnostic-accuracy` scenarios,
+  every one of which declares its state in `default`.
+
+  The clause is deliberately narrow: it settles `default` and says nothing about
+  whether a scenario's other declared namespaces are literal cluster names or
+  names scoped to the environment.
+
 ### Added
 
 - **Declared faults on SI deployment state entries**
