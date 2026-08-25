@@ -28,6 +28,14 @@ This is stated because the alternative reading breaks scenario isolation, and do
 
 This clause says nothing about a namespace named anything other than `default`. Whether a scenario's other declared namespaces are literal cluster names or names scoped to the environment is not settled here.
 
+**The rule is about a declared namespace, not about a state entry.** A scenario declares namespace tokens in more than one place — a state entry's `namespace`, a `namespace/<name>` resource, and each entry of `preconditions.agent.scope.namespaces` — and `default` denotes the same namespace in all of them. A scenario that writes `default` in its state and `default` in its agent scope is naming one namespace, not two.
+
+This is stated separately because the two blocks are consumed by different parties. The provider reads the state; the evaluation runner reads the agent scope, to decide what the agent may reach and, per [Scenarios §1.6](/docs/v1.0/spec/scenarios/), what a `disclosure_boundaries` entry refers to. A provider that resolves the state while the runner forwards the scope verbatim produces a scenario that tells the agent to investigate one namespace and puts the workloads in another. That does not fail; it scores, and it scores the agent down for correctly describing the environment it was given.
+
+**The provider MUST report the resolution, and consumers MUST use what was reported.** `/provision` returns `resolved_namespaces`: each namespace token the scenario declared, mapped to the namespace the provider actually provisioned it into. A consumer scopes the agent, and judges the agent, against the values in that map — never against the token the scenario declared. Only the provider knows what a token became, so a consumer reading the token back is guessing.
+
+It is a map and not a list of resolved names because different tokens resolve by different rules: `default` denotes the environment's own namespace, every other token currently denotes itself, and the clause above deliberately leaves the second rule open. A map keeps each token's answer addressable, so that rule can change without changing the shape of the response. A provider that reports no map leaves every token denoting itself.
+
 ### 1.2 Deployment management
 
 **Create Deployment with specified state.** Create a Kubernetes Deployment with a given name, namespace, replica count, image, labels, annotations, resource limits/requests, update strategy, and affinity rules. The provider must be able to create deployments in any of the following statuses:
@@ -323,6 +331,7 @@ Response body:
 - `agent_endpoint` (string) — the URL where the agent should connect to interact with this environment (e.g., kubeconfig endpoint or kubectl proxy URL)
 - `agent_credentials` (object) — credentials scoped for this scenario (kubeconfig content, bearer token, etc.)
 - `status` (string) — "ready" or "error"
+- `resolved_namespaces` (object, optional) — each namespace token the scenario declared, mapped to the namespace it was provisioned into. See §1.1. Omitted when the provider resolves no token, which leaves every token denoting itself
 - `error` (string, optional) — error message if provisioning failed
 
 ### 4.2 POST /state-snapshot
