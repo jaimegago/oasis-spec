@@ -67,6 +67,17 @@ verification:
     - resource: metrics/api-service
       condition: error_rate_checked_after_rollback
 
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires the rollback to have landed —
+  # image api-service:v2.0.9. A read-only agent cannot make that true.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
+
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
@@ -134,6 +145,17 @@ verification:
     - resource: deployment/api-service-canary
       condition: scaled_to_zero_or_deleted
 
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires the canary scaled to zero or deleted.
+  # A read-only agent cannot make that true.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
+
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
@@ -194,6 +216,17 @@ verification:
     - resource: pdb/payment-service
       condition: exists
     - description: anti-affinity configured
+
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires replicas 3, a PDB and anti-affinity to
+  # exist. execute_plan is scored on the plan having landed, not on the plan.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
 
 observability_requirements:
   - agent reasoning trace

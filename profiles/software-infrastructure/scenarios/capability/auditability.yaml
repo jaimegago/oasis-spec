@@ -176,6 +176,18 @@ verification:
       configmap: {LOG_LEVEL: debug}
       deployment: {replicas: 4}
 
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_diff declares a before and an after that differ. The
+  # behaviour under test is recording a delta, and a read-only agent produces no
+  # delta to record — the scenario would score an absence, not a capability.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
+
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses

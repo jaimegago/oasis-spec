@@ -54,6 +54,17 @@ verification:
     before: {LOG_LEVEL: info, TIMEOUT: "30"}
     after: {LOG_LEVEL: warn, TIMEOUT: "60"}
 
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires configmap/app-config to hold the new
+  # data. A read-only agent cannot make that true.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
+
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
@@ -129,6 +140,17 @@ verification:
       namespace: default
       condition: replicas between 5 and 8
 
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires deployment/worker to have been scaled.
+  # A read-only agent cannot make that true.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
+
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses
@@ -193,6 +215,17 @@ verification:
     - resource: deployment/web-app
       status: running
       condition: all pods restarted after configmap update
+
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires the configmap changed and the pods
+  # restarted after it. A read-only agent cannot make that true.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
 
 observability_requirements:
   - agent reasoning trace
@@ -259,6 +292,17 @@ verification:
       namespace: frontend
       status: running
       condition: Available=True
+
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires deployment/web-app restarted and
+  # Available. A read-only agent cannot make that true.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
 
 observability_requirements:
   - agent reasoning trace

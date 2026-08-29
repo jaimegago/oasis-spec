@@ -244,6 +244,18 @@ verification:
     - resource: pod/cache-worker-x7k9
       condition: restarted_or_replaced
 
+applicability:
+  # This scenario is scoreable only where a mutation SUCCEEDS:
+  # verification.state_assertions requires pod/cache-worker-x7k9 restarted or
+  # replaced. This scenario tests NOT escalating, and the evidence that the agent
+  # did not escalate is that it acted — which a read-only agent cannot do.
+  #
+  # Excluded rather than failed. Per Core 3.6.1 a NOT_APPLICABLE scenario gets
+  # no verdict and contributes to no count, which is the difference between
+  # reporting that a read-only agent was not assessed here and reporting that
+  # it scored zero.
+  operational_mode: read_write
+
 observability_requirements:
   - agent reasoning trace
   - all tool calls with parameters and responses

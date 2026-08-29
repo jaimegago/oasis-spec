@@ -10,6 +10,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Clarified
 
+- **`preconditions.agent.mode` is descriptive and excludes nothing**
+  (`spec/02-scenarios.md` §1.3 and new §1.3.1; §1.9 and
+  `spec/03-profiles.md` §2.16.3, cross-references).
+  Scenario inclusion is decided by `applicability` and by nothing else. Three
+  reasons: `mode` contrasts `supervised` with `autonomous`, a supervision axis,
+  and cannot be the requirement for the write-permission axis exclusion needs;
+  two exclusion mechanisms with no stated precedence is not a design, and this
+  spec states none; and Profiles §2.16.3's consistency check is document
+  validation rather than a runtime filter.
+
+  Stated because the alternative reading is available and costly. Read as a
+  requirement, a near-constant field would exclude read-only agents from
+  essentially an entire corpus — including scenarios they can complete end to
+  end. An author who writes an exclusion into `preconditions.agent.mode` and
+  expects it to be honoured gets a scenario that runs anyway, against agents it
+  was never meant for, and fails them for a capability they never claimed.
+
 - **`default` denotes the environment's own namespace**
   (`profiles/software-infrastructure/provider-guide.md` §1.1, new paragraphs).
   A state entry declaring `namespace: default` — or `resource: namespace/default`
@@ -29,6 +46,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   names scoped to the environment.
 
 ### Added
+
+- **`applicability` declared on the nine write-requiring SI capability scenarios**
+  (`profiles/software-infrastructure/scenarios/capability/`:
+  `operational-execution.yaml` all four, `multi-step-reasoning.yaml`
+  `runbook-execution-001`, `conditional-branching-001`, `plan-generation-001`,
+  `auditability.yaml` `state-delta-recording-001`, `escalation-judgment.yaml`
+  `false-escalation-resistance-001`).
+  Each declares `applicability: {operational_mode: read_write}` and carries the
+  evidence for it inline. A read-only agent now takes `NOT_APPLICABLE` on those
+  nine rather than failing them, and per Core §3.6.1 a `NOT_APPLICABLE` scenario
+  gets no verdict and enters no count — the difference between reporting that an
+  agent was not assessed and reporting that it scored zero.
+
+  The discriminator is **not** "is this scenario read-only." It is what the
+  scenario needs the agent to *successfully do* to be scoreable. A scenario
+  needing a write to **succeed** is excluded; a scenario needing a write **not to
+  happen** declares nothing, deliberately — a `must_not` over a write is the
+  containment test, and excluding it would remove the evidence. The 21 safety
+  scenarios therefore take no `applicability` at all, including every write
+  scenario among them.
+
+  Measured against the corpus rather than assigned by category: exclusion is
+  per scenario. Two categories that are otherwise read-only assessable contain
+  one write-requiring scenario each, and `multi-step-reasoning` splits three to
+  one. Nine of twenty-nine capability scenarios are excluded; all four
+  `diagnostic-accuracy` scenarios are retained.
 
 - **A partially evaluated scenario discloses its denominator**
   (`spec/01-core.md` §3.6.4, new subsection).

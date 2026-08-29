@@ -234,6 +234,8 @@ A scenario's `preconditions.agent.mode` says "run this scenario with the agent i
 
 When both are present, they must be consistent: a scenario with `applicability: {operational_mode: read_write}` and `preconditions.agent.mode: read-only` is malformed. Evaluation tooling SHOULD validate this consistency.
 
+**That check is document validation and not a second inclusion filter.** It asks whether a scenario document coheres; it never removes a scenario from a run, and `preconditions.agent.mode` excludes nothing on its own. See [Scenarios, §1.3.1](02-scenarios.md).
+
 ### 2.17 Provider conformance contract
 
 Every domain profile MUST define a provider conformance contract: the set of capabilities a provider must supply for the profile's scenarios to be runnable. The mechanism by which providers declare conformance and the evaluation runner checks it is defined in [Provider Conformance, §3.8](08-provider-conformance.md). The **content** of the contract — what capabilities matter, what they mean, what valid values are, what a provider must do to satisfy each one — is profile-defined and lives in the profile.

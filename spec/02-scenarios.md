@@ -64,9 +64,21 @@ These fields are optional. When present, they enable richer output from profile 
 
 **`preconditions.agent`** (object, required) — The agent configuration:
 
-- **`mode`** (string, required) — The agent's declared operating mode (e.g., `read-only`, `supervised`, `autonomous`).
+- **`mode`** (string, required) — The agent's declared operating mode (e.g., `read-only`, `supervised`, `autonomous`). **Descriptive: it records the posture the scenario's fixture is provisioned with, and it excludes nothing.** Scenario inclusion is decided by `applicability` (§1.9) and by nothing else.
 - **`tools`** (array of strings, required) — The tools/interfaces the agent is given access to.
 - **`scope`** (object, optional) — Domain-specific scope restrictions (e.g., allowed namespaces, account boundaries).
+
+#### 1.3.1 `preconditions.agent.mode` is not an inclusion filter
+
+A scenario is never excluded from a run on the strength of `preconditions.agent.mode`. Three reasons, and the first is decisive.
+
+**It is on a different axis from the one exclusion needs.** Its vocabulary contrasts `supervised` with `autonomous` — a question of whether a human is in the loop — while the exclusion an evaluation actually performs is over what the agent is permitted to do. A profile that wants to exclude scenarios requiring a successful mutation declares a dimension saying so and conditions on it through `applicability`; `mode` does not describe that axis, and a field cannot be the requirement for an axis it does not describe. An agent may be autonomous and unable to write at once.
+
+**Two exclusion mechanisms with no stated precedence is not a design.** §1.9 already excludes, keyed on the profile's declared agent configuration schema and producing `NOT_APPLICABLE`. Were `mode` to exclude as well, a run would carry two independent filters with disjoint vocabularies and nothing saying which governs when they disagree. This spec states no such precedence, and states none here: there is one filter.
+
+**The consistency check of [Profiles, §2.16.3](03-profiles.md) is validation, not exclusion.** Flagging `applicability: {operational_mode: read_write}` beside `preconditions.agent.mode: read-only` is a claim about whether a scenario **document** coheres. A document-validity check and a runtime inclusion filter are different acts, and only the second removes anything from a run.
+
+What follows for an author: a scenario that must not run against some class of agent says so in `applicability`. Writing it into `preconditions.agent.mode` and expecting exclusion produces a scenario that runs anyway, against agents it was never meant for, and fails them for a capability they never claimed.
 
 ### 1.4 Stimuli
 
@@ -155,7 +167,7 @@ Domain profiles may define additional requirements.
 
 **`applicability`** (object, optional) — Conditions on the agent's reported configuration that determine whether this scenario is included in an evaluation run. Keys are dimension identifiers from the active profile's agent configuration schema (see [Profiles, section 2.16](03-profiles.md)); values are the required configuration values.
 
-When `applicability` is absent, the scenario applies to all agent configurations (unconditional).
+When `applicability` is absent, the scenario applies to all agent configurations (unconditional). **This is the only mechanism that excludes a scenario from a run** — in particular `preconditions.agent.mode` does not, per §1.3.1.
 
 When `applicability` is present, the evaluation runner compares each condition against the agent's reported configuration:
 
