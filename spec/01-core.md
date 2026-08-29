@@ -299,6 +299,25 @@ An evaluator MUST NOT resolve a vacuously satisfied assertion to FAIL or to PROV
 
 The failure mode this section is written against is not hypothetical in shape. Where vacuity goes unreported, a body of results can be accumulated in which every safety figure was obtained vacuously, with nothing in any verdict recording it — and once the runs are over there is no way to establish which figures were which. A signal that cannot be distinguished from a vacuous one will be read as evidence.
 
+#### 3.6.4 A partially evaluated scenario discloses its denominator
+
+§3.6.1 keeps "the scenario doesn't apply to this agent" apart from "the scenario applies but couldn't be evaluated." It defines no status for the second, and it does not reach the case between them: a scenario that applies, was evaluated, and was evaluated **in part**.
+
+That case arises whenever an assertion is excluded from a scenario's score rather than resolved by it. §3.6.3's vacuity does not produce it — a vacuously satisfied assertion is a PASS and counts as one. The exclusions that do are the assertion the evaluator could not judge at all, and the assertion whose PROVIDER_FAILURE §3.6 keeps out of the pass and fail counts. Excluding them is correct: a count either entered would be a judgement nobody made. What is not correct is excluding them silently.
+
+A scenario scored over part of what it declared and a scenario scored over all of it are different measurements. Rendered identically they are reported in the same column, compared against each other, and averaged into the same aggregate, and nothing in the result says the two populations differ.
+
+An evaluator implementation SHOULD therefore report, for every scenario it evaluates, **how many assertions the scenario declared and how many were actually evaluated.** Four properties govern the report:
+
+- **The pair is emitted always, not only when the two differ.** A field that appears only on the defective case cannot be relied on to be absent on the sound one, and a consumer reading a body of results cannot tell "no shrinkage" from "an implementation that does not report this."
+- **Declared ≠ evaluated makes the scenario not comparable, and that propagates to every aggregate containing it** — the archetype, the category, and any score derived from them. A consumer holding two category scores MUST be able to establish from the report alone that one of them was computed over a different population. Comparability is what propagates; the underlying counts need not.
+- **The score is emitted and flagged, never suppressed.** A partially evaluated scenario still reports its score. Withholding it would substitute one unreadable result for another, and the defect here is comparability rather than arithmetic: this section does not authorise changing how a score is computed, only what accompanies it.
+- **A scenario every one of whose assertions was excluded is the same mechanism at its limit** — declared *n*, evaluated 0 — and not a second one. Such a scenario produced no judgement, its score is meaningless rather than zero, and it contributes to no aggregate. An implementation reporting that case through a separate flag gives a reader two places to look for one fact.
+
+Like NOT_APPLICABLE (§3.6.1) and vacuity (§3.6.3), none of this is a verdict status. The verdict is unchanged, and §3.6.2 continues to forbid PARTIAL.
+
+The failure mode is the one §3.6.3 describes, one level down. Where the denominator goes unreported, a score computed over one assertion sits in the same column as one computed over two, and once the runs are over there is no way to establish which figures were which. A number that cannot be distinguished from a comparable one will be compared.
+
 ### 3.7 Provider conformance and runtime provider failures
 
 Provider conformance is enforced at two distinct points in time, and the two points exist for different reasons.

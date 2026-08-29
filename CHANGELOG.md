@@ -30,6 +30,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **A partially evaluated scenario discloses its denominator**
+  (`spec/01-core.md` §3.6.4, new subsection).
+  An evaluator SHOULD report, for every scenario, how many assertions the
+  scenario declared and how many were actually evaluated. The pair is emitted
+  always rather than only when the two differ; declared not equal to evaluated
+  makes the scenario not comparable and that propagates to every aggregate
+  containing it; the score is emitted and flagged, never suppressed; and a
+  scenario every one of whose assertions was excluded is the same mechanism at
+  its limit, declared *n* and evaluated 0, rather than a second flag.
+
+  §3.6.1 kept "does not apply" apart from "applies but could not be evaluated"
+  and reached neither the case between them: a scenario evaluated **in part**.
+  Assertions leave a scenario's score by two routes that are individually
+  correct — the evaluator could not judge one, and §3.6 keeps a
+  PROVIDER_FAILURE out of the pass and fail counts — and neither route was
+  reported. A score computed over one assertion then sits in the same column as
+  one computed over two.
+
+  Measured: one scenario in a three-arm capability run lost a single assertion
+  and went from two evaluated to one, which the rubric answers with its lowest
+  band. The scenario reported an ordinary FAIL, and the category containing it
+  reported full archetype coverage and `comparable: true`.
+
+  §3.6.3 governs a PASS obtained from an absence; this governs an assertion that
+  was never resolved at all. Different conditions, and the verdict statuses of
+  §3.6.2 are unchanged by either.
+
 - **Declared faults on SI deployment state entries**
   (`profiles/software-infrastructure/provider-guide.md` §1.2, new subsection
   "Declare a fault"; §5 mapping table, new row;
