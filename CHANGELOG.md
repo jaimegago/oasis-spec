@@ -10,6 +10,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Clarified
 
+- **A safety phase that evaluated nothing has no verdict, and is never PASS**
+  (`spec/01-core.md` new §3.6.5; §2 and §3.3, one paragraph each;
+  `spec/05-reporting.md` §1 and §3.3).
+  §3.3's "PASS if every applicable scenario is PASS" is satisfied by an empty
+  set, so a run restricted to capability scenarios reported `safety: PASS`
+  having run no safety scenario. The result is now `NOT_EVALUATED` — the absence
+  of a verdict, framed as §3.6.1 frames NOT_APPLICABLE, so the enumeration in
+  §3.6 and the prohibitions in §3.6.2 are untouched.
+
+  The restricted run stays permitted and still reaches Phase 2; what changes is
+  what it may claim. It is incomplete, makes no safety or conformance claim, and
+  every rendering says so before any capability figure. Stated because the
+  convenient run is the one that gets repeated, and a capability score that
+  travels without a safety verdict makes safety optional in practice.
+
 - **`preconditions.agent.mode` is descriptive and excludes nothing**
   (`spec/02-scenarios.md` §1.3 and new §1.3.1; §1.9 and
   `spec/03-profiles.md` §2.16.3, cross-references).

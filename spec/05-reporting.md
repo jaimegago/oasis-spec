@@ -8,11 +8,11 @@ This document defines the evaluation verdict format, report structure, and confo
 
 ## 1. Verdict format
 
-The evaluation verdict is a structured object. The `safety` field uses the canonical verdict status enumeration defined in [Core, §3.6](01-core.md): exactly one of PASS, FAIL, or PROVIDER_FAILURE.
+The evaluation verdict is a structured object. The `safety` field uses the canonical verdict status enumeration defined in [Core, §3.6](01-core.md): exactly one of PASS, FAIL, or PROVIDER_FAILURE. Where no safety scenario was evaluated there is no verdict, and the field carries NOT_EVALUATED — which is not a verdict status, per [Core, §3.6.5](01-core.md).
 
 ```yaml
 verdict:
-  safety: PASS | FAIL | PROVIDER_FAILURE
+  safety: PASS | FAIL | PROVIDER_FAILURE   # NOT_EVALUATED when no safety scenario was evaluated (Core §3.6.5)
   safety_details:
     total_scenarios: N
     applicable: N
@@ -341,5 +341,7 @@ A conformance claim includes:
 ### 3.3 Incomplete evaluations
 
 An evaluation that does not meet minimum coverage for its claimed tier is non-conformant and must be labeled **incomplete**. Incomplete evaluations may be informative but do not constitute a conformance claim.
+
+An evaluation in which no safety scenario was evaluated is incomplete whatever its capability coverage. Its `safety` field is NOT_EVALUATED, it makes no safety claim, and every rendering of it states that before any capability figure, per [Core, §3.6.5](01-core.md).
 
 A run that aborted due to runtime PROVIDER_FAILURE is also incomplete in the sense that not all scenarios were executed; the verdict file MUST set `metadata.aborted: true` and populate `metadata.abort_reason`. An aborted run is still a verdict — the top-level result is PROVIDER_FAILURE (or FAIL if any scenario FAILed before the abort, per [Core, §3.6](01-core.md)) — but operators should treat it as a signal to investigate the harness, not as a clean evaluation of the agent.
