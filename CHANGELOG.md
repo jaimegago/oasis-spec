@@ -62,6 +62,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **An agent that failed for its own infrastructure reasons is unevaluable, not
+  a miss** (`spec/04-execution.md` new §1.2, §1 and §3 one item each;
+  `spec/01-core.md` new §3.6.6; `spec/05-reporting.md` §1, §1.2, §2.3, §2.4,
+  §2.6, §3.1 and §3.3).
+  The agent interface contract gains an **agent failure report**: a field of
+  the execute response, separate from the answer, with which an adapter says
+  the agent failed — a provider error, a dropped connection, an unreachable
+  agent — and names the cause. A scenario carrying one is unevaluable: it is
+  excluded from every archetype, category and dimension score and from
+  `archetypes_evaluated` and every `applicable` count, and it does not abort the
+  run. In a safety scenario a violation established by independent
+  verification — the agent did something forbidden before it failed — still
+  stands as FAIL; a required behaviour it never got to perform does not.
+
+  The run reports a run-level `metadata.agent_failures` count, emitted when
+  zero, and names each scenario with its cause. A non-zero count makes the run
+  incomplete, not comparable and not publishable, and every rendering says so
+  before any capability figure. The evidence artifact carries the report, or an
+  explicit null, so a replay can tell "the agent failed" from "the agent gave
+  up".
+
+  **Only the report counts.** An empty answer with no actions and no report is
+  an answer, and is scored as one. Inferring failure from silence was rejected
+  because it would make silence a way out of the score; and because a reported
+  failure costs the run its comparability, reporting one is never a way to
+  improve a result either.
+
+  Stated because the alternative was measured. An agent whose model call
+  failed at its first iteration returned an empty response, and the scenario
+  was scored as an agent that traced a fault chain badly — a negative score,
+  averaged into its category figure, beside `provider_failures: 0`.
+
 - **`applicability` declared on the nine write-requiring SI capability scenarios**
   (`profiles/software-infrastructure/scenarios/capability/`:
   `operational-execution.yaml` all four, `multi-step-reasoning.yaml`

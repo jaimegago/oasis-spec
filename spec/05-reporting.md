@@ -95,6 +95,12 @@ verdict:
       warnings: [list of coverage warnings, if any]
     aborted: false | true       # true if run was terminated by runtime PROVIDER_FAILURE
     abort_reason: [string]      # present when aborted = true
+    agent_failures: N           # run-level, both phases: scenarios whose adapter sent an agent
+                                # failure report (Core §3.6.6). Emitted when 0. Non-zero: the run
+                                # is incomplete (§3.3), not comparable, not publishable
+    agent_failure_scenarios:    # present when agent_failures > 0
+      - scenario_id: "..."
+        cause: [string]         # verbatim from the report
   adversarial_verification:  # optional — present only when performed
     performed: true | false
     generator:
@@ -117,6 +123,8 @@ verdict:
       passed: N
       failed: N
 ```
+
+**The agent failure count is run-level, and sits beside the abort fields rather than beside `safety_details.provider_failures`.** Those are per-phase: they count safety scenarios. An agent can fail in either phase, and a count that saw only one would let a failure in the other pass unreported. The count is emitted when it is zero, so that its absence is never read as a clean run. The provider-failure fields and the agent-failure fields are kept apart because they name different owners: PROVIDER_FAILURE is the harness, an agent failure is the agent ([Core, §3.6.6](01-core.md)).
 
 ### 1.1 Observation response shape
 
@@ -190,7 +198,10 @@ Where an environment's agent principal cannot be established, the report states 
 - the agent's reasoning trace;
 - all tool calls, with parameters and full response bodies;
 - the observation set collected for the scenario, in the shape defined in §1.1;
-- the observed model for the execution.
+- the observed model for the execution;
+- the agent failure report, where the adapter sent one, with its cause ([Execution, §1.2](04-execution.md)), and an explicit null where it did not.
+
+The agent failure report is in the artifact because without it a replay cannot do its job for the case that most needs one. An empty final answer and no actions is what an agent that gave up looks like, and also what an agent whose model call failed looks like; an artifact that records the first identically to the second cannot reproduce a verdict that told them apart, and cannot be used to find out which one happened. The null is explicit for the same reason: an absent field would not distinguish "no report was sent" from "this artifact predates the field".
 
 The scenario record in the verdict MUST reference the artifact by relative path. Tool response bodies are required in full, not summarized: evaluation predicates may be defined over their contents — an evaluator that excludes text echoed from a tool response cannot run without them — and a truncated artifact cannot reproduce the verdict. Replaying an artifact through the same evaluator MUST yield the same result, per [Core, §3.5.4](01-core.md#354-implementation-determinism).
 
@@ -199,7 +210,9 @@ The scenario record in the verdict MUST reference the artifact by relative path.
 ```yaml
 scenario_record:
   scenario_id: "..."
-  result: PASS | FAIL | PROVIDER_FAILURE | [score 0.0-1.0]
+  result: PASS | FAIL | PROVIDER_FAILURE | [score 0.0-1.0]   # absent when unevaluable (Core §3.6.6)
+  agent_failure:              # present when the adapter sent an agent failure report
+    cause: [string]
   observed_model: [string]
   evidence_artifact: "evidence-<scenario-id>.json"   # relative to the run output directory
   session_id: [string]        # provenance join key: verdict → transcript → agent audit trail
@@ -252,6 +265,7 @@ An OASIS-compliant evaluation report must contain the following sections. The re
   - Verification evidence summary
   - For scenarios with `result: PROVIDER_FAILURE`: the runtime fault that prevented independent verification
 - For excluded scenarios (NOT_APPLICABLE): a separate section listing the scenario ID and the configuration condition(s) that caused exclusion. NOT_APPLICABLE is an exclusion state, not a verdict status — these scenarios do not appear in PASS/FAIL/PROVIDER_FAILURE counts.
+- For unevaluable scenarios ([Core, §3.6.6](01-core.md)): a separate list naming each scenario and the cause its agent failure report gave. Like NOT_APPLICABLE, unevaluable is not a verdict status and these scenarios do not appear in PASS/FAIL/PROVIDER_FAILURE counts. A safety scenario whose violation stood despite a report is a FAIL and is counted as one; it is listed here as well, so that the report is not lost.
 - If any scenario has tolerance > 0: a consolidated **Human Review Required** section
 - Statement: "NOT_APPLICABLE scenarios are excluded from pass/fail counts. They indicate the scenario is not relevant to the agent's reported configuration, not that the agent passed."
 
@@ -265,6 +279,7 @@ Reports MUST NOT conflate these two concepts. Human review entries appear in the
 
 ### 2.4 Capability summary
 
+- Where any scenario carried an agent failure report: the count, each scenario with its cause, and the statement that the run's scores are not comparable and the run is not publishable — before any capability figure ([Core, §3.6.6](01-core.md))
 - Per domain-specific category: score, archetype breakdown, core dimension mapping
 - Per core dimension: aggregated score, contributing categories and weights
 - Complexity tier prominently displayed alongside all scores
@@ -288,7 +303,7 @@ For each executed scenario:
 - Stimulus applied
 - Agent behavior observed (reasoning trace, tool calls, actions)
 - Independent verification results, including the `evidence_source` of every observation used
-- Result: PASS, FAIL, or PROVIDER_FAILURE (safety) or score (capability)
+- Result: PASS, FAIL, or PROVIDER_FAILURE (safety) or score (capability); for an unevaluable scenario, no result, and the agent failure report with its cause in its place ([Core, §3.6.6](01-core.md))
 - Observed model for the execution (per §1.2)
 - Relative path to the scenario's evidence artifact, `evidence-<scenario-id>.json`
 - Non-scoring metadata: step count, duration, token usage — reported, never scored
@@ -320,6 +335,7 @@ An implementation claims OASIS conformance at the domain profile level. This sec
 - Safety verdicts computed as the canonical statuses defined in [Core, §3.6](01-core.md): PASS, FAIL, or PROVIDER_FAILURE. Implementations MUST NOT produce NEEDS_REVIEW, INCONCLUSIVE, PARTIAL, or any other verdict status not defined in §3.6.
 - Every applicable assertion is evaluated to a deterministic verdict ([Core, §3.5.3](01-core.md)) — there is no "no heuristic available" escape hatch
 - All outcomes independently verified (never relying on agent self-reporting)
+- A scenario whose response carried an agent failure report is unevaluable per [Core, §3.6.6](01-core.md); an agent failure is never inferred from an empty response ([Execution, §1.2](04-execution.md))
 - Every observation response carries an `evidence_source` block per §1.1; observations with `status: unreachable` are treated as runtime PROVIDER_FAILURE
 - Capability scores computed using the domain profile's scoring model and dimension mappings
 - Reports the agent's effective configuration in the verdict metadata
@@ -343,5 +359,7 @@ A conformance claim includes:
 An evaluation that does not meet minimum coverage for its claimed tier is non-conformant and must be labeled **incomplete**. Incomplete evaluations may be informative but do not constitute a conformance claim.
 
 An evaluation in which no safety scenario was evaluated is incomplete whatever its capability coverage. Its `safety` field is NOT_EVALUATED, it makes no safety claim, and every rendering of it states that before any capability figure, per [Core, §3.6.5](01-core.md).
+
+An evaluation in which any scenario carried an agent failure report is incomplete whatever its coverage. Its `metadata.agent_failures` is non-zero, its scores are not comparable to those of a run in which every scenario was evaluated, it makes no conformance claim, and it is not to be published as an evaluation of the agent, per [Core, §3.6.6](01-core.md). Its operator's response is the one PROVIDER_FAILURE asks for — investigate the cause and rerun — with the difference that the cause is in the agent's infrastructure rather than the harness.
 
 A run that aborted due to runtime PROVIDER_FAILURE is also incomplete in the sense that not all scenarios were executed; the verdict file MUST set `metadata.aborted: true` and populate `metadata.abort_reason`. An aborted run is still a verdict — the top-level result is PROVIDER_FAILURE (or FAIL if any scenario FAILed before the abort, per [Core, §3.6](01-core.md)) — but operators should treat it as a signal to investigate the harness, not as a clean evaluation of the agent.
