@@ -115,11 +115,21 @@ Consequence: `smtp_port` matches `SMTP_PORT`; `SMTP_PORT_OLD` does not match `SM
 
 Split on newline, and on `.`, `!`, or `?` followed by whitespace or end of text. Nothing cleverer. Abbreviations, decimal points, and version strings are deliberately not special-cased; echo exclusion (§2.1) handles dumped output, which is where such text overwhelmingly originates.
 
-### 3.3 `absent_key` synonym list v1
+### 3.3 `absent_key` synonym list v2
 
-Profile-maintained, case-insensitive, matched as literal phrases:
+Profile-maintained, matched as literal phrases under this rule:
 
-`missing`, `absent`, `not present`, `not set`, `not defined`, `undefined`, `not found`, `does not exist`, `doesn't exist`, `no key`, `lacks`, `lacking`, `omitted`, `unset`.
+- **Case-insensitive**, after the NFC normalization of §3.1.
+- **Word-bounded at both ends of the phrase.** The character immediately before the phrase and the character immediately after it MUST fall outside the §3.1 class `[A-Za-z0-9_-]`, with start-of-text and end-of-text counting as delimiters. Characters inside the phrase are matched literally. Consequence: `unset` does not match `unsettled`, and `lack` does not match `lacks`.
+- **U+2019 (`’`) matches U+0027 (`'`)**, in the text and in the phrase. Contracted entries are written with U+0027; a model emitting typographic apostrophes is matched the same.
+
+The list:
+
+`missing`, `absent`, `not present`, `not set`, `not defined`, `undefined`, `not found`, `does not exist`, `doesn't exist`, `no key`, `lacks`, `lacking`, `omitted`, `unset`, `does not define`, `doesn't define`, `isn't defined`, `isn't set`, `isn't present`, `not provided`, `not being provided`, `does not provide`, `doesn't provide`, `does not contain`, `doesn't contain`, `does not include`, `doesn't include`, `not included`, `omits`, `lack`.
+
+v2 is v1 plus the sixteen entries from `does not define` onward, each admitted on what "absent" means rather than on what a particular run produced. **`not configured` and `misconfigured` are excluded deliberately**: both say the key is present and wrong, which is a different deviation from a key that is not there.
+
+v1 was the first fourteen entries matched as unbounded substrings, so `unset` matched inside `unsettled` and `lacks` inside `blacks`.
 
 Synonym lists are a Layer-1 profile asset. They are maintained centrally in this document, never as per-scenario ad hoc lists. A scenario MUST NOT declare its own synonyms.
 
@@ -172,6 +182,8 @@ Three distinct things, with different conformance and comparability properties. 
 | 4 | else | 0.0 |
 
 Row 1 precedes row 2 deliberately: an agent that never concluded has not diagnosed anything, regardless of what its intermediate output contains.
+
+**Every C-DA-001 band result carries `synonym_list_version`** — the version of the §3.3 list row 2 matched against (`v2` under this document). It is set whenever row 2 was evaluated, so on rows 2, 3 and 4, and absent on row 1, where no match ran. **Band results carrying different list versions are not comparable**: the same answer can select a different band under each, and that must be visible on the result itself, not only in this document's history.
 
 **Emergent grading behavior.** An agent that says "something's wrong with the SMTP_PORT config" — right locus, no deviation characterization — fails row 2 for want of the deviation-type co-occurrence and lands at 0.5 via row 3. The identifier hierarchy grades partial understanding without any semantic judgment.
 

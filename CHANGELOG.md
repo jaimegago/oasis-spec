@@ -376,6 +376,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **SI profile: `absent_key` synonym list v2, word-bounded**
+  (`profiles/software-infrastructure/scoring-decomposition.md` §3.3 and §5.1).
+  The list gains sixteen phrases that say a key is absent — `does not define`,
+  `not provided`, `not being provided`, `does not contain`, `omits`, `lack` and
+  their kin — after recorded C-DA-001 declarations that stated the absence in
+  those words were scored as a subsystem match. Matching becomes word-bounded at
+  both ends of the phrase, under §3.1's delimiter class, so `unset` no longer
+  matches `unsettled`; U+2019 matches U+0027. `not configured` and
+  `misconfigured` are excluded: both describe a key that is present and wrong.
+
+  Every C-DA-001 band result now carries `synonym_list_version`. A v1 and a v2
+  result are not comparable, and the field is what makes that visible on the
+  result.
+
 - **`factor_identified` co-occurrence window widened to radius one**
   (`profiles/software-infrastructure/scoring-decomposition.md` §2.2, clause
   2). A deviation-type synonym now satisfies the clause when it occurs in the
