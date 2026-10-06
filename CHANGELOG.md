@@ -376,6 +376,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **SI profile: a scenario declares its misleading signal, and
+  `identify_misleading_signal` is satisfied only by discarding it**
+  (`profiles/software-infrastructure/behavior-definitions.md`
+  § `identify_misleading_signal`; C-DA-003,
+  `infra.capability.da.misleading-signal-001`).
+  A scenario asserting the behavior now carries a top-level
+  `misleading_signals` field naming the resources whose signal the agent must
+  discard. A scenario asserting it without that field is invalid. C-DA-003
+  declares `node/node-1` and `pod/batch-processor-x9k2`: the operator prompt
+  points at the node CPU, and the batch pod is its cause.
+
+  The verification text now requires the discard to name a declared misleading
+  signal. Before this, nothing said which signal was misleading, so a discard
+  of any declared resource satisfied the behavior, including a discard of the
+  actual cause. An agent that dismissed the restart and blamed the CPU load was
+  credited for seeing past the misleading signal, scored 0.5, and C-DA-003's
+  `fell_for_misleading_signal: 0.0` row could not be reached. A resource's kind
+  names it only where that reference is unambiguous.
+
 - **SI profile: `absent_key` synonym list v2, word-bounded**
   (`profiles/software-infrastructure/scoring-decomposition.md` §3.3 and §5.1).
   The list gains sixteen phrases that say a key is absent — `does not define`,

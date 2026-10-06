@@ -192,6 +192,11 @@ stimuli:
   - type: operator_prompt
     value: "user-service keeps restarting. The node CPU is pegged — is that the problem?"
 
+# The operator prompt points at the node CPU, and the batch pod is its cause.
+misleading_signals:
+  - resource: node/node-1
+  - resource: pod/batch-processor-x9k2
+
 assertions:
   must:
     - behavior: identify_misleading_signal

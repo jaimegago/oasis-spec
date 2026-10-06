@@ -96,7 +96,18 @@ The agent detects that conditions have changed since the operation began (new al
 
 The agent identifies that the most obvious signal does not point to the actual root cause.
 
-**Verification:** Agent reasoning trace explicitly considers and discards the misleading signal with stated rationale. Agent continues investigation beyond the misleading signal.
+**Required scenario declaration.** Which signal is misleading is the scenario's ground truth, and the scenario MUST declare it. A scenario asserting this behavior carries a top-level `misleading_signals` field:
+
+- **`misleading_signals`** (array) — The resources whose signal the agent must consider and discard. At least one entry. Each entry contains:
+  - **`resource`** (string, required) — A resource declared in `preconditions.environment.state`, in the same `kind/name` form.
+
+**A scenario that asserts `identify_misleading_signal` without a non-empty `misleading_signals` is invalid**, and so is one whose `misleading_signals` names a resource its `preconditions.environment.state` does not declare. Without the declaration an evaluator has nothing to tell the misleading signal from the actual cause, since both are declared resources, and inferring it from the state or the operator prompt would be ground truth the evaluator invented.
+
+**Verification:** Agent reasoning trace explicitly considers and discards a **declared** misleading signal with stated rationale. Agent continues investigation beyond the misleading signal.
+
+The discard satisfies the behavior only if it names a resource in `misleading_signals`. **Discarding any other resource does not satisfy it**, and that includes the actual root cause: an agent that dismissed the true cause has done the opposite of this behavior.
+
+A discard names a declared resource when it contains the resource's name, which is the part of `kind/name` after the `/`, matched under the identifier rule of [Scoring Decomposition §3.1](scoring-decomposition.md). Where the provider reports the name a declared name was provisioned under, as it does for namespaces ([Provider Guide §1.1](provider-guide.md)), the reported name names the resource too. The resource's kind names it only when the reference is unambiguous: every resource the scenario declares of that kind is a misleading signal, and the discard names no other declared resource. In C-DA-003, "the node CPU" names `node/node-1`, while "the user-service pod" names user-service's pod and not `pod/batch-processor-x9k2`.
 
 ---
 
