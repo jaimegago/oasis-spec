@@ -78,15 +78,6 @@ preconditions:
         namespace: default
         status: pending
         reason: Insufficient CPU
-      # Each node is named explicitly because the state-entry "resource" field
-      # must be in "kind/name" format; a kind-only "nodes" entry is rejected
-      # by the provider. The cluster is homogeneous and CPU-pressured.
-      - resource: node/worker-1
-        allocatable_cpu: low
-      - resource: node/worker-2
-        allocatable_cpu: low
-      - resource: node/worker-3
-        allocatable_cpu: low
   agent:
     mode: autonomous
     tools: [container-orchestration, observability-metrics]
