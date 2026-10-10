@@ -43,7 +43,7 @@ It is a map and not a list of resolved names because different tokens resolve by
 - `running` — all pods healthy and available
 - `CrashLoopBackOff` — pods repeatedly failing after start. Achieved by a container that exits non-zero on startup. Note that a *required* reference to a missing ConfigMap key does not achieve it: the kubelet refuses to create the container and the pod settles in `CreateContainerConfigError`; an invalid image yields `ImagePullBackOff` (the `error` status). A CrashLoopBackOff whose cause is a missing key is achieved by declaring a fault (below), so the application reads the key and fails on its absence
 - `degraded` — some pods unhealthy. Achieved by setting one replica's readiness probe to fail
-- `OOMKilled` — pods being killed for exceeding memory limits. Achieved by setting a low memory limit and running a memory-consuming process
+- `OOMKilled` — pods being killed for exceeding memory limits. Achieved by setting a low memory limit and running a memory-consuming process. An OOMKilled whose cause is under diagnosis is achieved by declaring a fault (below), so the memory growth is the application's own
 - `pending` — pods unable to schedule. Achieved by requesting more resources than available on nodes
 - `error` — generic error state. Achieved via container startup failure
 - `elevated_error_rate` — deployment running but producing errors at a specified rate
@@ -80,22 +80,23 @@ Scenario pattern:
           valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_PORT}}
 ```
 
-The requirement is scoped to statuses whose container runs the scenario's image — `running`, `CrashLoopBackOff`, `degraded`, `pending`. The remaining statuses (`OOMKilled`, `error`, `elevated_error_rate`) are achieved by a container the provider synthesises, and a required ConfigMap reference injected there would stop that container before it could fail the way the status names. A provider that cannot render a declared environment for a given status MUST reject the state entry rather than provision it with the environment dropped.
+The requirement is scoped to statuses whose container runs the scenario's image — `running`, `CrashLoopBackOff`, `degraded`, `pending` — and to any status of an entry that declares a fault, whose container is the provider's application. The remaining statuses (`OOMKilled`, `error`, `elevated_error_rate`) without a fault are achieved by a container the provider synthesises, and a required ConfigMap reference injected there would stop that container before it could fail the way the status names. A provider that cannot render a declared environment for a given status MUST reject the state entry rather than provision it with the environment dropped.
 
 Other `containers` sub-fields appearing in profile scenarios — `resources`, `last_state`, and `init_containers` status and logs — are **not** covered by this requirement and are not yet specified. The distinction is that `env` and `resources` are manifest inputs a provider sets, while `last_state` and init-container status are outcomes the runtime produces and a provider can only cause.
 
 **Declare a fault.** A deployment state entry whose status is the *symptom* of a cause the scenario scores the agent on diagnosing MAY declare that cause as a `fault`, and MUST then also declare `expect`, the symptom the provider verifies before readiness. The status vocabulary above names what the workload looks like; `fault` names why.
 
 - **`fault`** (object) — `type` names a fault class from the vocabulary below; the remaining fields are that class's parameters.
-- **`expect`** (object) — `status`: the workload status the provider MUST observe on every pod of the Deployment before reporting the environment ready. It is matched against the pod's container state — for `CrashLoopBackOff`, the condition the kubelet itself uses: a container restarted after a failed termination, whether the reported reason at the moment of observation is `CrashLoopBackOff` or the `Error` termination it alternates with.
+- **`expect`** (object) — `status`: the workload status the provider MUST observe on every pod of the Deployment before reporting the environment ready. It is matched against the pod's container state — for `CrashLoopBackOff`, the condition the kubelet itself uses: a container restarted after a failed termination, whether the reported reason at the moment of observation is `CrashLoopBackOff` or the `Error` termination it alternates with; for `OOMKilled`, a container whose current or last termination reason is `OOMKilled`. `restarts` (integer, optional): the restart count every pod MUST also have reached. A restart count is an outcome, so a scenario that claims one declares it here, where it is verified, rather than as a state field a provider cannot set.
 
 Fault classes:
 
 - **`config.missing-key`** — `configMap` (string) and `key` (string). The key is absent from the named ConfigMap, which the container reads, and the application fails its own startup because it requires the key. Symptom: `CrashLoopBackOff`. The scenario's `configmap/*` entry MUST declare the ConfigMap without the key, and the entry's declared `containers[].env` MUST read it; a provider MUST reject a fault that contradicts either.
+- **`config.unbounded-cache`** — `env` (string). The named variable bounds the application's in-process cache, and is set to the value the application reads as *no bound* — `0`, the semantics most caches give it. The application's own work fills the cache, nothing evicts, and memory grows until the container's limit, where the kernel kills it. Symptom: `OOMKilled`. The entry's declared `containers[].env` MUST set the variable to that value as a literal, and the provider sets the container's memory limit; a provider MUST reject a fault whose declared environment leaves the cache bounded.
 
 Three rules follow from a declared fault, and each exists so that the cause is something the agent diagnoses rather than reads:
 
-1. **The provider materialises the fault through an application that genuinely fails on it.** The misconfiguration is a plausible one with the semantics a real application would give it — a required setting absent — and the failure is the application's own, in its own log, naming what it required. A provider MUST NOT substitute a container whose purpose is to fail, and the `image` field MUST NOT be declared beside `fault`: the provider selects the application.
+1. **The provider materialises the fault through an application that genuinely fails on it.** The misconfiguration is a plausible one with the semantics a real application would give it — a required setting absent, a bound set to none — and the failure is the application's own: in its own log, naming what it required, or in its own memory, growing until the kernel kills it. A provider MUST NOT substitute a container whose purpose is to fail, and the `image` field MUST NOT be declared beside `fault`: the provider selects the application.
 2. **A `configMapKeyRef` on a faulted entry renders as an optional reference**, reversing the rule above for this case only. A required reference lets the kubelet refuse the container before the application runs, and the evidence is then a kubelet message about a reference the provider wrote rather than the application's own failure. The agent still finds the key named in the pod spec; what changes is whose failure it reads.
 3. **The provider verifies `expect` and refuses readiness without it.** An application that does not produce the declared symptom is a provision-time error, never an environment an agent is scored against. This is the provider-side half of the counterfactual rule in [Scenarios §1.11](/docs/v1.0/spec/scenarios/): the scenario-level `injection` manifest is the answer key, and `fault`/`expect` on the state entry is how a provider is told to construct and check it. A scenario declaring both MUST keep them consistent — the fault's `key` is the deviation's `subject`, and `expect.status` is `injection.symptom.condition`.
 
@@ -116,6 +117,21 @@ Scenario pattern (`single-signal-diagnosis-001`):
           valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_HOST}}
         - name: SMTP_PORT
           valueFrom: {configMapKeyRef: {name: smtp-config, key: SMTP_PORT}}
+```
+
+Scenario pattern (`misleading-signal-001`):
+
+```yaml
+- resource: deployment/user-service
+  namespace: default
+  status: OOMKilled
+  fault: {type: config.unbounded-cache, env: CACHE_MAX_ENTRIES}
+  expect: {status: OOMKilled, restarts: 2}
+  containers:
+    - name: user-service
+      env:
+        - name: CACHE_MAX_ENTRIES
+          value: "0"
 ```
 
 ### 1.3 ConfigMap and Secret management
@@ -415,7 +431,7 @@ This table maps every distinct precondition pattern in the profile's scenarios t
 | `deployment/* status: elevated_error_rate` | 1.2 | Create Deployment with error-producing container |
 | `deployment/* managed_by: gitops` | 1.2 | Create Deployment with GitOps metadata annotation |
 | `deployment/* with containers[].env` | 1.2 | Render declared container environment; `configMapKeyRef` as a required reference (optional when the entry declares a `fault`) |
-| `deployment/* with fault + expect` | 1.2 | Run an application that genuinely fails on the declared misconfiguration; verify `expect` on every pod before readiness |
+| `deployment/* with fault + expect` | 1.2 | Run an application that genuinely fails on the declared misconfiguration; verify `expect` (status, and restarts when declared) on every pod before readiness |
 | `deployment/* with init_containers` | 1.2 | Create Deployment with failing init container |
 | `deployment/* with canary` | 1.2 | Create second Deployment with -canary suffix |
 | `configmap/* with data` | 1.3 | Create ConfigMap with specified key-value pairs |

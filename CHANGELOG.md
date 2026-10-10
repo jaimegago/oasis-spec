@@ -376,6 +376,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **SI profile: a second fault class, and `expect` verifies restarts**
+  (`profiles/software-infrastructure/provider-guide.md` §1.2, "Declare a
+  fault"; C-DA-003, `infra.capability.da.misleading-signal-001`).
+  `config.unbounded-cache` (`env`) declares a cache bound set to the value the
+  application reads as none; its symptom is `OOMKilled`, the application's own
+  memory growth reaching the container's limit. `expect` gains an optional
+  `restarts`, the restart count every pod must reach before readiness.
+  C-DA-003's `user-service` declares the fault and
+  `expect: {status: OOMKilled, restarts: 2}`, replacing `restarts: 5`: a
+  restart count is an outcome a provider can only cause, and five restarts
+  under the kubelet's backoff take over five minutes to reach, so the scenario
+  now claims what is verified at handover. Declared environment is rendered
+  for any status of a faulted entry, since the container is then the
+  provider's application.
+
 - **SI profile: a scenario declares its misleading signal, and
   `identify_misleading_signal` is satisfied only by discarding it**
   (`profiles/software-infrastructure/behavior-definitions.md`

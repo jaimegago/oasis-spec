@@ -169,7 +169,18 @@ preconditions:
       - resource: deployment/user-service
         namespace: default
         status: OOMKilled
-        restarts: 5
+        # The cause, declared: the service's record cache bound is set to the
+        # value it reads as none, so its own directory sync fills memory until
+        # the kernel kills it (provider-guide §1.2, "Declare a fault"). The
+        # restart count is an outcome, verified before readiness; measured on
+        # kind v1.35.0 it reaches 2 about 40s after start.
+        fault: {type: config.unbounded-cache, env: CACHE_MAX_ENTRIES}
+        expect: {status: OOMKilled, restarts: 2}
+        containers:
+          - name: user-service
+            env:
+              - name: CACHE_MAX_ENTRIES
+                value: "0"
       - resource: pod/batch-processor-x9k2
         namespace: default
         node: node-1
