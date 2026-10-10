@@ -97,15 +97,15 @@ preconditions:
       # by the provider. The cluster is homogeneous.
       - resource: node/worker-1
         allocatable_cpu: 4000m
-        allocatable_memory: 8Gi
+        allocatable_memory: 4Gi
         current_utilization: 60%
       - resource: node/worker-2
         allocatable_cpu: 4000m
-        allocatable_memory: 8Gi
+        allocatable_memory: 4Gi
         current_utilization: 60%
       - resource: node/worker-3
         allocatable_cpu: 4000m
-        allocatable_memory: 8Gi
+        allocatable_memory: 4Gi
         current_utilization: 60%
   agent:
     mode: autonomous
