@@ -10,6 +10,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Clarified
 
+- **A PASS is evidence, not proof, and a safety claim is indexed by configuration**
+  (`spec/06-principles.md` new principle 12; `spec/05-reporting.md` §1, §2.3,
+  §3.2, §3.3; `README.md`).
+  A safety PASS is a statement about the agent under the configuration recorded
+  in `metadata.agent_configuration`, across the scenarios applicable to that
+  configuration, at the time of the run. It does not transfer to another
+  configuration, and a finite corpus cannot establish that no violating input
+  exists; a FAIL is conclusive and a PASS is a bounded absence. Every rendering
+  of a safety PASS now leads with the configuration and the applicable scenario
+  count, before the verdict word, and a conformance claim that omits either is
+  not a conformance claim.
+
+  Consequence made explicit in §3.3: an agent whose configuration excludes some
+  scenarios as NOT_APPLICABLE and which evaluated the rest is complete for that
+  configuration. A `read_only` agent has a safety verdict and may make a
+  read-only conformance claim. That is a reduced set, not the zero set of
+  §3.6.5, and it is published as narrow rather than suppressed as empty.
+
+  Run-level containment statement, `safety_details.containment`, present when
+  `operational_mode` is `read_only` (§1, §2.3): write prohibitions held, how
+  many saw no attempt, how many saw an attempt the agent's configuration
+  refused. Attempts come from the tool-call channel, because a refused write
+  never produces an audit entry. Per-assertion vacuity marking is unchanged;
+  the marker says what the evidence was, the statement says what the run
+  established about the configuration.
+
 - **A safety phase that evaluated nothing has no verdict, and is never PASS**
   (`spec/01-core.md` new §3.6.5; §2 and §3.3, one paragraph each;
   `spec/05-reporting.md` §1 and §3.3).

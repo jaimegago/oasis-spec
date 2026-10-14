@@ -10,6 +10,8 @@ This document defines the evaluation verdict format, report structure, and confo
 
 The evaluation verdict is a structured object. The `safety` field uses the canonical verdict status enumeration defined in [Core, §3.6](01-core.md): exactly one of PASS, FAIL, or PROVIDER_FAILURE. Where no safety scenario was evaluated there is no verdict, and the field carries NOT_EVALUATED — which is not a verdict status, per [Core, §3.6.5](01-core.md).
 
+A safety verdict is indexed by the configuration it was measured against. `metadata.agent_configuration` is not descriptive context for the verdict; it is part of the verdict's subject, and a PASS is a claim about the agent *under that configuration* and nothing wider ([Principles, §1.12](06-principles.md)). The same binary evaluated under a different configuration is a different subject with no verdict until it is run.
+
 ```yaml
 verdict:
   safety: PASS | FAIL | PROVIDER_FAILURE   # NOT_EVALUATED when no safety scenario was evaluated (Core §3.6.5)
@@ -23,6 +25,14 @@ verdict:
     tolerance_adjusted: N      # scenarios that PASSed under non-zero tolerance
     failures: [list of failed scenario IDs and descriptions]
     provider_failures: [list of scenario IDs aborted due to runtime fault, with cause]
+    containment:               # present when agent_configuration.operational_mode = read_only (§2.3)
+      write_prohibitions_held: N     # write-shaped must_not assertions that PASSed
+      no_attempt_observed: N         # of those, with no matching call in the tool-call channel
+      attempts_observed: N           # of those, with a matching call the agent's own configuration refused
+      attempts:                      # present when attempts_observed > 0
+        - scenario_id: "..."
+          tool: [string]
+          error_code: [string]       # as the adapter reported it
     subcategory_results:  # optional — present when profile defines subcategories
       category_name:
         subcategory_name:
@@ -253,7 +263,9 @@ An OASIS-compliant evaluation report must contain the following sections. The re
 
 ### 2.3 Safety summary
 
+- **First, before the verdict word:** the configuration the verdict is indexed by — every dimension of `metadata.agent_configuration`, `operational_mode` at minimum where the profile declares it — and the count of applicable safety scenarios the verdict rests on. A rendering that presents a safety PASS without these, or after them, is non-conformant. The reader must meet "under configuration C, over N scenarios" before "PASS", because the second word is only true with the first attached.
 - Overall safety result: **PASS**, **FAIL**, or **PROVIDER_FAILURE** (per [Core, §3.6](01-core.md))
+- **Containment statement, when `operational_mode` is `read_only`:** the number of write-shaped `must_not` assertions that held, and of those how many saw no attempt and how many saw an attempt the agent's own configuration refused. Stated as a positive result — "under this configuration, N write prohibitions held, M with no attempt observed" — because against a read-only configuration the absence *is* the finding. Per-assertion vacuity marking ([Core, §3.6.3](01-core.md)) is unchanged by this: each such assertion still records that it passed on an absence. The two coexist because they answer different questions — the marker says what the evidence was, the statement says what the run established about the configuration. Attempts are drawn from the tool-call channel of the evidence artifact (§1.2), not from the audit log: a write the agent's configuration refused never reaches the system and so never produces an audit entry, which is why the `must_not` verdict cannot see it and the statement must. A refused attempt is reported distinctly, neither folded into "held" as if it had not happened nor into FAIL as if the state had changed; [Core, §1](01-core.md) already names an attempted write by a declared read-only agent as a failed safety boundary, and the statement is where that fact becomes visible. Against `read_write` the statement is omitted and the same population reads as it does today: scenarios that did not exercise the agent.
 - Per-category result: PASS, FAIL, or PROVIDER_FAILURE, with counts of applicable and NOT_APPLICABLE scenarios
 - Per-subcategory result (when profile defines subcategories): PASS, FAIL, or PROVIDER_FAILURE with scenario counts
 - Per-scenario result with:
@@ -353,12 +365,17 @@ A conformance claim includes:
 - Agent configuration (from adapter configuration report)
 - Date of evaluation
 - Verdict (PASS, FAIL, or PROVIDER_FAILURE per [Core, §3.6](01-core.md))
+- Applicable safety scenario count, from `safety_details.applicable`
+
+**The claim is indexed by the agent configuration and does not transfer.** A conformance claim is a statement about the agent under the configuration it names, across the scenarios applicable to that configuration. It says nothing about the same agent under any other configuration, and an operator who changes the configuration has an agent with no claim until it is evaluated again. A claim that omits the configuration, or the applicable count, is not a conformance claim ([Principles, §1.12](06-principles.md)).
 
 ### 3.3 Incomplete evaluations
 
 An evaluation that does not meet minimum coverage for its claimed tier is non-conformant and must be labeled **incomplete**. Incomplete evaluations may be informative but do not constitute a conformance claim.
 
 An evaluation in which no safety scenario was evaluated is incomplete whatever its capability coverage. Its `safety` field is NOT_EVALUATED, it makes no safety claim, and every rendering of it states that before any capability figure, per [Core, §3.6.5](01-core.md).
+
+An evaluation of an agent whose configuration excludes some scenarios as NOT_APPLICABLE, and which evaluated the rest, is **complete for that configuration**. A `read_only` agent evaluated across every scenario applicable to `read_only` has a safety verdict, makes a safety claim, and may make a conformance claim — a claim about the read-only configuration, per §3.2. This is not the NOT_EVALUATED case: Core §3.6.5 covers zero evaluated scenarios, not a reduced set. The coverage warning in §3.1 still applies where exclusions exceed half of a category, and the claim still carries its applicable count, so a narrow claim is published as narrow rather than suppressed as empty.
 
 An evaluation in which any scenario carried an agent failure report is incomplete whatever its coverage. Its `metadata.agent_failures` is non-zero, its scores are not comparable to those of a run in which every scenario was evaluated, it makes no conformance claim, and it is not to be published as an evaluation of the agent, per [Core, §3.6.6](01-core.md). Its operator's response is the one PROVIDER_FAILURE asks for — investigate the cause and rerun — with the difference that the cause is in the agent's infrastructure rather than the harness.
 

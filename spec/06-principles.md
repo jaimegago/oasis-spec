@@ -28,6 +28,8 @@
 
 11. **Predictability is a vulnerability.** A fully deterministic, publicly known evaluation corpus can be gamed. The standard provides extension points for adversarial verification — non-deterministic probes and reserved scenarios — to test whether safety properties generalize beyond the known test surface. Deterministic evaluation proves the agent *can* behave correctly; adversarial verification probes whether it *will*.
 
+12. **A PASS is evidence, not proof.** A safety PASS means that no violation was observed, under the agent's declared configuration, across the scenarios applicable to that configuration, at the time of the run. It is a property of a recorded run of an identified configuration, not of the agent: it does not transfer to another configuration, and a finite corpus cannot establish that no violating input exists. The asymmetry is deliberate. A FAIL is conclusive — the violation was observed. A PASS is a bounded absence, and every rendering of one carries the bounds: the configuration it is indexed by and the number of scenarios it rests on ([Reporting, §2.3](05-reporting.md), [§3.2](05-reporting.md)). An agent whose configuration is changed by its operator has not been evaluated until it is evaluated again.
+
 ---
 
 ## 2. Relationship to existing frameworks

@@ -59,7 +59,7 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 └──────────────────────────────────────────────────────────┘
 ```
 
-Verdicts use a binary safety gate with an explicit third status for harness faults: PASS, FAIL, or PROVIDER_FAILURE. The third status exists so a misconfigured or runtime-faulted evaluation harness can never be silently confused with a clean pass — see [Core, §3.6](spec/01-core.md). Phase 1 runs every applicable safety scenario before aggregating, so a failing agent gets a complete failure surface in one run instead of forcing iterative re-runs.
+Verdicts use a binary safety gate with an explicit third status for harness faults: PASS, FAIL, or PROVIDER_FAILURE. The third status exists so a misconfigured or runtime-faulted evaluation harness can never be silently confused with a clean pass — see [Core, §3.6](spec/01-core.md). Phase 1 runs every applicable safety scenario before aggregating, so a failing agent gets a complete failure surface in one run instead of forcing iterative re-runs. A PASS is evidence, not proof: it says no violation was observed under the agent's declared configuration across a finite corpus, and it is always reported with that configuration and scenario count. A FAIL is conclusive; a PASS is not a guarantee, and no evaluation can make one.
 
 ## Key principles
 
@@ -72,6 +72,8 @@ Verdicts use a binary safety gate with an explicit third status for harness faul
 **Scores require context.** Capability scores are always reported with the complexity tier (Minimal / Integrated / Production-realistic) of the evaluation environment. Scores from different tiers are not comparable.
 
 **Safety through precision, not paralysis.** Every safety test that checks "agent refuses X" has a companion test that checks "agent correctly does legitimate-X." An agent that passes safety by refusing everything has demonstrated inability, not safety.
+
+**A PASS is evidence, not proof.** A safety PASS is a bounded absence — no violation observed, under one declared configuration, over a finite corpus. It does not transfer to another configuration and it is not a guarantee. A FAIL is conclusive.
 
 **Predictability is a vulnerability.** A deterministic, public test corpus can be gamed. OASIS provides an optional adversarial verification extension — non-deterministic probes and reserved scenarios — to test whether safety properties generalize beyond the known test surface.
 
