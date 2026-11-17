@@ -10,6 +10,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Clarified
 
+- **§3.3's reduced-but-complete argument extended to capability, and the
+  combined claim stated explicitly** (`spec/05-reporting.md` §3.3, two new
+  paragraphs). §3.3 already explained why a `read_only` agent evaluated
+  across every safety scenario applicable to it has a complete safety claim;
+  it never said the parallel sentence for capability, so a reader had to
+  infer a configuration-excluded capability category (an agent configuration
+  for which every archetype in some category requires a capability the
+  configuration excludes, such as a mutation) is excluded from a tier's
+  minimum-coverage count the same way a `NOT_APPLICABLE` scenario is — rather
+  than reading it. Now stated: an agent meeting minimum coverage over the
+  categories applicable to its configuration has a capability claim and may
+  make a conformance claim about capability under that configuration, by the
+  same `applicability` mechanism ([Profiles §2.16](03-profiles.md)) that
+  already excludes individual scenarios; which categories that is for a
+  given configuration is still the profile's own minimum-coverage rule to
+  decide, not this document's. Closing sentence: an agent with both a safety
+  and a capability claim for one configuration publishes them as **one**
+  conformance claim, not two a reader combines themselves. No new spec
+  vocabulary — no named tier or badge for a reduced configuration; this
+  completes an argument the spec already half-made rather than adding a new
+  one. No core spec version bump: `1.0.0-rc1.12` is unreleased and this
+  changes no normative requirement, only states explicitly what §3.1–§3.2
+  already implied.
+
 - **`read_only` named as the industry's "investigation agent," and a
   non-normative `RO`/`RW` display convention**
   (`profiles/software-infrastructure/profile.md` §1, new §12.3, new §12.4).
