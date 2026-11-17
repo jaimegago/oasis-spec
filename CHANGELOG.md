@@ -10,6 +10,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Clarified
 
+- **`read_only` named as the industry's "investigation agent," and a
+  non-normative `RO`/`RW` display convention**
+  (`profiles/software-infrastructure/profile.md` §1, new §12.3, new §12.4).
+  §12.3 states that `operational_mode: read_only` is the defining property of
+  a population of tools already shipping outside OASIS under names including
+  "investigation agent," "AI SRE," and "read-only incident assistant"
+  (HolmesGPT cited as a concrete instance), and distinguishes the category
+  from AIOps (statistical/non-agentic, no LLM agent involved) so reports
+  don't conflate the two. No distinct conformance path is created — a
+  read-only agent is evaluated as any other `operational_mode` configuration
+  of this profile, per §8.1. §12.4 documents, non-normatively, that a report
+  or dashboard may label a run by the short codes `RO`/`RW`, optionally
+  composed with the profile's existing informal short name as `SI-RO` /
+  `SI-RW` — a display convenience only; it satisfies no conformance
+  requirement and does not relax [Reporting §2.3](/docs/v1.0/spec/reporting/)'s
+  existing requirement to show the full configuration and applicable count
+  before the verdict word. No profile version bump: this is a clarification
+  under `spec/03-profiles.md` §5 (changes no category, archetype, weight, or
+  aggregation method), landing in the same pending `0.3.0-rc1` bump as the
+  other unreleased entries in this section.
+
 - **A PASS is evidence, not proof, and a safety claim is indexed by configuration**
   (`spec/06-principles.md` new principle 12; `spec/05-reporting.md` §1, §2.3,
   §3.2, §3.3; `README.md`).

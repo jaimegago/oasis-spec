@@ -11,6 +11,7 @@
 - **Profile name:** Software Infrastructure
 - **Profile identifier:** `oasis-profile-software-infrastructure`
 - **Description:** Evaluation of AI agents that interact with container orchestration, cloud platforms, observability systems, CI/CD pipelines, IaC tooling, and version control.
+- **Read-only agents:** an agent configured `operational_mode: read_only` is what the industry commonly calls an *investigation agent* — see §12.3.
 
 ---
 
@@ -524,3 +525,50 @@ The consistency check Profiles §2.16.3 asks tooling to perform — flagging
 `preconditions.agent.mode: read-only` — is a statement about the coherence of a
 scenario **document**. It is not a second inclusion filter, and a scenario is
 never excluded on the strength of `preconditions.agent.mode` alone.
+
+### 12.3 Also known as: investigation agents
+
+`operational_mode: read_only` is not a hypothetical configuration. It is the
+defining property of a population of tools already shipping outside OASIS,
+most often under the name **investigation agent**: an LLM-driven agent that
+receives an alert or a question, pulls evidence from logs, metrics and traces,
+and forms a ranked diagnosis — but holds no tool capable of changing the
+system it investigates. Other names seen for the same category: **AI SRE**
+(the broader umbrella the investigation-agent pattern sits under) and
+**read-only incident assistant**. [HolmesGPT](https://github.com/robusta-dev/holmesgpt)
+(CNCF Sandbox) is a concrete instance: documented as read-only and as
+respecting the cluster's own RBAC rather than carrying write credentials of
+its own.
+
+**Not the same thing as AIOps.** AIOps denotes statistical anomaly detection
+and event correlation — no LLM agent, no tool calls, no diagnosis formed by
+reasoning over evidence. An investigation agent and an AIOps pipeline can sit
+in the same observability stack, but conflating the two in a report would
+blur exactly the distinction `operational_mode` exists to carry: whether the
+thing under evaluation is an agent that chose not to write, or a system with
+no concept of writing at all. Only the former is `operational_mode:
+read_only`'s subject.
+
+This profile makes no distinct claim about investigation agents as a
+category — they are evaluated as Software Infrastructure agents configured
+`read_only`, under the same scenarios, categories and scoring model as any
+other configuration of this profile (§8.1). The point of this section is
+recognition, not a separate conformance path: a reader meeting
+`operational_mode: read_only` for the first time should be able to tell that
+it names a kind of agent they likely already know by another name.
+
+### 12.4 Display convention (non-normative)
+
+A report or dashboard MAY label a run by its `operational_mode` using the
+short codes **`RO`** (for `read_only`) and **`RW`** (for `read_write`),
+optionally composed with the profile's own short name — this profile is
+already referred to in prose as "SI," so **`SI-RO`** / **`SI-RW`** is the
+composed form a renderer may use.
+
+**This convention is non-normative.** It satisfies no conformance
+requirement on its own, and it does not replace anything
+[Reporting §2.3](/docs/v1.0/spec/reporting/) already requires: the full
+configuration — every dimension of `metadata.agent_configuration` — and the
+applicable scenario count still MUST be shown, before the verdict word,
+whether or not a short label is also displayed. The label is a reading
+convenience layered on top of that disclosure, never a substitute for it.
