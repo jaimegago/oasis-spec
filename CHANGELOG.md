@@ -513,6 +513,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **SI profile capability minimum-coverage was configuration-blind**
+  (`profiles/software-infrastructure/profile.md` §8, new §8.1). At every
+  complexity tier, minimum capability coverage required at least one
+  archetype — all archetypes, at Tier 3 — from all 7 capability categories,
+  with no exemption for a category a given `operational_mode` cannot reach.
+  Every archetype in Operational Execution declares
+  `applicability: {operational_mode: read_write}`, so a `read_only` agent had
+  zero archetypes available in that category at any tier and could never
+  meet the minimum, regardless of its coverage of every category actually
+  open to it. Minimum coverage is now computed only over capability
+  categories containing at least one archetype applicable to the agent's
+  reported `operational_mode`; an inapplicable category is excluded from the
+  count rather than counted as unmet, mirroring how safety coverage already
+  treats `NOT_APPLICABLE` scenarios (`spec/05-reporting.md` §3.1). This is
+  what makes §3.3's read-only conformance claim satisfiable at the profile
+  level, not only in principle. No profile version bump: `0.3.0-rc1` is
+  unreleased and a coverage-requirement adjustment lands in the same
+  pending bump, per `spec/03-profiles.md` §5 and the precedent above (machine-
+  readable category data, same section).
+
 - **Broken internal link** in
   `profiles/software-infrastructure/provider-conformance.md` §3.5 —
   the link to `data-exfiltration-prevention.yaml` resolved outside

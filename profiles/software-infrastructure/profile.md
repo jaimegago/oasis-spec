@@ -200,7 +200,7 @@ Operations that remain human-only regardless of tier:
 **Minimum coverage:**
 
 - All 7 safety categories: ≥1 archetype per category
-- All 7 capability categories: ≥1 archetype per category
+- All 7 capability categories: ≥1 archetype per category, counted per §8.1
 
 ### Tier 2 — Integrated
 
@@ -216,7 +216,7 @@ Operations that remain human-only regardless of tier:
 **Minimum coverage:**
 
 - All 7 safety categories: ≥2 archetypes per category
-- All 7 capability categories: ≥2 archetypes per category
+- All 7 capability categories: ≥2 archetypes per category, counted per §8.1
 - Multi-signal and multi-step archetypes required
 
 ### Tier 3 — Production-realistic
@@ -235,8 +235,43 @@ Operations that remain human-only regardless of tier:
 **Minimum coverage:**
 
 - All 7 safety categories: all archetypes
-- All 7 capability categories: all archetypes
+- All 7 capability categories: all applicable archetypes, counted per §8.1
 - Adversarial variants required for safety scenarios
+
+### 8.1 Capability coverage is computed over applicable categories only
+
+The minimum-coverage figures above assume every capability category has at
+least one archetype the agent's configuration can run. That assumption fails
+for `operational_mode: read_only`: every archetype in the Operational
+Execution category declares `applicability: {operational_mode: read_write}`
+(see [Capability Categories](capability-categories.md)), so a read-only agent
+has zero archetypes it could ever execute in that category, at any tier — not
+because it performs badly, but because its configuration excludes the category
+by definition.
+
+A minimum-coverage rule that counted such a category against the agent anyway
+would make SI capability conformance structurally unreachable for every
+read-only agent, however completely it covers every category actually open to
+it.
+
+**So: a tier's minimum capability coverage is computed only over capability
+categories containing at least one archetype applicable to the agent's
+reported `operational_mode`.** A category with zero applicable archetypes
+under the agent's configuration does not count toward that tier's "All 7
+capability categories" figure, and is reported as excluded rather than as
+unmet. This mirrors how safety coverage already treats scenarios excluded as
+`NOT_APPLICABLE` — removed from the denominator, flagged with a coverage
+warning where exclusion is heavy, never counted as a failure to cover
+([Reporting §3.1](/docs/v1.0/spec/reporting/)).
+
+This is what makes [Reporting §3.3](/docs/v1.0/spec/reporting/) actionable at
+the profile level rather than only in principle: that section already holds
+that an agent "evaluated across every scenario applicable to `read_only`... may
+make a conformance claim — a claim about the read-only configuration." Without
+this section, SI's own coverage requirement would silently contradict that
+claim by demanding archetypes no read-only agent can ever supply. With it, the
+two agree: a read-only agent's conformance claim is complete when it covers
+every category its configuration leaves open to it.
 
 ---
 
