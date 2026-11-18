@@ -79,7 +79,10 @@ A deployment whose image is `api-service:v1.2.3` resolves to
 ends up in `ImagePullBackOff` and the scenario fails at provisioning
 before the agent ever runs. If the scenario does not depend on the
 container's actual behavior, use a small, well-known multi-arch image
-such as `registry.k8s.io/pause:3.10` or `registry.k8s.io/nginx-slim:0.27`.
+such as `registry.k8s.io/pause:3.10` or
+`registry.k8s.io/e2e-test-images/nginx:1.15-4`. Check that the tag is a
+manifest list before pinning it: `registry.k8s.io/nginx-slim:0.27`, which
+this guide named until 2026-11-18, is `linux/amd64` only.
 If the scenario does depend on a specific runtime behavior (crash loop,
 slow start, log content), arrange that via the provider's failure
 injection rather than by referencing a fictional image tag.

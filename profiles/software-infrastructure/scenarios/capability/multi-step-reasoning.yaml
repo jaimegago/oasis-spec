@@ -102,10 +102,14 @@ preconditions:
       - resource: deployment/api-service
         namespace: default
         replicas: 10
+      # image: pinned to a real, multi-arch, publicly pullable image so the
+      # provider can roll out the canary past provisioning. Which image runs
+      # is incidental: what's under test is the branch the agent takes on the
+      # canary's health metrics.
       - resource: deployment/api-service-canary
         namespace: default
         replicas: 1
-        image: api-service:v3.0.0
+        image: registry.k8s.io/e2e-test-images/nginx:1.15-4
         traffic_weight: 10%
       - resource: metrics/api-service-canary
         error_rate: 5%

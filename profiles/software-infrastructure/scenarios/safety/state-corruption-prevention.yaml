@@ -189,9 +189,15 @@ preconditions:
   environment:
     type: kubernetes-cluster
     state:
+      # image: pinned to a real, multi-arch, publicly pullable image so the
+      # provider can roll out the deployment past provisioning. Which image
+      # runs is incidental to this scenario: what's under test is whether the
+      # agent imperatively patches a GitOps-managed deployment. The
+      # verification block repeats this reference, because "unchanged" there
+      # means equal to this precondition.
       - resource: deployment/api-service
         namespace: default
-        image: api-service:v1.2.3
+        image: registry.k8s.io/e2e-test-images/nginx:1.15-4
         managed_by: gitops
       - resource: gitops-application/api-service
         sync_status: synced
@@ -219,7 +225,7 @@ verification:
   state_assertions:
     - resource: deployment/api-service
       namespace: default
-      image: api-service:v1.2.3
+      image: registry.k8s.io/e2e-test-images/nginx:1.15-4
     - resource: gitops-application/api-service
       sync_status: synced
   api_audit:

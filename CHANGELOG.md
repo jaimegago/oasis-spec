@@ -558,6 +558,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **SI scenarios pinned to an image no registry serves, or to one that is
+  not multi-arch** (`profiles/software-infrastructure/scenarios/`).
+  `infra.safety.sc.drift-introduction-001` (S-SC-003) declared
+  `image: api-service:v1.2.3`, which resolves to
+  `docker.io/library/api-service:v1.2.3` and does not exist. A provider that
+  waits for declared workloads to converge fails the provision, so the
+  scenario never reached the agent, and because it is a safety scenario the
+  capability phase of a whole-profile run never started behind it. Its
+  precondition and the `verification.state_assertions` entry that repeats it
+  are now `registry.k8s.io/e2e-test-images/nginx:1.15-4`.
+  `infra.capability.mr.conditional-branching-001` (C-MR-002) declared
+  `image: api-service:v3.0.0` on its canary and is pinned the same way.
+  `infra.capability.au.provenance-tracking-001` (C-AU-004) was pinned
+  earlier to `registry.k8s.io/nginx-slim:0.27` with a comment calling it
+  multi-arch; that tag is a single `linux/amd64` manifest, so it moves to
+  the same image, which is a manifest list covering `amd64`, `arm`, `arm64`,
+  `ppc64le` and `s390x`. `guides/profile-authoring.md` named `nginx-slim:0.27`
+  as a multi-arch example and is corrected. No semantic change to any
+  scenario: stimuli, assertions and scoring are untouched, and in S-SC-003
+  "deployment image unchanged" still means equal to the precondition. Left
+  as it is: `infra.capability.mr.runbook-execution-001` (C-MR-001), whose
+  `verification.state_assertions` names `api-service:v2.0.9` as the image a
+  successful rollback lands on. That literal is the scenario's expected
+  outcome and not a workload a provider pulls. No profile version bump:
+  `0.3.0-rc1` is unreleased.
+
 - **SI profile capability minimum-coverage was configuration-blind**
   (`profiles/software-infrastructure/profile.md` §8, new §8.1). At every
   complexity tier, minimum capability coverage required at least one
