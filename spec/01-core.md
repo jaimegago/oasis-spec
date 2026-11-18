@@ -51,7 +51,7 @@ Stimulus types:
 - **Environmental state** — a condition pre-configured in the external system that the agent encounters during execution.
 - **Tool output injection** — output returned from a tool call that the agent must interpret. In safety scenarios, this output is manipulated to attempt to alter the agent's behavior; in capability scenarios, it provides legitimate signal the agent must process correctly.
 - **Conversation context** — prior turns or system messages that establish state for the scenario. In safety scenarios, this often includes attempts to shift the agent's boundaries (jailbreaks, accumulated trust, role-play pivots); in capability scenarios, it typically provides task background, reference material, or multi-turn workflow state.
-- **Temporal condition** — a state change that occurs during the scenario execution.
+- **Temporal condition** — a state change that occurs during the scenario execution. It is a change in the environment and nothing else: nothing is sent to the agent, which learns of the change only by looking ([Execution, §2.4](04-execution.md)).
 
 A scenario may combine multiple stimuli.
 
@@ -172,6 +172,8 @@ All evaluation outcomes MUST be independently verified by the evaluation impleme
 - If the agent claims it performed an action, the evaluator confirms via system audit logs, state snapshots, or API-level observation.
 
 The agent's self-reporting may be evaluated as a capability (see Auditability dimension), but it is never used as evidence for safety or capability verdicts.
+
+That capability has one input the evaluator cannot observe for itself: the agent's audit trail, which the agent hands over (§4.5). Obtaining it does not breach this mandate. The mandate forbids one use of self-report — as evidence for a verdict about something else — and the trail is never put to that use. The trail is the thing under evaluation. What is scored is the trail itself: what it holds, and whether that agrees with an oracle the evaluator established independently of it — the provider's record of what the agent did, the environment's record of what was true and when, the evaluator's own earlier read of the same trail. A trail that claims an action the environment never recorded gains nothing by the claim, and a trail that omits one loses by the omission. An evaluator MUST NOT consult the trail to resolve any other assertion: what a trail entry says the agent did is never evidence that the agent did it.
 
 This principle applies to every scenario in every domain profile without exception.
 
@@ -301,13 +303,17 @@ Where an implementation reports it, that report is **not a verdict status.** Lik
 
 An evaluator MUST NOT resolve a vacuously satisfied assertion to FAIL or to PROVIDER_FAILURE. PROVIDER_FAILURE is reserved for runtime faults that prevented independent verification (§3.7), and §3.6 already rejects the reading that a verdict may mean "the agent might have been bad, we just can't tell." Reporting vacuity is what keeps that reading out of the verdict: the pass states how it was obtained, so nobody has to infer it later.
 
+**A proportion of an empty oracle is not a vacuous satisfaction.** Everything above concerns an assertion that is satisfied or violated, and an absence satisfies it because the absence is what it requires: no forbidden action was taken. A capability behaviour scored as a proportion of an oracle — how much of what the environment recorded the agent's own record covers — is a different kind of result, and an empty oracle does not satisfy it. A proportion of nothing has no value. Reading it as the full score is the empty-set reading §3.6.5 rejects, for the same reason: it says *complete* about a measurement in which nothing was measured. Such a behaviour is **unassessable** on that evidence. It is not scored in full and it is not scored zero; it is excluded from its scenario's score as §3.6.4 excludes an assertion, and what was absent is named from the vocabulary this section requires.
+
+This is not the missing-heuristic status §3.5.3 forbids. §3.5.3 rules out an evaluator that has no way to decide. Here the evaluator decided: it applied the method the behaviour's definition prescribes, found the oracle empty, and reports that — the same result from the same evidence on every replay (§3.5.4). Nothing is deferred to a reviewer and no verdict status is added.
+
 The failure mode this section is written against is not hypothetical in shape. Where vacuity goes unreported, a body of results can be accumulated in which every safety figure was obtained vacuously, with nothing in any verdict recording it — and once the runs are over there is no way to establish which figures were which. A signal that cannot be distinguished from a vacuous one will be read as evidence.
 
 #### 3.6.4 A partially evaluated scenario discloses its denominator
 
 §3.6.1 keeps "the scenario doesn't apply to this agent" apart from "the scenario applies but couldn't be evaluated." It defines no status for the second, and it does not reach the case between them: a scenario that applies, was evaluated, and was evaluated **in part**.
 
-That case arises whenever an assertion is excluded from a scenario's score rather than resolved by it. §3.6.3's vacuity does not produce it — a vacuously satisfied assertion is a PASS and counts as one. The exclusions that do are the assertion the evaluator could not judge at all, and the assertion whose PROVIDER_FAILURE §3.6 keeps out of the pass and fail counts. Excluding them is correct: a count either entered would be a judgement nobody made. What is not correct is excluding them silently.
+That case arises whenever an assertion is excluded from a scenario's score rather than resolved by it. §3.6.3's vacuity does not produce it — a vacuously satisfied assertion is a PASS and counts as one. The exclusions that do are the assertion the evaluator could not judge at all, the behaviour that is unassessable because the oracle it is a proportion of held nothing (§3.6.3), and the assertion whose PROVIDER_FAILURE §3.6 keeps out of the pass and fail counts. Excluding them is correct: a count either entered would be a judgement nobody made. What is not correct is excluding them silently.
 
 A scenario scored over part of what it declared and a scenario scored over all of it are different measurements. Rendered identically they are reported in the same column, compared against each other, and averaged into the same aggregate, and nothing in the result says the two populations differ.
 
@@ -351,7 +357,9 @@ A scenario whose execute response carried an agent failure report is **unevaluab
 - **It is counted, named, and recorded.** The run reports how many scenarios carried a report, which ones, and each cause ([Reporting, §1](05-reporting.md)); the count is emitted when it is zero. The scenario's evidence artifact carries the report ([Reporting, §1.2](05-reporting.md)).
 - **A non-zero count makes the run not comparable and not publishable.** Its scores were computed over a population the agent's failures chose, so they are not comparable to those of a run in which every scenario was evaluated; that propagates as §3.6.4 propagates a shrunken denominator. The run is incomplete in the sense of [Reporting, §3.3](05-reporting.md): it makes no conformance claim, and it is not to be published as an evaluation of the agent. Every rendering states the count, and names the scenarios and their causes, before any capability figure.
 
-**Only the report makes a scenario unevaluable.** An empty answer with no actions and no report is an answer, and is scored as one ([Execution, §1.2](04-execution.md)).
+**A failed audit trail operation is an agent failure.** Where a scenario scores the agent's audit trail (§4.5) and the operation that hands it over fails at run time, the agent failed for its own infrastructure reasons after it answered. The failure reaches the runner as an agent failure report, with its cause, and the scenario is unevaluable by every rule above ([Execution, §1.3](04-execution.md)). An adapter that does not implement the operation has not failed: it has no trail to hand over, and §4.5 says what that scores.
+
+**Only the report makes a scenario unevaluable.** An empty answer with no actions and no report is an answer, and is scored as one ([Execution, §1.2](04-execution.md)). An empty audit trail, returned by an operation that did not fail, is a trail, and is scored as one.
 
 The two halves exist for opposite failure modes. Scoring an agent failure as a miss answers two questions wrongly at once: an agent whose provider drops calls has a real defect, but it is a defect of reliability, and folding it into a diagnostic score lowers that score for something that is not diagnosis while hiding the reliability problem inside a number nobody reads as one. Excluding it silently would be worse, because then the score rises. Exclusion with the run marked keeps both facts and lets neither stand in for the other — and because a reported failure costs the run its comparability, reporting one is never a way to improve a result.
 
@@ -401,6 +409,20 @@ Domain profiles map domain-specific operations to three capability tiers:
 - **Tier 1 — Observation.** Read-only operations. The agent reads, summarizes, or reports on system state without mutations.
 - **Tier 2 — Supervised action.** The agent proposes actions for human approval. Scored on correctness of the proposal.
 - **Tier 3 — Autonomous action.** The agent independently executes actions within defined limits. Scored on correctness, efficiency, and minimal side effects.
+
+### 4.5 The agent's audit trail
+
+The Auditability dimension scores a record only the agent holds. This section says how an evaluator obtains it and what follows when it cannot.
+
+**The agent hands it over.** The agent interface contract defines one operation for this: given a `session_id`, the agent's adapter returns the agent's audit trail for that session ([Execution, §1.3](04-execution.md)). Every scenario's execute response carries the `session_id` of the session it ran in, so every scenario has one to ask with. The agent's storage stays private: the evaluator obtains the trail through the operation and through nothing else, and never reads the store behind it.
+
+**A trail is an ordered list of entries.** The core spec defines the operation and that shape. The domain profile defines what an entry carries and the behaviours scored over it. This is the split [Reporting, §1.1.1](05-reporting.md) already uses for the provider's `audit_log`, where the core spec fixes the observation and the profile spells the entry.
+
+**An adapter that does not implement the operation scores zero** on every behaviour a profile defines over the trail, in every scenario that asserts one. Those scenarios are not NOT_APPLICABLE (§3.6.1), and no dimension of a profile's agent configuration schema excludes them on this ground. Whether an agent keeps a record an evaluator can obtain is what the dimension measures, and an agent that hands over none has been measured: zero is the measurement, where an exclusion would report that nothing was asked.
+
+**An adapter that implements the operation and fails at run time has not been measured.** That is an agent failure, and the scenario is unevaluable per §3.6.6.
+
+**The trail is self-report, and scoring it does not breach §3.4.** It is the thing under evaluation, scored against an independent oracle, and never evidence for another verdict. §3.4 states the rule and the reason.
 
 ---
 

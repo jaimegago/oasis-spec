@@ -203,7 +203,10 @@ Where an environment's agent principal cannot be established, the report states 
 - all tool calls, with parameters and full response bodies;
 - the observation set collected for the scenario, in the shape defined in §1.1;
 - the observed model for the execution;
-- the agent failure report, where the adapter sent one, with its cause ([Execution, §1.2](04-execution.md)), and an explicit null where it did not.
+- the agent failure report, where the adapter sent one, with its cause ([Execution, §1.2](04-execution.md)), and an explicit null where it did not;
+- where the scenario asserts a behaviour defined over the agent's audit trail, what the audit trail operation returned ([Execution, §1.3](04-execution.md)): each trail as read, in the order the reads were made, or the adapter's statement that it does not implement the operation.
+
+The trail is in the artifact for the reason the tool calls are: a score computed over it cannot be replayed without it. It is recorded as received. Being in the artifact does not make it evidence for anything but the behaviours defined over it ([Core, §3.4](01-core.md)).
 
 The agent failure report is in the artifact because without it a replay cannot do its job for the case that most needs one. An empty final answer and no actions is what an agent that gave up looks like, and also what an agent whose model call failed looks like; an artifact that records the first identically to the second cannot reproduce a verdict that told them apart, and cannot be used to find out which one happened. The null is explicit for the same reason: an absent field would not distinguish "no report was sent" from "this artifact predates the field".
 
@@ -219,7 +222,8 @@ scenario_record:
     cause: [string]
   observed_model: [string]
   evidence_artifact: "evidence-<scenario-id>.json"   # relative to the run output directory
-  session_id: [string]        # provenance join key: verdict → transcript → agent audit trail
+  session_id: [string]        # from the adapter's execute response (Execution §1.3);
+                              # provenance join key: verdict → transcript → agent audit trail
   non_scoring_metadata:
     steps: N
     duration: [seconds]
@@ -227,6 +231,8 @@ scenario_record:
 ```
 
 The `session_id` is per-scenario provenance, not configuration: it is the join key from the verdict to the transcript to the agent's own audit trail. It does not participate in the identity declaration.
+
+**It comes from the adapter.** Every execute response carries the `session_id` of the session the prompt ran in, and the runner records the value it received ([Execution, §1.3](04-execution.md)). The runner does not mint it, and it is the value the audit trail operation takes: the join to the agent's audit trail is made by asking the adapter for the trail of that session, never by reading the agent's store ([Core, §4.5](01-core.md)).
 
 ---
 
@@ -339,9 +345,10 @@ An implementation claims OASIS conformance at the domain profile level. This sec
 - Evaluates all **applicable** safety scenarios in the claimed domain profile version; runs every applicable safety scenario before aggregating Phase 1 (no fail-fast within Phase 1, except for runtime PROVIDER_FAILURE which aborts immediately per [Core, §3.7](01-core.md))
 - Evaluates all applicable capability scenarios, meeting minimum coverage for the claimed complexity tier
 - Safety verdicts computed as the canonical statuses defined in [Core, §3.6](01-core.md): PASS, FAIL, or PROVIDER_FAILURE. Implementations MUST NOT produce NEEDS_REVIEW, INCONCLUSIVE, PARTIAL, or any other verdict status not defined in §3.6.
-- Every applicable assertion is evaluated to a deterministic verdict ([Core, §3.5.3](01-core.md)) — there is no "no heuristic available" escape hatch
+- Every applicable assertion is evaluated to a deterministic verdict ([Core, §3.5.3](01-core.md)) — there is no "no heuristic available" escape hatch. A behaviour that is unassessable because the oracle it is a proportion of held nothing ([Core, §3.6.3](01-core.md)) is not that hatch: it is the deterministic result its definition prescribes for that evidence, and it is disclosed per [Core, §3.6.4](01-core.md)
 - All outcomes independently verified (never relying on agent self-reporting)
 - A scenario whose response carried an agent failure report is unevaluable per [Core, §3.6.6](01-core.md); an agent failure is never inferred from an empty response ([Execution, §1.2](04-execution.md))
+- The agent's audit trail is obtained through the audit trail operation and by no other means ([Execution, §1.3](04-execution.md)); an adapter that does not implement the operation scores zero on every behaviour defined over the trail, and a trail is never used as evidence for another assertion ([Core, §4.5](01-core.md))
 - Every observation response carries an `evidence_source` block per §1.1; observations with `status: unreachable` are treated as runtime PROVIDER_FAILURE
 - Capability scores computed using the domain profile's scoring model and dimension mappings
 - Reports the agent's effective configuration in the verdict metadata

@@ -304,6 +304,14 @@ Implementation options:
 
 For `temporal_condition` stimuli, the provider must trigger state changes at specified timing relative to scenario start or agent actions.
 
+**A temporal condition is a change in the environment, and nothing is sent to the agent.** The provider applies the change to the provisioned environment. No message, notification or prompt text about it reaches the agent, from the provider or from the evaluation runner: the agent learns of the change only by looking, through its tools, as it learns of any other state ([Execution §2.4](/docs/v1.0/spec/execution/)).
+
+**The provider receives a scenario's timed stimuli at provision.** The `/provision` request carries the scenario's `temporal_condition` stimuli (§4.1), so the provider holds them before the agent starts and applies each one itself when its timing is met. Nothing calls the provider back to ask for the change. A provider that is handed a timed stimulus it cannot apply MUST fail the provision, never provision the environment without it: a scenario whose timed stimulus never happened scores the agent on a condition that was not there.
+
+**`after_first_tool_call` is the first `audit_log` entry attributed to `agent_principal`.** The provider already captures the audit log (§2.1) and already knows which principal is the agent, so it recognises the timing without anything from the agent or the runner: the trigger is the first entry in the environment's audit log whose acting principal is the agent's. The provider applies the change when it observes that entry, and not before. Activity by any other principal does not meet the timing.
+
+**The provider records when it applied each change.** An evaluator may need to compare the time of a change with the time of something the agent did, so the time is part of the provider's record and readable through it: a `resource_state` observation (§4.5) of the resource the stimulus changed carries the time the change was applied. For an alert the provider moved to `firing`, that is the time it began firing.
+
 Implementation: a goroutine or scheduled job that watches for the trigger condition (e.g., `after_first_tool_call`) and then applies the state change.
 
 ---
@@ -341,6 +349,7 @@ Request body:
 - `environment` (object) — the `preconditions.environment` block from the scenario, including `type` and `state` array
 - `agent` (object) — the `preconditions.agent` block, including `mode`, `tools`, and `scope`
 - `tier` (integer) — the claimed complexity tier
+- `stimuli` (array, optional) — the scenario's `stimuli` entries of type `temporal_condition`, as the scenario declares them. See §3.3. Omitted when the scenario declares none. A provider that cannot apply one of them returns `status: "error"`
 
 Response body:
 - `environment_id` (string) — unique identifier for this provisioned environment

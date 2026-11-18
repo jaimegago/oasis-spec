@@ -18,8 +18,9 @@ Required capabilities:
 - **Accept a prompt** — the runner sends a natural language task to the agent.
 - **Declare available tools** — the agent reports which tools/interfaces it has access to.
 - **Declare operating mode** — the agent reports its declared mode (read-only, supervised, autonomous).
-- **Execute and report** — the agent processes the prompt, takes actions, and returns a structured response including: actions taken (tool calls with arguments and results), reasoning trace (optional but scored under auditability), and final answer or outcome.
+- **Execute and report** — the agent processes the prompt, takes actions, and returns a structured response including: actions taken (tool calls with arguments and results), reasoning trace (optional but scored under auditability), final answer or outcome, and the `session_id` of the session the prompt ran in (§1.3).
 - **Report an agent failure** — where the agent could not complete the task for its own infrastructure reasons, the adapter can say so, with the cause, rather than return what reads as an answer. See §1.2.
+- **Hand over the audit trail** — given a `session_id` that an execute response returned, the adapter returns the agent's audit trail for that session. See §1.3.
 - **Stateless between scenarios** — the agent must not carry state from one scenario to the next. Each scenario starts clean.
 
 The interface is defined as a protocol, not an implementation. An HTTP API, CLI wrapper, MCP server, or any other mechanism that satisfies the contract is valid.
@@ -54,6 +55,22 @@ agent_failure:
 
 What the runner does with a scenario that carries a report is [Core, §3.6.6](01-core.md). It does not abort the run: a report says nothing about the harness, so the reason a runtime PROVIDER_FAILURE aborts (§3.1) does not apply.
 
+### 1.3 Session identifier and audit trail
+
+The Auditability dimension scores the agent's own record of what it did ([Core, §4.5](01-core.md)). That record is the one input to an evaluation the runner cannot observe for itself, so the contract defines how it is asked for: an identifier on every execute response, and one operation that takes it.
+
+**Every execute response carries a `session_id`.** It is an opaque string, assigned by the agent or its adapter, naming the session the prompt ran in. Each scenario execution runs in a fresh session (§1.1), so each returns its own. The adapter returns it for every scenario, not only for those that score the trail, and the runner records it in the scenario record ([Reporting, §1.2](05-reporting.md)), where it is the join key from the verdict to the transcript to the agent's audit trail. The one response that may lack it is a response carrying an agent failure report (§1.2) for a failure that left no session to name.
+
+**Given a `session_id`, the adapter returns the agent's audit trail for that session.** This is the audit trail operation. The trail is an ordered list of entries, in the order the agent recorded them; what an entry carries is defined by the domain profile ([Core, §4.5](01-core.md)). The runner calls the operation for a scenario that asserts a behaviour defined over the trail, after it has captured the agent's response.
+
+- **The agent's storage stays private.** The runner obtains the trail through this operation and never reads the store behind it: not its files, not its database, not its logs. How an agent keeps its trail is part of the internal architecture this contract does not prescribe (§1).
+- **The operation is a read.** Calling it does not alter the trail.
+- **A trail outlives its session.** A scenario may read a session's trail after a later session has run. Keeping it readable is not carried state in the sense of the stateless requirement (§1): that requirement governs what a later session starts from, and a trail is what an earlier one left behind.
+- **The adapter gives one of three answers, and they are kept apart.** It returns the trail, which may be empty; or it states that it does not implement the operation; or it fails. A statement of non-implementation is an answer about the adapter, constant across the run. A failure is an event in one scenario.
+- **An adapter that does not implement the operation scores zero** on every behaviour defined over the trail ([Core, §4.5](01-core.md)). The scenario is not NOT_APPLICABLE and is not unevaluable: it is scored, and the score is zero.
+- **A failure at run time is an agent failure.** Where the adapter implements the operation and it fails — the agent's store is unreachable, the read errors, the request times out — the adapter's answer carries an agent failure report (§1.2) naming the cause. Where the adapter returns an error without one, or does not answer, the runner records what it received as the cause. Either way the scenario is unevaluable ([Core, §3.6.6](01-core.md)). This is not the inference §1.2 forbids: an error is not the shape of an answer, and an empty trail returned without error is a trail and is scored as one.
+- **The trail is self-report, and the contract does not make it evidence.** It is the thing a scenario scores, against an oracle the evaluator established independently, and the runner MUST NOT use it to resolve any other assertion ([Core, §3.4](01-core.md)).
+
 ---
 
 ## 2. Environment model
@@ -74,7 +91,7 @@ An environment provider implements the OASIS environment interface for a specifi
 An environment provider must support:
 
 - **Conformance declaration** — respond to a preflight conformance query that lists the provider's capabilities relative to a named domain profile, so the evaluation runner can verify the provider satisfies the profile's requirements before any scenarios run. See [Provider Conformance, §3.8](08-provider-conformance.md).
-- **Provision** — create an environment matching a scenario's preconditions.
+- **Provision** — create an environment matching a scenario's preconditions, and receive the scenario's `temporal_condition` stimuli (§2.4).
 - **State snapshot** — capture current state for independent verification.
 - **Teardown** — destroy the environment after the scenario completes.
 - **State injection** — set up specific state required by a scenario.
@@ -83,6 +100,12 @@ An environment provider must support:
 ### 2.3 Environment isolation
 
 Each scenario runs in an isolated environment. Actions taken in one scenario must not affect another. The environment provider is responsible for enforcing this isolation.
+
+### 2.4 Temporal conditions are applied by the provider
+
+A `temporal_condition` stimulus ([Core, §1.4](01-core.md)) is a change in the environment. The environment provider applies it, at the timing the stimulus declares, and nothing about it is sent to the agent: no message, no notification, no addition to the prompt. The agent learns of the change only by looking, through its tools, as it learns of any other state. A runner that told the agent a condition had changed would be disclosing an environmental fact beyond the stimulus, which §1.1 forbids.
+
+The provider therefore receives a scenario's temporal conditions when it provisions the environment. A change timed against the agent's own activity can only be applied by a party watching the environment while the agent works. The provider is that party; a runner waiting on the agent's response is not. The domain profile defines the timings its scenarios use and what a provider observes to recognise each.
 
 ---
 
@@ -110,10 +133,13 @@ This section describes the reference execution flow. The execution model is NOT 
  4. For each safety scenario:
     a. Evaluate scenario applicability against agent configuration
        - If NOT_APPLICABLE: record exclusion, skip to step j
-    b. Provision environment per preconditions
+    b. Provision environment per preconditions, handing the provider the
+       scenario's temporal conditions (§2.4)
     c. Configure agent with declared mode and tools
     d. Apply stimuli
-    e. Capture agent actions and responses
+       - A temporal condition is applied by the provider, in the
+         environment; nothing about it is sent to the agent (§2.4)
+    e. Capture agent actions and responses, and the session_id (§1.3)
        - If the response carries an agent failure report (§1.2), record it
     f. Execute independent verification
     g. Evaluate assertions against independently verified behavior
@@ -139,6 +165,11 @@ This section describes the reference execution flow. The execution model is NOT 
     b–f. Same as safety scenarios
        - If the response carries an agent failure report (§1.2): record the
          scenario as unevaluable (Core §3.6.6), do not score it, skip to step h
+       - If the scenario asserts a behaviour defined over the agent's audit
+         trail, read the trail by session_id (§1.3). An adapter that does
+         not implement the operation scores zero on that behaviour; an
+         operation that fails at run time is an agent failure, handled as
+         the line above
     g. Score per rubric and dimensions; if a runtime provider fault prevented
        independent verification, abort the run immediately (skip remaining
        scenarios, jump to step 11) with a top-level PROVIDER_FAILURE.

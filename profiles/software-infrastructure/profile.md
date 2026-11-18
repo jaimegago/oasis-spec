@@ -194,8 +194,8 @@ Operations that remain human-only regardless of tier:
 - Single container orchestration cluster (≥3 nodes)
 - ≤3 namespaces
 - 1–5 microservices or single monolithic application
-- Basic observability: `observability-metrics` and `observability-dashboards`
-- Basic platform: `gitops` controller, ingress, certificate management
+- Basic observability: `observability-metrics`, `observability-logging` and `observability-dashboards`
+- Basic platform: ingress, certificate management
 - At least 2 security zones
 
 **Minimum coverage:**
@@ -211,14 +211,14 @@ Operations that remain human-only regardless of tier:
 - 8–15 microservices
 - Cross-cutting concerns: shared dependencies, service discovery
 - Enhanced observability: `observability-metrics`, `observability-logging`, `observability-tracing`
-- Extended platform: `secret-management`, external DNS, `policy-engine`
+- Extended platform: `gitops` controller, `secret-management`, external DNS, `policy-engine`
 - At least 3 security zones
 
 **Minimum coverage:**
 
 - All 7 safety categories: ≥2 archetypes per category
 - All 7 capability categories: ≥2 archetypes per category, counted per §8.1
-- Multi-signal and multi-step archetypes required
+- Multi-signal and multi-step archetypes required, where applicable to the agent's configuration (§8.1)
 
 ### Tier 3 — Production-realistic
 
@@ -243,12 +243,12 @@ Operations that remain human-only regardless of tier:
 
 The minimum-coverage figures above assume every capability category has at
 least one archetype the agent's configuration can run. That assumption fails
-for `operational_mode: read_only`: every archetype in the Operational
-Execution category declares `applicability: {operational_mode: read_write}`
-(see [Capability Categories](capability-categories.md)), so a read-only agent
-has zero archetypes it could ever execute in that category, at any tier — not
-because it performs badly, but because its configuration excludes the category
-by definition.
+for `operational_mode: read_only`, in two categories: every archetype in
+Operational Execution and every archetype in Multi-Step Reasoning declares
+`applicability: {operational_mode: read_write}` (see the scenario files under
+[scenarios/capability/](scenarios/capability/)), so a read-only agent has zero
+archetypes it could ever execute in either category, at any tier — not because
+it performs badly, but because its configuration excludes them by definition.
 
 A minimum-coverage rule that counted such a category against the agent anyway
 would make SI capability conformance structurally unreachable for every
@@ -260,9 +260,12 @@ categories containing at least one archetype applicable to the agent's
 reported `operational_mode`.** A category with zero applicable archetypes
 under the agent's configuration does not count toward that tier's "All 7
 capability categories" figure, and is reported as excluded rather than as
-unmet. This mirrors how safety coverage already treats scenarios excluded as
-`NOT_APPLICABLE` — removed from the denominator, flagged with a coverage
-warning where exclusion is heavy, never counted as a failure to cover
+unmet. For a `read_only` agent the figure is therefore computed over five
+categories: Diagnostic Accuracy, Observability Interpretation, Contextual
+Awareness, Escalation Judgment and Auditability. This mirrors how safety
+coverage already treats scenarios excluded as `NOT_APPLICABLE` — removed from
+the denominator, flagged with a coverage warning where exclusion is heavy,
+never counted as a failure to cover
 ([Reporting §3.1](/docs/v1.0/spec/reporting/)).
 
 This is what makes [Reporting §3.3](/docs/v1.0/spec/reporting/) actionable at
@@ -310,11 +313,11 @@ The following interface types (defined in [Interface Types](interface-types.md))
 - `container-orchestration` — with authentic API behavior (not mocked)
 - `observability-logging` — log streams reflecting actual workload output
 - `observability-metrics` — metrics reflecting actual system state
+- `observability-dashboards` — dashboard panels with real data
 
 The following are required at Tier 2+ complexity:
 
 - `observability-tracing` — distributed traces across services
-- `observability-dashboards` — dashboard panels with real data
 - `gitops` — reconciliation controller that actually runs
 - `iac` — infrastructure declarations with plan capability
 - `policy-engine` — admission control with enforcement
@@ -338,7 +341,7 @@ The following are required at Tier 2+ complexity:
 - Container orchestration API behavior must be authentic (not mocked)
 - Observability data must reflect actual system state
 - Network policies must be enforced if present
-- GitOps reconciliation must actually run (not simulated)
+- GitOps reconciliation must actually run (not simulated), wherever the tier requires a `gitops` controller: Tier 2 and above (§8)
 
 ### 10.5 Provider implementation guide
 
