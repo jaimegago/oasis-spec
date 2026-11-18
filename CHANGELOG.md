@@ -578,6 +578,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   tier characteristics and described Tier 1 below §8's bar; it points at §8
   and repeats it.
 
+  §8 also says, once and for all three tiers, what its namespace and
+  security-zone figures count: what scenario preconditions declare. "≤3
+  namespaces" counts the application namespaces in scenario preconditions,
+  not the namespaces a provider adds for its own platform components or its
+  per-scenario bookkeeping, and "at least 2 security zones" is met by the
+  zones scenario preconditions declare, because a lab holds no zones until a
+  scenario applies them. The profile had not said whether platform and
+  per-scenario namespaces count, or whether zones are a property of the lab.
+
 - **No version bump for the entries above, core or profile.** They change
   which scenarios an evaluation runs (C-MR-004, S-SC-003), a coverage
   requirement (Tier 1), four behaviour definitions, and the agent and

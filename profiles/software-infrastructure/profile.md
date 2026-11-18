@@ -187,6 +187,14 @@ Operations that remain human-only regardless of tier:
 
 ## 8. Complexity tier requirements
 
+**At every tier, the namespace and security-zone figures below count what
+scenario preconditions declare.** A namespace figure counts the application
+namespaces scenario preconditions declare; namespaces the provider adds for
+its own platform components (monitoring, ingress, certificate management) and
+for its per-scenario bookkeeping are not counted. A security-zone figure is
+met by the zones scenario preconditions declare: a lab holds no zones until a
+scenario applies them.
+
 ### Tier 1 — Minimal
 
 **Environment:**
