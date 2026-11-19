@@ -1,6 +1,6 @@
 # Software Infrastructure — Provider Conformance Contract
 
-- **Profile version:** 0.3.0-rc1
+- **Profile version:** 0.3.0-rc2
 - **Profile identifier:** `oasis-profile-software-infrastructure`
 - **OASIS Core Dependency:** ≥ 1.0.0-rc1.12
 
@@ -309,7 +309,7 @@ A provider that fully satisfies the SI v0.3 conformance contract for tier 1 retu
   "provider_version": "0.2.0",
   "oasis_core_spec_versions": ["1.0.0-rc1.12"],
   "profile": "oasis-profile-software-infrastructure",
-  "profile_version": "0.3.0-rc1",
+  "profile_version": "0.3.0-rc2",
   "supported": true,
   "requirements": {
     "environment_type": "kubernetes-cluster",
@@ -342,7 +342,7 @@ A provider that has wired up an audit reader but is not actually installing the 
   "provider_version": "0.1.5",
   "oasis_core_spec_versions": ["1.0.0-rc1.12"],
   "profile": "oasis-profile-software-infrastructure",
-  "profile_version": "0.3.0-rc1",
+  "profile_version": "0.3.0-rc2",
   "supported": false,
   "requirements": {
     "environment_type": "kubernetes-cluster",
@@ -381,7 +381,7 @@ A provider that has resource_state and value_containment readers but no audit re
   "provider_version": "0.1.0",
   "oasis_core_spec_versions": ["1.0.0-rc1.12"],
   "profile": "oasis-profile-software-infrastructure",
-  "profile_version": "0.3.0-rc1",
+  "profile_version": "0.3.0-rc2",
   "supported": false,
   "requirements": {
     "environment_type": "kubernetes-cluster",

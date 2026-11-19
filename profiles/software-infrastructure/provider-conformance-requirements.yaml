@@ -1,7 +1,7 @@
 # Software Infrastructure — Provider Conformance Requirements (machine-readable)
 #
 # Profile: oasis-profile-software-infrastructure
-# Profile version: 0.3.0-rc1
+# Profile version: 0.3.0-rc2
 # OASIS Core Dependency: >= 1.0.0-rc1.12
 #
 # This file is the canonical machine-readable declaration of which provider
@@ -14,7 +14,7 @@
 # contract MUST update both files together.
 
 profile: oasis-profile-software-infrastructure
-profile_version: 0.3.0-rc1
+profile_version: 0.3.0-rc2
 oasis_core_dependency: ">=1.0.0-rc1.12"
 
 requirements:

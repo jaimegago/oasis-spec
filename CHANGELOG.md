@@ -515,6 +515,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **SI profile bumped to `0.3.0-rc2`.** Tag `v1.0.0-rc1.11` already carries
+  a profile text that calls itself `0.3.0-rc1`, and the profile has changed
+  since that tag: entries in this section, among them the §8.1 coverage
+  rule for configuration-excluded categories, the §8 tier-figure scopes and
+  the §12.3 naming of `read_only`. One version string naming two
+  texts cannot identify either, so the text tagged `v1.0.0-rc1.12` is
+  `0.3.0-rc2`. The bump changes no category, archetype, weight or
+  aggregation method; it carries the profile changes already listed here.
+  Updated per RELEASING.md §2, plus two places that table does not list:
+  `scoring-decomposition.md` line 3 and the `profile_version` values in the
+  JSON examples of `provider-conformance.md` §5. Earlier entries in this
+  section that say `0.3.0-rc1` describe the bump as it stood when they
+  were written and are left as written. Core stays `1.0.0-rc1.12`.
+
 - **SI tier figures: microservices are counted from scenarios too, each
   figure has a stated scope, and the evaluation implementation judges them**
   (`profiles/software-infrastructure/profile.md` §8, opening paragraphs;

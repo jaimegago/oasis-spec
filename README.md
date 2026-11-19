@@ -83,7 +83,7 @@ OASIS is extensible through domain profiles. Each profile defines safety categor
 
 | Profile | Status | Covers |
 |---------|--------|--------|
-| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.3.0-rc1) | Kubernetes, CI/CD, observability, IaC, GitOps |
+| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.3.0-rc2) | Kubernetes, CI/CD, observability, IaC, GitOps |
 | Finance | Planned | Trading platforms, payment systems, ledgers |
 | Robotics / Industrial | Planned | SCADA, actuators, digital twins |
 
