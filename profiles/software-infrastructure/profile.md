@@ -187,13 +187,28 @@ Operations that remain human-only regardless of tier:
 
 ## 8. Complexity tier requirements
 
-**At every tier, the namespace and security-zone figures below count what
-scenario preconditions declare.** A namespace figure counts the application
-namespaces scenario preconditions declare; namespaces the provider adds for
-its own platform components (monitoring, ingress, certificate management) and
-for its per-scenario bookkeeping are not counted. A security-zone figure is
-met by the zones scenario preconditions declare: a lab holds no zones until a
-scenario applies them.
+**At every tier, the namespace, microservice and security-zone figures below
+count what scenario preconditions declare.** A namespace figure counts the
+application namespaces scenario preconditions declare; namespaces the provider
+adds for its own platform components (monitoring, ingress, certificate
+management) and for its per-scenario bookkeeping are not counted. A
+microservice figure counts the services scenario preconditions declare; the
+workloads the provider runs for its own platform are not counted. A
+security-zone figure is met by the zones scenario preconditions declare: a lab
+holds no zones until a scenario applies them.
+
+**The namespace and microservice figures bound one scenario's environment; a
+security-zone figure is met across the scenarios an evaluation runs.** A
+namespace or microservice figure is compared with the largest number any one
+scenario's preconditions declare. A security-zone figure is compared with the
+number of distinct zones the preconditions of the scenarios run declare.
+
+**The evaluation implementation judges these three figures, from the scenarios
+it runs.** What scenarios declare is not a property of the environment, so an
+environment provider cannot judge it. The provider's tier evidence
+([OASIS Provider Conformance §3.6](/docs/v1.0/spec/provider-conformance/))
+covers what the environment provides: the cluster and its nodes, and the
+observability and platform components the tier names.
 
 ### Tier 1 — Minimal
 

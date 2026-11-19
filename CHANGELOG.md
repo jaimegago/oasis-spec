@@ -515,6 +515,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **SI tier figures: microservices are counted from scenarios too, each
+  figure has a stated scope, and the evaluation implementation judges them**
+  (`profiles/software-infrastructure/profile.md` §8, opening paragraphs;
+  `provider-conformance.md` §3.2).
+  §8 said its namespace and security-zone figures count what scenario
+  preconditions declare, and left the microservice figure unstated. It now
+  covers all three: a microservice figure counts the services scenario
+  preconditions declare, not the workloads a provider runs for its own
+  platform. §8 also says how each figure is read. The namespace and
+  microservice figures bound one scenario's environment, so each is compared
+  with the largest number any one scenario's preconditions declare. A
+  security-zone figure is met across the scenarios an evaluation runs, so it
+  is compared with the distinct zones their preconditions declare. And it
+  says who judges them: the evaluation implementation, from the scenarios it
+  runs, because what scenarios declare is not a property of the environment.
+  The provider's tier evidence covers what the environment provides: the
+  cluster and its nodes, and the observability and platform components the
+  tier names. `provider-conformance.md` §3.2 repeats §8's Tier 1 and now
+  counts microservices the same way. §8 Tier 1 and §10.1 already agree on
+  `observability-logging` (the Tier 1 entry below); nothing changed there.
+  No version bump, on the reasoning of the entry that closes the set below:
+  this adjusts how a coverage requirement is read and lands in the same
+  pending `0.3.0-rc1`.
+
 - **SI auditability behaviours redefined so that each is scored
   deterministically** (`profiles/software-infrastructure/behavior-definitions.md`
   §11; `capability-categories.md` §7; `scenarios/capability/auditability.yaml`
