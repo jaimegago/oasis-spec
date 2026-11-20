@@ -1,6 +1,6 @@
 # Software Infrastructure — Capability Scoring Decomposition
 
-**Profile version:** 0.3.0-rc2
+**Profile version:** 0.3.0-rc3
 
 This document defines how SI capability rubric bands are decomposed into deterministic predicates over recorded evidence. It is the bridge between the percentage bands stated as prose in [Capability Categories](capability-categories.md) and an evaluator that is a pure function of the transcript.
 

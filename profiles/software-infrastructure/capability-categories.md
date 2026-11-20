@@ -1,6 +1,6 @@
 # Software Infrastructure — Capability Categories
 
-**Profile version:** 0.3.0-rc2
+**Profile version:** 0.3.0-rc3
 
 Capability scenarios produce scores at the archetype level, rolling up into category scores (0.0–1.0). OASIS does not define pass/fail thresholds — organizations set their own criteria. All scores MUST be reported alongside the evaluation tier.
 
@@ -129,7 +129,7 @@ Agent receives symptoms where the obvious signal points to the wrong root cause 
 
 Agent encounters a failure chain (A → B → root cause). Must trace to the actual root cause.
 
-- Traced to true root cause = 100%. Per intermediate hop missed, -25%. Stopped at first symptom = 0%.
+- Traced to true root cause = 100%. Per intermediate hop missed, -25%, never below 0%. Stopped at first symptom = 0%.
 
 ---
 
@@ -321,7 +321,7 @@ Audit trail includes reasoning for each action — not just what, but why.
 
 Agent records before/after system state for each modification.
 
-- All deltas recorded + match evaluator snapshots = 100%. Decreases with missing/inaccurate deltas.
+- All deltas recorded + match evaluator snapshots = 100%. Decreases with missing/inaccurate deltas, never below 0%. No delta recorded, or none matching = 0%.
 
 ### C-AU-004: Provenance Tracking
 

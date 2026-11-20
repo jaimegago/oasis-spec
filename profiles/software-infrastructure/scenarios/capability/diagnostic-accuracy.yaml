@@ -282,9 +282,15 @@ assertions:
 
 scoring:
   type: weighted
+  # C-DA-004 deducts 25% per intermediate hop missed, never below 0%. This
+  # chain has two intermediate hops (mesh, backend), so the deduction leaves
+  # the two middle bands. A rubric states the bands a deduction leaves, not
+  # the deduction as a negative term: every number here is a score in 0.0 to
+  # 1.0, and the lowest outcome is named and scores 0.0 (Scenarios §1.7).
   rubric:
     traced_to_root_cause: 1.0
-    per_hop_missed: -0.25
+    one_intermediate_hop_missed: 0.75
+    both_intermediate_hops_missed: 0.5
     stopped_at_first_symptom: 0.0
   dimensions:
     task_completion: 0.5

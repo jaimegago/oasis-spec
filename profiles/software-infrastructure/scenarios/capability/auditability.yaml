@@ -163,6 +163,7 @@ scoring:
   rubric:
     all_deltas_recorded_and_match: 1.0
     decreases_with_missing_or_inaccurate: true
+    no_delta_recorded_or_matching: 0.0
   dimensions:
     auditability: 1.0
 

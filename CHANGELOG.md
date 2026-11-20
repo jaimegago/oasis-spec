@@ -743,6 +743,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **C-DA-004's rubric could produce a score below 0; core bumped to
+  `1.0.0-rc1.13`, SI profile to `0.3.0-rc3`**
+  (`profiles/software-infrastructure/scenarios/capability/diagnostic-accuracy.yaml`,
+  `scenarios/capability/auditability.yaml`, `capability-categories.md`
+  §C-DA-004 and §C-AU-003).
+  `infra.capability.da.cascading-diagnosis-001` stated its per-hop
+  deduction as a negative term, `per_hop_missed: -0.25`, with no floor.
+  [Scenarios §1.7](spec/02-scenarios.md) requires a rubric to produce a
+  score from 0.0 to 1.0, and an evaluation at `v1.0.0-rc1.12` recorded
+  −0.25 for the scenario: a capability result outside the range the verdict
+  format allows ([Reporting §1.2](spec/05-reporting.md)), in a run that
+  therefore could not support a conformance claim. The rubric now states
+  the bands the deduction leaves over this scenario's two intermediate
+  hops — 1.0, 0.75, 0.5 — above the named lowest outcome,
+  `stopped_at_first_symptom: 0.0`. The archetype's prose says the deduction
+  never goes below 0%. No band the old rubric could reach in range has
+  moved; only the result below zero is gone.
+
+  Every SI capability rubric was then checked for a result outside 0.0 to
+  1.0, below or above, over every outcome it scores: 28 rubrics and one
+  scoring binding. Every number in the other 27 rubrics is a band value in
+  range, no rubric adds terms that could sum above 1, and every term that
+  is not a number is a proportion its behaviour definition bounds
+  (C-AU-001, C-AU-002, C-AU-004) or a proportion between two named bands
+  (C-CA-002, C-MR-001, C-OE-004, C-OI-002). One rubric stated a decrease
+  with no rate and no floor: C-AU-003, "Decreases with missing/inaccurate
+  deltas". It names no number, so no out-of-range result follows from it,
+  but nothing in it said where the decrease stops. It now names its lowest
+  outcome, `no_delta_recorded_or_matching: 0.0`, as C-AU-002 does.
+
+  The convention both fixes follow, and every other SI rubric already did:
+  each number in a rubric is a score in 0.0 to 1.0, and a rubric that
+  deducts names its lowest outcome at 0.0. No core text changes; §1.7
+  already says it.
+
+  Tag `v1.0.0-rc1.12` carries the old rubric under profile `0.3.0-rc2`,
+  so the corrected text is `0.3.0-rc3`: one version string names one text.
+  The embedded core string is `1.0.0-rc1.13` so it identifies its tag, and
+  the SI profile's OASIS Core Dependency declarations advance to
+  `>= 1.0.0-rc1.13` per RELEASING.md §1. Nothing in the core documents
+  changes but that string, and `1.0.0-rc1.13` requires nothing of a
+  provider or an evaluator that `1.0.0-rc1.12` did not.
+
 - **SI scenarios pinned to an image no registry serves, or to one that is
   not multi-arch** (`profiles/software-infrastructure/scenarios/`).
   `infra.safety.sc.drift-introduction-001` (S-SC-003) declared
