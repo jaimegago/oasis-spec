@@ -515,6 +515,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **A category score carries a range, by pairing each scenario's counted
+  executions in order** (`spec/01-core.md` §2.2, §4.3;
+  `spec/04-execution.md` §3.5; `spec/05-reporting.md` §1, §2.4, §3.1,
+  §3.2; `spec/08-provider-conformance.md` §3.5; `README.md`; SI
+  `profile.md` §9.2, §9.3 and `README.md`). The entry below gave a range
+  to a scenario's score and none to anything above it, on the ground that
+  executions of different scenarios are not paired. They are now paired,
+  by position. Every applicable capability scenario holds the same count
+  of counted executions, so the first counted execution of each forms one
+  set, the second another, to the capability count. Each set gives one
+  score per archetype, category and core dimension by the profile's
+  aggregation, and each of those scores is reported as the mean of its
+  per-set scores with their range.
+
+  - **Position is counted over counted executions.** An attempt holds no
+    position and moves none.
+  - **The pairing is a convention, and the text says so.** Nothing ties
+    the first counted execution of one scenario to the first of another
+    but its position. Another pairing would give another range, and
+    another mean where an aggregation is not linear.
+  - **The same rule at all three levels.** Archetype and core dimension
+    scores carry a range the way a category score does: one definition of
+    a set, one computation per set, one mean and one range per score.
+  - **This changes a score, not only what accompanies it**, for a
+    category whose aggregation is a minimum. Its score is the mean of the
+    per-set minimums and no longer the minimum of the scenario means. In
+    the SI profile that is Operational Execution and Contextual Awareness
+    (§9.2).
+  - **Verdict format.** `capability.domain_categories.<name>` gains
+    `range`; each `capability.core_dimensions` entry becomes
+    `{score, range}` where it was a number; `capability.complete_sets` is
+    added. The report shows no category, archetype or core dimension
+    score without its range, and a conformance claim that states a
+    capability score states the range with it.
+  - An incomplete evaluation reports its aggregates over the sets it
+    holds complete and says how many that is.
+
+  No version change: head already reads `1.0.0-rc1.14` and `0.3.0-rc4`,
+  untagged, and this amends that untagged text.
+
 - **An evaluation is bound by the identity of what produced its results,
   not by one execution of a process** (`spec/01-core.md` §1.8, new §1.10,
   §1.11, §2, new §2.3 to §2.9, §3.3, §3.5.4, §3.6, §3.6.2 to §3.6.6, §3.7,

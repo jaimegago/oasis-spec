@@ -123,7 +123,7 @@ An optional third phase — adversarial verification — may follow both phases.
 
 Capability scenarios test whether the agent can accomplish tasks correctly and efficiently. Capability scores are domain-specific, structured around categories defined by the domain profile.
 
-**Every applicable capability scenario is executed until it holds the evaluation's capability count of counted executions** (§2.4). The core spec sets no minimum for that count; the domain profile does. A capability scenario's result is the mean of the scores of its counted executions, reported with their range (§4.3).
+**Every applicable capability scenario is executed until it holds the evaluation's capability count of counted executions** (§2.4). The core spec sets no minimum for that count; the domain profile does. A capability scenario's result is the mean of the scores of its counted executions, reported with their range, and every score computed above the scenario is reported with a range as well (§4.3).
 
 Capability scores are informational. OASIS does not mandate pass/fail thresholds for capabilities — organizations set their own acceptance criteria. The safety gate is binary; capability scoring is a report.
 
@@ -549,11 +549,18 @@ The mean is taken over scores and not over bands. Where a rubric or a band templ
 
 The range is reported because a mean alone hides what it was taken over. Scores move between executions of one scenario by one agent, on one build and one model. A mean of 0.5 over three executions that each scored 0.5 and a mean of 0.5 over executions that scored 0.0, 0.5 and 1.0 are different findings, and the range is what tells them apart.
 
-Archetype, category and core dimension scores are computed from scenario results, which are means. A range is reported for a scenario and is not defined for an aggregate: the executions of different scenarios are not paired with one another, so there is no set of aggregate values to take a range over.
+**Every score above the scenario is taken over sets of paired executions, and is reported with its range.** Every applicable capability scenario of an evaluation holds the same number of counted executions (§2.4), so they are paired by position. The first counted execution of each scenario forms the first **set**, the second counted execution of each forms the second, and so on to the capability count. A set holds one score for every applicable capability scenario. From it the domain profile's aggregation gives one score for each archetype, each category and each core dimension, exactly as it would from a single execution of every scenario:
 
-Each domain-specific category receives a score from 0.0 to 1.0, computed from archetype-level results using an aggregation method defined by the domain profile (weighted average, minimum, or other).
+- Within a set, each domain-specific category receives a score from 0.0 to 1.0, computed from archetype-level results using an aggregation method defined by the domain profile (weighted average, minimum, or other).
+- Within a set, core dimension scores are computed by aggregating the domain category scores that map to each dimension, using weights declared in the domain profile.
 
-Core dimension scores are computed by aggregating the domain category scores that map to each dimension, using weights declared in the domain profile.
+**An archetype, category or core dimension score is the arithmetic mean of its per-set scores, reported with their range**: the lowest and the highest of them. A category score reported without its range is not the score this section defines.
+
+**Position is counted over counted executions, not over attempts.** A scenario's first counted execution is the first of its executions, in order of start, that reached a verdict. An attempt holds no position and moves none (§2.5): a scenario whose first two executions were attempts enters the first set with its third.
+
+**The pairing is a convention.** Nothing ties the first counted execution of one scenario to the first of another but its position. The two need not have been made on the same day or on the same lab, and the order in which scenarios are executed is free (§2.3). Another pairing of the same executions would give other per-set scores and so another range, and, where a profile's aggregation is not linear — a minimum, for instance — another mean as well. The convention is fixed so that every implementation computes the same figures from the same record and a reader can recompute them. A range over sets says how far an aggregate moves when each scenario contributes one execution to it. It does not say that the executions in a set had anything in common but their position.
+
+A set is **complete** once every applicable capability scenario holds a counted execution at that position, and aggregates are computed over complete sets only. A complete evaluation holds exactly as many complete sets as its capability count. An incomplete one reports its aggregates over the sets it holds complete, and says how many that is.
 
 Capability scores MUST always be reported alongside the complexity tier at which the evaluation was conducted. Scores from different tiers are not comparable.
 

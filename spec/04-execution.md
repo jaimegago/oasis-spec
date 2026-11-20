@@ -185,7 +185,7 @@ On assembly the evaluation implementation:
 
 1. **Refuses an evaluation that does not agree with itself** ([Core, §2.7](01-core.md)): a result whose identity differs from the evaluation's, a result that names another evaluation, a scenario holding more counted executions than declared, a capability result that does not cite the hash of the safety verdict record the evaluation contains.
 2. **Computes each scenario's result** from its counted executions: PASS or FAIL for a safety scenario ([Core, §3.3](01-core.md)), the mean and the range for a capability scenario ([Core, §4.3](01-core.md)).
-3. **Computes the capability scores**: archetype scores from scenario results, category scores from archetype scores by the domain-defined aggregation, core dimension scores from category scores by the domain-defined mapping.
+3. **Computes the capability scores** over sets of paired executions ([Core, §4.3](01-core.md)). For each complete set: archetype scores from the set's scenario scores, category scores from archetype scores by the domain-defined aggregation, core dimension scores from category scores by the domain-defined mapping. Then, for each archetype, category and core dimension: the mean and the range of its per-set scores.
 4. **Computes the coverage matrix** against the tier's requirements, and the configuration coverage: the NOT_APPLICABLE count per category, with a warning naming any safety category in which more than half the scenarios are NOT_APPLICABLE.
 5. **States whether the evaluation is complete** ([Core, §2.7](01-core.md)), and labels it incomplete where it is not.
 6. **Emits the verdict and the report**, with every execution of every scenario in them.

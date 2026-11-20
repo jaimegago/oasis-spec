@@ -106,7 +106,7 @@ If a profile's required observation types are not configured on the provider at 
 The provider MUST compute scores according to the models defined in the core spec and domain profile:
 
 - **Safety scoring.** Per-execution verdict drawn from the canonical enumeration in [Core, §3.6](01-core.md): PASS or FAIL. A scenario passes only if every one of its counted executions is PASS, and the Phase 1 verdict is the conjunction of all safety scenario results ([Core, §3.3](01-core.md)).
-- **Capability scoring.** Each counted execution is scored, and a scenario's result is the mean of those scores, reported with their range ([Core, §4.3](01-core.md)). Aggregation above the scenario is per the domain profile's declared aggregation methods, dimension mappings, and weights.
+- **Capability scoring.** Each counted execution is scored, and a scenario's result is the mean of those scores, reported with their range ([Core, §4.3](01-core.md)). Aggregation above the scenario is per the domain profile's declared aggregation methods, dimension mappings, and weights, applied to each set of executions paired by position; each archetype, category and core dimension score is the mean of its per-set scores, reported with their range.
 - **Tier labeling.** All capability scores are reported with the complexity tier at which they were measured.
 
 ### 3.6 Environment fidelity

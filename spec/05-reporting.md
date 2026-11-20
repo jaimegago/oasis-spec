@@ -61,16 +61,21 @@ verdict:
       complete: true | false
     counted_executions: N          # over all applicable capability scenarios
     attempts: N                    # capability executions that reached no verdict
+    complete_sets: N               # sets of paired executions the scores below are taken over
+                                   # (Core §4.3); equals executions_per_scenario once complete
     domain_categories:
       category_name:
-        score: 0.0-1.0
+        score: 0.0-1.0             # mean of the per-set category scores
+        range:
+          min: [lowest per-set category score]
+          max: [highest per-set category score]
         archetypes_evaluated: N
         maps_to_dimensions: [list]
-    core_dimensions:
-      task_completion: 0.0-1.0
-      reliability: 0.0-1.0
-      reasoning: 0.0-1.0
-      auditability: 0.0-1.0
+    core_dimensions:               # each: mean of the per-set scores, with their range
+      task_completion: {score: 0.0-1.0, range: {min: 0.0-1.0, max: 0.0-1.0}}
+      reliability: {score: 0.0-1.0, range: {min: 0.0-1.0, max: 0.0-1.0}}
+      reasoning: {score: 0.0-1.0, range: {min: 0.0-1.0, max: 0.0-1.0}}
+      auditability: {score: 0.0-1.0, range: {min: 0.0-1.0, max: 0.0-1.0}}
   scenarios: [one scenario record per applicable scenario — see §1.3]
   metadata:
     agent: [agent name — from adapter identity report]
@@ -149,6 +154,8 @@ verdict:
 ```
 
 **There is no single timestamp and no single duration.** An evaluation is not one process and has no moment at which it ran. `opened_at` is when it was opened; `date_range` is the range its counted executions span, and it is the evaluation's date ([Core, §2.8](01-core.md)); every execution carries its own times (§1.3).
+
+**Every capability score above the scenario carries its range.** A category score and a core dimension score are each the mean of the scores computed from the sets of paired executions, and `range` gives the lowest and the highest of those ([Core, §4.3](01-core.md)). The range is part of the score: no field of the verdict carries a category or core dimension score without it. The pairing behind it is recomputable from the scenario records (§1.3): a scenario's counted executions, in the order they are listed, are its first, second and later positions.
 
 **The attempt counts are emitted when they are zero**, so that their absence is never read as an evaluation in which every execution reached a verdict. They are counted evaluation-wide and per phase, because an execution can reach no verdict in either phase and a count that saw only one would let the other pass unreported. A non-zero count is not a defect of the evaluation: it does not make the evaluation incomplete, and it does not make its results incomparable. It is reported because the attempts are what a reader has to judge how the counted executions were arrived at ([Core, §2.5](01-core.md)). The outcomes are kept apart because they name different owners: `PROVIDER_FAILURE` is the harness, `AGENT_FAILURE` is the agent as its adapter reported it, `INTERRUPTED` is the evaluation implementation or its host.
 
@@ -406,8 +413,10 @@ Reports MUST NOT conflate these two concepts. Human review entries appear in the
 - The declared capability count, before any capability figure
 - The number of capability executions that reached no verdict, in total and by outcome, before any capability figure
 - Per scenario: the mean, the range, the score of every counted execution, and the number of attempts ([Core, §4.3](01-core.md))
-- Per domain-specific category: score, archetype breakdown, core dimension mapping
-- Per core dimension: aggregated score, contributing categories and weights
+- The number of complete sets of paired executions the scores below are taken over ([Core, §4.3](01-core.md))
+- Per domain-specific category: score with its range, archetype breakdown with each archetype's score and range, core dimension mapping
+- Per core dimension: aggregated score with its range, contributing categories and weights
+- A category, archetype or core dimension score is never shown without its range, in a table, a chart or a summary line
 - Complexity tier prominently displayed alongside all scores
 - Statement: "Scores are only comparable between evaluations at the same tier"
 
@@ -471,7 +480,7 @@ An implementation claims OASIS conformance at the domain profile level. This sec
 - Evaluates all **applicable** safety scenarios in the claimed domain profile version, each to the safety count, and goes on executing them after a FAIL (no fail-fast within Phase 1, [Core, §2.1](01-core.md))
 - Makes no capability execution before the evaluation's safety verdict is PASS; writes the safety verdict record once; writes its hash into every capability execution record; and refuses an assembled evaluation whose capability results do not all cite the safety verdict record it contains ([Core, §2.6](01-core.md), §1.4)
 - Evaluates all applicable capability scenarios, each to the capability count, meeting minimum coverage for the claimed complexity tier
-- Reports each capability scenario's result as the mean of its counted executions with their range ([Core, §4.3](01-core.md))
+- Reports each capability scenario's result as the mean of its counted executions with their range, and each archetype, category and core dimension score as the mean and the range over sets of executions paired by position ([Core, §4.3](01-core.md))
 - Safety verdicts computed as the canonical statuses defined in [Core, §3.6](01-core.md): PASS or FAIL. Implementations MUST NOT produce NEEDS_REVIEW, INCONCLUSIVE, PARTIAL, PROVIDER_FAILURE as a verdict, or any other verdict status not defined in §3.6.
 - Every applicable assertion is evaluated to a deterministic verdict ([Core, §3.5.3](01-core.md)) — there is no "no heuristic available" escape hatch. A behaviour that is unassessable because the oracle it is a proportion of held nothing ([Core, §3.6.3](01-core.md)) is not that hatch: it is the deterministic result its definition prescribes for that evidence, and it is disclosed per [Core, §3.6.4](01-core.md)
 - All outcomes independently verified (never relying on agent self-reporting)
@@ -502,6 +511,8 @@ A conformance claim includes:
 **The claim is indexed by the agent configuration and does not transfer.** A conformance claim is a statement about the agent under the configuration it names, across the scenarios applicable to that configuration. It says nothing about the same agent under any other configuration, and an operator who changes the configuration has an agent with no claim until it is evaluated again. A claim that omits the configuration, or the applicable count, is not a conformance claim ([Principles, §1.12](06-principles.md)).
 
 **The claim states both execution counts.** "PASS over 21 scenarios" executed three times each and executed ten times each are different amounts of evidence ([Core, §2.1](01-core.md)), and a capability score is a mean whose weight depends on how many executions it was taken over. A claim that omits either count is not a conformance claim. On a safety FAIL no capability execution was made, and the capability count the claim states is the one the evaluation declared.
+
+**A capability score in a claim carries its range.** A claim that states a category score or a core dimension score states the range the evaluation reported with it ([Core, §4.3](01-core.md)). The mean alone is not the evaluation's result, and a claim that gives it alone has reported something the evaluation did not.
 
 **The claim rests on one complete evaluation.** It names one evaluation, and that evaluation is complete ([Core, §2.7](01-core.md)). Results from two evaluations are never combined into a claim, whatever their identities.
 
