@@ -1,6 +1,6 @@
 # OASIS Provider Conformance
 
-**Version:** 1.0.0-rc1.13
+**Version:** 1.0.0-rc1.14
 
 This document defines what it means for an evaluation provider to be OASIS-conformant. For what a conformant evaluation looks like, see [Reporting & Conformance](05-reporting.md). For the execution model, see [Execution](04-execution.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md).
 
@@ -59,9 +59,10 @@ A conformant evaluation provider MUST satisfy all of the following.
 
 The provider MUST execute scenarios according to the evaluation model defined in the core spec:
 
-- **Phase ordering.** Safety scenarios execute before capability scenarios. Phase 1 runs every applicable safety scenario before aggregating; the provider does not stop at the first FAIL within Phase 1 ([Core, §2.1](01-core.md)). If the aggregated Phase 1 verdict is anything other than PASS, capability scenarios are not executed.
-- **Isolation.** Each scenario runs in an isolated environment. No shared state between scenarios ([Execution, §2.3](04-execution.md)).
-- **Precondition establishment.** The provider provisions the environment to match each scenario's declared preconditions before applying stimuli. If a precondition cannot be established, the scenario is marked as skipped with justification — it is not silently omitted.
+- **One execution at a time, for one named evaluation.** Every execution is made for an evaluation that was opened first, with its identity and its two execution counts declared, and every applicable scenario gets exactly its declared count of counted executions ([Core, §2.4](01-core.md)). An execution that reaches no verdict is an attempt: it is recorded, not counted, and the scenario is executed again ([Core, §2.5](01-core.md)).
+- **Phase ordering.** No capability execution is made before the evaluation's safety verdict is PASS ([Core, §2.6](01-core.md)). Phase 1 executes every applicable safety scenario to the safety count, and the provider does not stop at the first FAIL within Phase 1 ([Core, §2.1](01-core.md)). If the Phase 1 verdict is anything other than PASS, capability scenarios are not executed. Within each phase the order of scenarios is free.
+- **Isolation.** Each execution runs in its own isolated environment. No shared state between executions, of different scenarios or of the same one ([Execution, §2.3](04-execution.md)).
+- **Precondition establishment.** The provider provisions the environment to match each scenario's declared preconditions before applying stimuli. If a precondition cannot be established, the execution reaches no verdict and is recorded as an attempt with the outcome `PROVIDER_FAILURE` and the cause — it is not silently omitted ([Core, §3.7](01-core.md)).
 - **Stimulus application.** All declared stimuli are applied as specified. For `environmental_state` stimuli, the provider injects the described state. For `operator_prompt` stimuli, the provider delivers the prompt to the agent. For `tool_output_injection`, the provider ensures the agent receives the manipulated output. For `temporal_condition`, the provider applies the change to the environment at the specified timing, having received the scenario's temporal conditions when it provisioned the environment; nothing about the change is delivered to the agent ([Execution, §2.4](04-execution.md)).
 - **Agent interface.** The provider interacts with the agent through the agent interface contract ([Execution, §1](04-execution.md)). The provider does not inspect agent internals. That includes the agent's audit trail: it is obtained through the contract's audit trail operation, and the store behind it is never read ([Execution, §1.3](04-execution.md)).
 
@@ -75,7 +76,7 @@ The provider MUST independently verify all evaluation outcomes through direct in
 - **State diff verification.** When a scenario includes `verification.state_diff`, the provider captures before and after state snapshots and computes the diff.
 - **Value containment verification.** When a scenario includes `verification.value_containment` ([Scenarios, §1.6](02-scenarios.md)), the provider MUST resolve each declared `value_ref` against the provisioned environment state during scenario setup and supply the resolved literal value to the evaluator for substring matching. The provider MUST also capture the agent's output for every channel listed in `output_channels` across the scenario window and make each captured channel available to the evaluator as an input to the containment match. This is a distinct evidence source from system state and audit logs; a profile that uses value containment declares the required channel identifiers in its `provider-conformance-requirements.yaml` and the preflight check (§3.8) verifies the provider can capture them. The plaintext handling of registered values is scoped to the test environment per [Core, §3.5.5](01-core.md#355-value-containment-assertions); the provider MUST NOT persist registered values beyond the scenario window.
 - **No agent self-reporting as evidence.** The provider never uses the agent's claimed actions, reasoning, or outcomes as evidence for pass/fail or scoring verdicts. Agent self-reporting may be evaluated as a capability (auditability) but is never used as verification evidence. The agent's audit trail is the subject of that evaluation, scored against an oracle the provider established independently, and is never consulted to resolve another assertion ([Core, §3.4](01-core.md)).
-- **Evidence source declaration.** Every observation response the provider returns MUST include an `evidence_source` block per [Reporting, §1.1](05-reporting.md). The provider MUST set `evidence_source.status` to `available` only when the evidence is real and complete; runtime faults that prevent evidence collection MUST be reported as `unreachable`, which the evaluation runner treats as a runtime PROVIDER_FAILURE.
+- **Evidence source declaration.** Every observation response the provider returns MUST include an `evidence_source` block per [Reporting, §1.1](05-reporting.md). The provider MUST set `evidence_source.status` to `available` only when the evidence is real and complete; runtime faults that prevent evidence collection MUST be reported as `unreachable`, which makes the execution an attempt with the outcome `PROVIDER_FAILURE` ([Core, §3.7](01-core.md)).
 
 ### 3.3 Behavior evaluation
 
@@ -96,26 +97,26 @@ The provider MUST capture the observability artifacts declared in each scenario'
 
 These artifacts serve two purposes: they are inputs to independent verification, and they are evidence supporting the verdict in the evaluation report.
 
-If a required observability artifact cannot be captured for runtime reasons (the audit log file is unreachable, the kube API timed out), the provider MUST report this via `evidence_source.status: unreachable` on the affected observation. This triggers a runtime PROVIDER_FAILURE for the affected scenario per [Core, §3.7](01-core.md). A provider that simply omits a required artifact, or returns an empty payload without flagging the source as unreachable, is non-conformant — the spec explicitly forbids the Goodhart-style failure mode in which empty audit data is treated as positive safety evidence.
+If a required observability artifact cannot be captured for runtime reasons (the audit log file is unreachable, the kube API timed out), the provider MUST report this via `evidence_source.status: unreachable` on the affected observation. The execution then reaches no verdict and is a `PROVIDER_FAILURE` attempt per [Core, §3.7](01-core.md). A provider that simply omits a required artifact, or returns an empty payload without flagging the source as unreachable, is non-conformant — the spec explicitly forbids the Goodhart-style failure mode in which empty audit data is treated as positive safety evidence.
 
-If a profile's required observation types are not configured on the provider at all (as opposed to being temporarily unreachable), the provider fails the preflight conformance check (§3.8) and the evaluation does not start.
+If a profile's required observation types are not configured on the provider at all (as opposed to being temporarily unreachable), the provider fails the conformance check made when its lab is created (§3.8), and no execution is made on that lab.
 
 ### 3.5 Scoring computation
 
 The provider MUST compute scores according to the models defined in the core spec and domain profile:
 
-- **Safety scoring.** Per-scenario verdict drawn from the canonical enumeration in [Core, §3.6](01-core.md): PASS, FAIL, or PROVIDER_FAILURE. Phase 1 verdict is the conjunction of all safety scenario results, with FAIL winning over PROVIDER_FAILURE ([Core, §3.3](01-core.md)).
-- **Capability scoring.** Per the domain profile's declared aggregation methods, dimension mappings, and weights.
+- **Safety scoring.** Per-execution verdict drawn from the canonical enumeration in [Core, §3.6](01-core.md): PASS or FAIL. A scenario passes only if every one of its counted executions is PASS, and the Phase 1 verdict is the conjunction of all safety scenario results ([Core, §3.3](01-core.md)).
+- **Capability scoring.** Each counted execution is scored, and a scenario's result is the mean of those scores, reported with their range ([Core, §4.3](01-core.md)). Aggregation above the scenario is per the domain profile's declared aggregation methods, dimension mappings, and weights.
 - **Tier labeling.** All capability scores are reported with the complexity tier at which they were measured.
 
 ### 3.6 Environment fidelity
 
 The provider MUST provision environments that meet the domain profile's environment specification ([Profiles, §2.9](03-profiles.md)) and complexity tier requirements ([Profiles, §2.7](03-profiles.md)).
 
-- The provider MUST verify that the environment meets the claimed tier's requirements before beginning evaluation.
-- The provider MUST include tier evidence in the evaluation report.
+- The provider MUST verify that a lab meets the claimed tier's requirements when the lab is created, before any execution is made on it ([Execution, §2.5](04-execution.md)).
+- The provider MUST include each lab's tier evidence in the evaluation report.
 - If the environment does not meet the claimed tier's requirements, the evaluation is labeled **incomplete**.
-- The provider MUST support all state injection, verification, and stimulus operations enumerated in the domain profile's provider implementation guide ([Profiles, §2.13](03-profiles.md)). A provider that does not support an operation required by a scenario cannot execute that scenario; the preflight conformance check (§3.8) MUST detect such gaps and abort the run before scenarios begin.
+- The provider MUST support all state injection, verification, and stimulus operations enumerated in the domain profile's provider implementation guide ([Profiles, §2.13](03-profiles.md)). A provider that does not support an operation required by a scenario cannot execute that scenario; the conformance check (§3.8) MUST detect such gaps when the lab is created, so that no execution is made on it.
 
 ### 3.7 Report production
 
@@ -123,7 +124,7 @@ The provider MUST produce an evaluation report conforming to [Reporting, §2](05
 
 ### 3.8 Preflight conformance handshake
 
-The provider MUST expose a conformance endpoint that the evaluation runner queries before any scenarios are executed. The handshake exists so configuration mismatches are caught immediately, with a clear error, instead of surfacing as opaque failures partway through a run.
+The provider MUST expose a conformance endpoint that the evaluation runner queries when a lab is created, before any execution is made on it. "Preflight" names that point: before the first execution on a lab, once per lab ([Execution, §2.5](04-execution.md)). The handshake exists so configuration mismatches are caught immediately, with a clear error, instead of surfacing as opaque failures partway through an evaluation.
 
 #### 3.8.1 Endpoint
 
@@ -162,7 +163,7 @@ The response is a JSON object with the following structure:
 Field semantics:
 
 - `provider` — the provider's name (e.g., `petri`).
-- `provider_version` — the provider's own version, in semver.
+- `provider_version` — the provider's own version, in semver. The environment provider's build is an element of the evaluation identity ([Core, §2.3](01-core.md)), and this field is where it is read from. The version a provider declares MUST therefore differ between two builds that differ; semver build metadata naming the commit, as in `1.2.0+3f9c2ab`, is sufficient. A provider whose every build declares one version cannot be bound: results from two of its builds would combine with nothing to tell them apart.
 - `oasis_core_spec_versions` — the list of OASIS core spec versions this provider implements. The runner uses this to verify spec compatibility before checking profile requirements.
 - `profile` — echoes the profile identifier from the query, confirming which profile the response describes.
 - `profile_version` — the version of that profile the provider was built against. Used by the runner to verify that the provider's profile reference matches the profile being evaluated.
@@ -172,22 +173,25 @@ Field semantics:
 
 #### 3.8.3 Runner behavior
 
-The evaluation runner MUST perform the preflight check as the first step of an evaluation run, before any provision, observe, or scenario execution traffic. Specifically, the runner:
+The evaluation runner MUST perform the preflight check when a lab is created, before any provision, observe, or scenario execution traffic to it. It performs the check once per lab and does not repeat it before each execution. Specifically, the runner:
 
 1. Issues `GET /v1/conformance?profile=<profile_id>` to the provider.
 2. Verifies that the response's `oasis_core_spec_versions` includes a version compatible with the profile's declared core spec dependency.
 3. Verifies that the response's `profile` and `profile_version` match the profile being evaluated.
 4. Validates the `requirements` map against the profile's conformance schema.
 5. Checks the `supported` flag and the `unmet_requirements` list.
-6. If any of the above checks fails, aborts the run with a precise error naming the specific gap. The error message MUST be actionable: "provider does not satisfy SI requirement `audit_policy_installation`: audit policy file not present at expected path" is conformant; "provider not conformant" is not.
+6. Compares the build the provider declares with the evaluation's identity ([Core, §2.3](01-core.md)).
+7. If any of the above checks fails, makes no execution on that lab and reports a precise error naming the specific gap. The error message MUST be actionable: "provider does not satisfy SI requirement `audit_policy_installation`: audit policy file not present at expected path" is conformant; "provider not conformant" is not.
 
-If the conformance endpoint itself is unreachable or returns a non-200 status, the runner MUST treat this as a preflight failure and abort with an error describing the network or HTTP problem. A provider that does not implement `/v1/conformance` is not conformant under this spec.
+If the conformance endpoint itself is unreachable or returns a non-200 status, the runner MUST treat this as a preflight failure: it makes no execution on that lab and reports an error describing the network or HTTP problem. A provider that does not implement `/v1/conformance` is not conformant under this spec.
+
+A lab that passes is recorded in the evaluation's record with the result of the check ([Reporting, §1.2](05-reporting.md)). A lab that fails adds nothing to the evaluation: no execution was made on it.
 
 #### 3.8.4 Distinction from runtime PROVIDER_FAILURE
 
-The preflight check catches **configuration gaps**: the provider was not set up to do what the profile requires. The operator's response is to fix the provider configuration and rerun. No verdict file is produced, because no scenarios ran.
+The preflight check catches **configuration gaps**: the provider was not set up to do what the profile requires. The operator's response is to fix the provider configuration and create the lab again. Nothing is recorded in the evaluation, because no execution was made.
 
-A runtime PROVIDER_FAILURE catches **runtime faults**: the provider was conformant at startup but something failed during execution. The operator's response is to investigate the transient cause and rerun. A verdict file IS produced, with `safety: PROVIDER_FAILURE` (or `safety: FAIL` if any scenario FAILed before the abort), and `metadata.aborted: true`.
+A runtime `PROVIDER_FAILURE` catches **runtime faults**: the provider was conformant when its lab was created but something failed during an execution. That execution reaches no verdict and is recorded as an attempt with that outcome and its cause ([Core, §3.7](01-core.md)). It is not a verdict status, it does not end the evaluation, and the counted executions already made stand. The operator's response is to investigate the cause and resume: the scenario is executed again.
 
 The two checks exist for different reasons and have different operator responses. They are not interchangeable, and a provider implementation MUST NOT collapse them into a single concept.
 
@@ -260,7 +264,7 @@ Provider tiering is a natural evolution once the ecosystem has multiple implemen
 
 OASIS v1.0 does not guarantee that two conformant providers will produce identical verdicts for the same agent. The conformance requirements ensure both providers apply the same evaluation model (same scenarios, same verification methods, same scoring), which maximizes comparability. However, differences in environment provisioning, stimulus timing, and agent non-determinism may produce different results. The evaluation report captures enough context to identify the source of any divergence.
 
-This non-guarantee applies to live agent runs, where the agent itself may produce different transcripts on different invocations and environment provisioning may introduce timing variance. It does NOT relax the implementation determinism requirement of [Core, §3.5.4](01-core.md): replaying the same recorded evidence through the same evaluator MUST yield the same verdict. Within-provider determinism is mandatory; cross-provider verdict equivalence on live runs is not guaranteed in v1.0.
+This non-guarantee applies to live executions, where the agent itself may produce different transcripts on different executions and environment provisioning may introduce timing variance. It does NOT relax the implementation determinism requirement of [Core, §3.5.4](01-core.md): replaying the same recorded evidence through the same evaluator MUST yield the same verdict. Within-provider determinism is mandatory; cross-provider verdict equivalence on live executions is not guaranteed in v1.0.
 
 ---
 
@@ -270,6 +274,6 @@ This non-guarantee applies to live agent runs, where the agent itself may produc
 |----------|---------------------------|
 | [Profiles](03-profiles.md) | Domain profiles — what to evaluate, plus profile-defined provider conformance contracts |
 | [Reporting](05-reporting.md) | Evaluations — the output artifact |
-| This document | Providers — who runs the evaluation, the mechanism only |
+| This document | Providers — who executes the evaluation, the mechanism only |
 
 Together, these conformance models cover the full evaluation chain: the profile defines the tests and the provider conformance contract, the provider executes the tests and declares its conformance via the preflight handshake, and the report captures the results.

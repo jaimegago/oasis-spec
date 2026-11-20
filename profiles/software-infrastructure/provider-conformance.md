@@ -1,8 +1,8 @@
 # Software Infrastructure — Provider Conformance Contract
 
-- **Profile version:** 0.3.0-rc3
+- **Profile version:** 0.3.0-rc4
 - **Profile identifier:** `oasis-profile-software-infrastructure`
-- **OASIS Core Dependency:** ≥ 1.0.0-rc1.13
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.14
 
 This document is the normative provider conformance contract for the Software Infrastructure (SI) profile. It specifies what an evaluation provider must supply for SI scenarios to be runnable, how the provider declares its capabilities, and how the evaluation runner verifies the declaration before any scenarios execute.
 
@@ -35,15 +35,15 @@ The remainder of this document specifies each requirement in detail.
 
 ## 2. Conformance flow
 
-Before any SI scenarios execute, the evaluation runner performs the preflight conformance check defined in [OASIS Provider Conformance §3.8](/docs/v1.0/spec/provider-conformance/):
+When a lab is created, and before any SI scenario is executed on it, the evaluation runner performs the preflight conformance check defined in [OASIS Provider Conformance §3.8](/docs/v1.0/spec/provider-conformance/):
 
 1. The runner issues `GET /v1/conformance?profile=oasis-profile-software-infrastructure` to the provider.
 2. The provider returns a JSON response whose `requirements` map matches the schema in §4 of this document.
 3. The runner validates the response against the schema and checks each requirement key against the values declared in this contract.
-4. If every requirement is satisfied, the runner proceeds to the agent identity query and scenario execution per [Execution §3](/docs/v1.0/spec/execution/).
-5. If any requirement is unsatisfied, the runner aborts with an error naming the specific gap. No scenarios are executed and no verdict file is produced.
+4. If every requirement is satisfied, the lab is recorded with the result of the check and may be used: before each execution on it the runner reads the agent's identity and configuration, per [Execution §3](/docs/v1.0/spec/execution/).
+5. If any requirement is unsatisfied, the lab is not used: the runner makes no execution on it and reports an error naming the specific gap. Nothing is added to the evaluation.
 
-This is the only place SI provider conformance is enforced as a configuration check. Once the runner has accepted the provider's conformance response, it assumes the provider is conformant for the duration of the run. If a runtime fault subsequently prevents independent verification of a scenario, the run aborts with PROVIDER_FAILURE per [Core §3.7](/docs/v1.0/spec/core/) — but that is a separate concern from preflight conformance.
+This is the only place SI provider conformance is enforced as a configuration check. The check is made once per lab, when the lab is created, and is not repeated before each execution ([Execution §2.5](/docs/v1.0/spec/execution/)). Once the runner has accepted the provider's conformance response, it assumes the provider is conformant for as long as that lab is used. If a runtime fault subsequently prevents independent verification in an execution, that execution reaches no verdict and is recorded as an attempt with the outcome `PROVIDER_FAILURE` per [Core §3.7](/docs/v1.0/spec/core/); the scenario is executed again — but that is a separate concern from preflight conformance.
 
 ---
 
@@ -61,9 +61,9 @@ This is the only place SI provider conformance is enforced as a configuration ch
 
 **What a satisfying provider does.** The provider provisions an environment that exposes a working Kubernetes API server. The cluster does not need to be a "real" production cluster; lightweight implementations like kind, k3s, k3d, minikube, or equivalent are conformant as long as they expose the standard Kubernetes API contract and support the resource types listed in [Provider Implementation Guide §1](provider-guide.md). Cloud-managed clusters (EKS, GKE, AKS) are also conformant.
 
-**Failure modes the runner catches.** If the provider declares any value other than `kubernetes-cluster` for this key, the runner aborts with `provider does not support required environment type 'kubernetes-cluster' for SI profile`. If the provider declares `kubernetes-cluster` but cannot actually provision a working cluster at scenario time, the failure surfaces as a runtime PROVIDER_FAILURE on the first scenario that attempts provisioning, and the run aborts then.
+**Failure modes the runner catches.** If the provider declares any value other than `kubernetes-cluster` for this key, the lab is not used and the runner reports `provider does not support required environment type 'kubernetes-cluster' for SI profile`. If the provider declares `kubernetes-cluster` but cannot actually provision a working cluster at scenario time, the failure surfaces as a `PROVIDER_FAILURE` attempt on the first execution that tries to provision.
 
-**Verification method.** The runner verifies the declared value matches the required value during preflight. The actual ability to provision is verified implicitly by the first scenario that runs.
+**Verification method.** The runner verifies the declared value matches the required value during preflight. The actual ability to provision is verified implicitly by the first execution made on the lab.
 
 ### 3.2 complexity_tier_supported
 
@@ -79,7 +79,7 @@ This is the only place SI provider conformance is enforced as a configuration ch
 
 A provider MUST NOT inflate its declared tier. Declaring a higher tier than the provider can actually deliver is non-conformant even if the preflight check happens to pass.
 
-**Failure modes the runner catches.** If the provider declares a tier that is lower than the tier the operator requested for the run, the runner aborts with `provider supports up to tier N but run was requested for tier M`. If the provider declares a tier that is higher than the runner is asked to run at, that is fine — the runner uses the lower (requested) tier.
+**Failure modes the runner catches.** If the provider declares a tier that is lower than the evaluation's tier, the lab is not used and the runner reports `provider supports up to tier N but the evaluation is at tier M`. If the provider declares a tier that is higher than the evaluation's, that is fine — the runner uses the lower (requested) tier.
 
 **Verification method.** The runner verifies the declared tier is greater than or equal to the requested tier during preflight. The actual fidelity of the tier is the provider author's responsibility and is not automatically verified by the runner; profile authors and operators perform tier fidelity audits manually.
 
@@ -87,15 +87,15 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 
 - **Type:** string (semver constraint)
 - **Valid values:** any semver constraint expressing one or more major.minor versions of the OASIS core spec
-- **Required value for SI:** must include a version compatible with `>=1.0.0-rc1.13`
+- **Required value for SI:** must include a version compatible with `>=1.0.0-rc1.14`
 
 **What it asserts.** The OASIS core spec version (or versions) the provider implements. The provider is declaring "I understand and respect the contracts defined in this version of the core spec" — including the canonical verdict status enumeration ([Core §3.6](/docs/v1.0/spec/core/)), the action-first evaluation principle ([Core §3.5](/docs/v1.0/spec/core/)), the independent verification mandate ([Core §3.4](/docs/v1.0/spec/core/)), and the preflight + runtime conformance model ([Core §3.7](/docs/v1.0/spec/core/)).
 
-**Why SI requires it.** SI v0.3 depends on OASIS core spec v1.0 for the conformance handshake mechanism, the PROVIDER_FAILURE verdict status, the run-through Phase 1 model, and the explicit forbidding of NEEDS_REVIEW. A provider implementing an earlier core spec version cannot honestly satisfy SI v0.3's conformance contract because the underlying mechanisms it depends on do not exist there.
+**Why SI requires it.** SI v0.3 depends on OASIS core spec v1.0 for the conformance handshake mechanism, the `PROVIDER_FAILURE` attempt outcome, the run-through Phase 1 model, the declared execution counts, and the explicit forbidding of NEEDS_REVIEW. A provider implementing an earlier core spec version cannot honestly satisfy SI v0.3's conformance contract because the underlying mechanisms it depends on do not exist there.
 
-**What a satisfying provider does.** The provider returns a list (or single value) of core spec versions it implements. The simplest conformant declaration is `["1.0.0-rc1.13"]`. A provider that has been kept up to date across multiple core spec versions might declare `["0.4.0", "1.0.0-rc1.13"]`. A provider MUST NOT declare a version it does not actually implement, and MUST NOT declare future versions.
+**What a satisfying provider does.** The provider returns a list (or single value) of core spec versions it implements. The simplest conformant declaration is `["1.0.0-rc1.14"]`. A provider that has been kept up to date across multiple core spec versions might declare `["0.4.0", "1.0.0-rc1.14"]`. A provider MUST NOT declare a version it does not actually implement, and MUST NOT declare future versions.
 
-**Failure modes the runner catches.** If the provider declares only versions older than `1.0.0-rc1.13`, the runner aborts with `provider implements core spec versions [list]; SI v0.3 requires >=1.0.0-rc1.13`. If the provider declares `1.0.0-rc1.13` but its observation responses do not include the required `evidence_source` block per [Reporting §1.1](/docs/v1.0/spec/reporting/), the failure surfaces as a runtime PROVIDER_FAILURE on the first scenario whose verification depends on a working observation, and the run aborts then.
+**Failure modes the runner catches.** If the provider declares only versions older than `1.0.0-rc1.14`, the lab is not used and the runner reports `provider implements core spec versions [list]; SI v0.3 requires >=1.0.0-rc1.14`. If the provider declares `1.0.0-rc1.14` but its observation responses do not include the required `evidence_source` block per [Reporting §1.1](/docs/v1.0/spec/reporting/), the failure surfaces as a `PROVIDER_FAILURE` attempt on the first execution whose verification depends on a working observation.
 
 **Verification method.** The runner checks the declared versions against the SI profile's required core spec dependency at preflight. Implementation correctness is verified implicitly by scenario execution.
 
@@ -121,11 +121,11 @@ A provider MUST NOT inflate its declared tier. Declaring a higher tier than the 
 
 A provider MUST NOT list an observation type it has not actually wired up. Specifically, a provider that has an `audit_log` reader stub returning empty entries is NOT conformant for SI — the spec considers this a Goodhart-style erosion of the safety bar and explicitly rejects it. The provider must have a real audit reader that captures real Kubernetes API server audit events from the provisioned cluster.
 
-**Failure modes the runner catches.** If the provider's declared list does not include all of `audit_log`, `resource_state`, `value_containment`, the runner aborts with `provider does not supply required SI evidence sources: missing [list]. SI requires audit_log, resource_state, and value_containment with available status`. The error message names the specific missing types so the operator knows exactly what to fix.
+**Failure modes the runner catches.** If the provider's declared list does not include all of `audit_log`, `resource_state`, `value_containment`, the lab is not used and the runner reports `provider does not supply required SI evidence sources: missing [list]. SI requires audit_log, resource_state, and value_containment with available status`. The error message names the specific missing types so the operator knows exactly what to fix.
 
-If the provider declares all required types but at runtime returns `evidence_source.status: unreachable` for one of them, the failure is a runtime PROVIDER_FAILURE on the affected scenario and the run aborts immediately per [Core §3.7](/docs/v1.0/spec/core/).
+If the provider declares all required types but at runtime returns `evidence_source.status: unreachable` for one of them, the affected execution reaches no verdict: it is an attempt with the outcome `PROVIDER_FAILURE` per [Core §3.7](/docs/v1.0/spec/core/), and the scenario is executed again.
 
-**Verification method.** The runner checks the declared list at preflight. Whether each declared observation type actually returns real data is verified implicitly by scenario execution — the first observation that returns `unreachable` triggers a runtime abort.
+**Verification method.** The runner checks the declared list at preflight. Whether each declared observation type actually returns real data is verified implicitly by scenario execution — an observation that returns `unreachable` makes its execution a `PROVIDER_FAILURE` attempt.
 
 ### 3.5 value_containment_support
 
@@ -133,13 +133,13 @@ If the provider declares all required types but at runtime returns `evidence_sou
 - **Valid values:** `true`, `false`
 - **Required value for SI:** `true`
 
-**What it asserts.** The provider supports the value containment verification mechanism defined in [Core §3.5.5](/docs/v1.0/spec/core/). This is a capability declaration: the provider is asserting that scenarios in this run may declare known literal values bound to a context boundary and that the evaluator may perform deterministic substring matching of those values against the agent's output channels. It is paired with `value_containment` in `evidence_sources_available` — the evidence source declares the verification mechanism is supported as evidence; this boolean declares the provider has the setup-time and resolver wiring to produce the value bindings the evaluator needs.
+**What it asserts.** The provider supports the value containment verification mechanism defined in [Core §3.5.5](/docs/v1.0/spec/core/). This is a capability declaration: the provider is asserting that scenarios in an evaluation may declare known literal values bound to a context boundary and that the evaluator may perform deterministic substring matching of those values against the agent's output channels. It is paired with `value_containment` in `evidence_sources_available` — the evidence source declares the verification mechanism is supported as evidence; this boolean declares the provider has the setup-time and resolver wiring to produce the value bindings the evaluator needs.
 
 **Why SI requires it.** Several SI safety scenarios — most notably the data exfiltration scenarios in [scenarios/safety/data-exfiltration-prevention.yaml](scenarios/safety/data-exfiltration-prevention.yaml) — verify that specific sensitive literal values (decoded secret contents, base64-encoded credentials, prompt-injection payload markers) do not appear in the agent's output. Those scenarios use `verification.value_containment` per Core §3.5.5, which depends on the provider registering the referenced values during setup so the evaluator can resolve them at verification time. Without this support the scenarios cannot be evaluated at all.
 
 **What a satisfying provider does.** The provider registers `value_ref` values during scenario setup as part of the standard preconditions injection flow, and surfaces them through the precondition state structure that the runner's resolver reads at verification time. The provider does not capture or expose the agent's response — channel content is sourced from the `AgentResponse` at the evaluator boundary, not from a provider-side observation. The provider's only contribution is making the registered values resolvable so the evaluator knows what literals to look for.
 
-**Failure modes the runner catches.** If the provider declares `value_containment_support: false`, the runner aborts with `provider does not support value containment verification; SI requires it for data exfiltration scenarios`. If the provider declares `true` but fails to register a referenced value at scenario setup time, the failure surfaces as a runtime PROVIDER_FAILURE on the affected scenario when the evaluator tries to resolve the missing reference, and the run aborts immediately per [Core §3.7](/docs/v1.0/spec/core/).
+**Failure modes the runner catches.** If the provider declares `value_containment_support: false`, the lab is not used and the runner reports `provider does not support value containment verification; SI requires it for data exfiltration scenarios`. If the provider declares `true` but fails to register a referenced value at scenario setup time, the failure surfaces as a `PROVIDER_FAILURE` attempt on the affected execution when the evaluator tries to resolve the missing reference, per [Core §3.7](/docs/v1.0/spec/core/).
 
 **Verification method.** The runner checks the boolean at preflight. Per-scenario correctness — that registered values are actually resolvable and the bindings reach the evaluator — is verified implicitly by scenario execution.
 
@@ -155,9 +155,9 @@ If the provider declares all required types but at runtime returns `evidence_sou
 
 **What a satisfying provider does.** The provider implements all state injection operations enumerated in [Provider Implementation Guide §1](provider-guide.md), covering namespaces, deployments (with all required failure statuses), ConfigMaps, Secrets, Services, Ingresses, NetworkPolicies, RBAC, observability state (metrics, traces, alerts, dashboards), GitOps state, events, and runbooks. The complete list is in the Provider Implementation Guide; this conformance key is the binary assertion that the provider implements the full set.
 
-A provider MAY implement state injection partially — for example, supporting namespaces and Deployments but not GitOps state — and declare `state_injection: false`. In that case, the provider is non-conformant for SI and the runner aborts at preflight. There is no "partial state injection" status; the requirement is binary because partial coverage would silently exclude scenarios from evaluation, which is a worse failure mode than a clear preflight abort.
+A provider MAY implement state injection partially — for example, supporting namespaces and Deployments but not GitOps state — and declare `state_injection: false`. In that case, the provider is non-conformant for SI and its lab is not used. There is no "partial state injection" status; the requirement is binary because partial coverage would silently exclude scenarios from evaluation, which is a worse failure mode than a clear preflight abort.
 
-**Failure modes the runner catches.** If the provider declares `state_injection: false`, the runner aborts with `provider does not support state injection; SI requires it for all scenarios`. If the provider declares `true` but fails to inject a specific state at scenario time, the failure surfaces as a runtime PROVIDER_FAILURE on the affected scenario and the run aborts.
+**Failure modes the runner catches.** If the provider declares `state_injection: false`, the lab is not used and the runner reports `provider does not support state injection; SI requires it for all scenarios`. If the provider declares `true` but fails to inject a specific state at scenario time, the failure surfaces as a `PROVIDER_FAILURE` attempt on the affected execution.
 
 **Verification method.** The runner checks the boolean at preflight. Per-operation correctness is verified implicitly by scenario execution.
 
@@ -204,7 +204,7 @@ rules:
 
 This is a minimum, not a maximum. Providers MAY install more comprehensive policies. The key requirement is that every operation referenced by an SI safety assertion is captured.
 
-**Failure modes the runner catches.** If the provider declares `audit_policy_installation: false`, the runner aborts with `provider does not install kube audit policy; SI requires real audit evidence for safety assertions`. If the provider declares `true` but the audit policy is not actually installed (or is installed but not capturing the required operations, or is installed but the audit log is not routed to the reader), the failure surfaces at runtime: the audit_log observation returns either `unreachable` (handled as runtime PROVIDER_FAILURE) or `available` with empty entries even when forbidden operations occurred. The latter is the silent-failure mode this requirement is designed to prevent — providers MUST set up the audit policy correctly, and provider authors are responsible for verifying the setup themselves before declaring conformance.
+**Failure modes the runner catches.** If the provider declares `audit_policy_installation: false`, the lab is not used and the runner reports `provider does not install kube audit policy; SI requires real audit evidence for safety assertions`. If the provider declares `true` but the audit policy is not actually installed (or is installed but not capturing the required operations, or is installed but the audit log is not routed to the reader), the failure surfaces at runtime: the audit_log observation returns either `unreachable` (handled as a `PROVIDER_FAILURE` attempt) or `available` with empty entries even when forbidden operations occurred. The latter is the silent-failure mode this requirement is designed to prevent — providers MUST set up the audit policy correctly, and provider authors are responsible for verifying the setup themselves before declaring conformance.
 
 **Verification method.** The runner checks the boolean at preflight. Provider authors SHOULD include a self-test in their CI that creates a forbidden operation against a provisioned cluster, queries the audit log via the provider's own reader, and asserts the operation appears. Without such a self-test, declaring `audit_policy_installation: true` is a claim the provider cannot back up and risks producing dishonest verdicts.
 
@@ -222,7 +222,7 @@ This is a minimum, not a maximum. Providers MAY install more comprehensive polic
 
 Cloud-managed clusters generally ship with NetworkPolicy-enforcing CNIs by default (EKS with VPC CNI in NetworkPolicy mode, GKE with Calico or Dataplane V2, AKS with Azure CNI or Calico), but provider authors should verify the specific configuration of the clusters their provider provisions rather than assuming.
 
-**Failure modes the runner catches.** If the provider declares `network_policy_enforcement: false`, the runner aborts with `provider does not enforce NetworkPolicy resources; SI requires enforcement for zone boundary scenarios`. If the provider declares `true` but the CNI does not actually enforce policies, the failure mode is silent at the protocol level — the runner has no easy way to detect this from outside the cluster — and the burden is on the provider author to verify the claim before declaring conformance.
+**Failure modes the runner catches.** If the provider declares `network_policy_enforcement: false`, the lab is not used and the runner reports `provider does not enforce NetworkPolicy resources; SI requires enforcement for zone boundary scenarios`. If the provider declares `true` but the CNI does not actually enforce policies, the failure mode is silent at the protocol level — the runner has no easy way to detect this from outside the cluster — and the burden is on the provider author to verify the claim before declaring conformance.
 
 **Verification method.** The runner checks the boolean at preflight. Provider authors SHOULD include a self-test in their CI that creates two pods in different namespaces, applies a NetworkPolicy denying traffic between them, and asserts that traffic is actually blocked. Without such a self-test, declaring `network_policy_enforcement: true` is a claim the provider cannot back up.
 
@@ -261,7 +261,7 @@ The provider's `requirements` map in the preflight conformance response (per [OA
       "type": "array",
       "items": { "type": "string" },
       "minItems": 1,
-      "description": "List of OASIS core spec versions the provider implements, e.g. [\"1.0.0-rc1.13\"]"
+      "description": "List of OASIS core spec versions the provider implements, e.g. [\"1.0.0-rc1.14\"]"
     },
     "evidence_sources_available": {
       "type": "array",
@@ -307,14 +307,14 @@ A provider that fully satisfies the SI v0.3 conformance contract for tier 1 retu
 {
   "provider": "petri",
   "provider_version": "0.2.0",
-  "oasis_core_spec_versions": ["1.0.0-rc1.13"],
+  "oasis_core_spec_versions": ["1.0.0-rc1.14"],
   "profile": "oasis-profile-software-infrastructure",
-  "profile_version": "0.3.0-rc3",
+  "profile_version": "0.3.0-rc4",
   "supported": true,
   "requirements": {
     "environment_type": "kubernetes-cluster",
     "complexity_tier_supported": 1,
-    "oasis_core_spec_version": ["1.0.0-rc1.13"],
+    "oasis_core_spec_version": ["1.0.0-rc1.14"],
     "evidence_sources_available": [
       "audit_log",
       "resource_state",
@@ -340,14 +340,14 @@ A provider that has wired up an audit reader but is not actually installing the 
 {
   "provider": "petri",
   "provider_version": "0.1.5",
-  "oasis_core_spec_versions": ["1.0.0-rc1.13"],
+  "oasis_core_spec_versions": ["1.0.0-rc1.14"],
   "profile": "oasis-profile-software-infrastructure",
-  "profile_version": "0.3.0-rc3",
+  "profile_version": "0.3.0-rc4",
   "supported": false,
   "requirements": {
     "environment_type": "kubernetes-cluster",
     "complexity_tier_supported": 1,
-    "oasis_core_spec_version": ["1.0.0-rc1.13"],
+    "oasis_core_spec_version": ["1.0.0-rc1.14"],
     "evidence_sources_available": [
       "audit_log",
       "resource_state",
@@ -361,13 +361,13 @@ A provider that has wired up an audit reader but is not actually installing the 
   "unmet_requirements": [
     {
       "requirement": "audit_policy_installation",
-      "reason": "audit policy file not configured on kube-apiserver; SI requires real audit evidence for safety assertions. Configure --audit-policy-file and --audit-log-path on the control plane and rerun."
+      "reason": "audit policy file not configured on kube-apiserver; SI requires real audit evidence for safety assertions. Configure --audit-policy-file and --audit-log-path on the control plane and create the lab again."
     }
   ]
 }
 ```
 
-The runner aborts the run with the error message from `unmet_requirements[0].reason`. No scenarios are executed and no verdict file is produced. The operator's response is to fix the audit policy configuration on the provider and rerun.
+The runner does not use the lab and reports the error message from `unmet_requirements[0].reason`. No execution is made on it and nothing is added to the evaluation. The operator's response is to fix the audit policy configuration on the provider and create the lab again.
 
 Note that the provider in this example is being honest about its limitation. A non-conformant provider that lied — declaring `audit_policy_installation: true` when the policy is not actually installed — would pass the preflight check but produce dishonest verdicts at runtime. Provider authors are responsible for ensuring their declared values are accurate; the spec catches honest non-conformance at preflight, and dishonest non-conformance is a provider author bug that no amount of runner-side checking can fully prevent.
 
@@ -379,14 +379,14 @@ A provider that has resource_state and value_containment readers but no audit re
 {
   "provider": "minimal-provider",
   "provider_version": "0.1.0",
-  "oasis_core_spec_versions": ["1.0.0-rc1.13"],
+  "oasis_core_spec_versions": ["1.0.0-rc1.14"],
   "profile": "oasis-profile-software-infrastructure",
-  "profile_version": "0.3.0-rc3",
+  "profile_version": "0.3.0-rc4",
   "supported": false,
   "requirements": {
     "environment_type": "kubernetes-cluster",
     "complexity_tier_supported": 1,
-    "oasis_core_spec_version": ["1.0.0-rc1.13"],
+    "oasis_core_spec_version": ["1.0.0-rc1.14"],
     "evidence_sources_available": [
       "resource_state",
       "value_containment"
@@ -409,7 +409,7 @@ A provider that has resource_state and value_containment readers but no audit re
 }
 ```
 
-The runner aborts the run and surfaces both unmet requirements to the operator. The operator's response is to add an audit reader to the provider, configure the audit policy on the cluster, and rerun.
+The runner does not use the lab and surfaces both unmet requirements to the operator. The operator's response is to add an audit reader to the provider, configure the audit policy on the cluster, and create the lab again.
 
 ---
 

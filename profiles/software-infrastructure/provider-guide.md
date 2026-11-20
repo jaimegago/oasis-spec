@@ -1,6 +1,6 @@
 # Software Infrastructure — Provider Implementation Guide
 
-**Profile version:** 0.3.0-rc3
+**Profile version:** 0.3.0-rc4
 
 This document specifies the concrete operations an environment provider must implement to support the Software Infrastructure domain profile. It translates the abstract scenario preconditions, stimuli, and verification requirements into Kubernetes-level operations.
 
@@ -24,7 +24,7 @@ The provider must also support namespaces with team labels, criticality labels, 
 
 **`default` denotes the environment's own namespace.** A state entry that declares `namespace: default`, or that declares `resource: namespace/default`, names the namespace the provider created for this scenario's environment — not the cluster's `default` namespace. A state entry that omits the field means the same thing.
 
-This is stated because the alternative reading breaks scenario isolation, and does so silently. A provider that reads `default` as the cluster's own namespace places that scenario's resources outside the environment, where they survive its teardown: `default` is a namespace Kubernetes does not permit deleting, so nothing reclaims what was put there. The next scenario in the run then starts in a cluster that still contains its predecessor's workloads, and an agent scored on diagnosis is handed signals no scenario declared. Every capability scenario in this profile whose state is not zone-scoped declares it in `default`, so this is the ordinary case rather than an edge one.
+This is stated because the alternative reading breaks scenario isolation, and does so silently. A provider that reads `default` as the cluster's own namespace places that scenario's resources outside the environment, where they survive its teardown: `default` is a namespace Kubernetes does not permit deleting, so nothing reclaims what was put there. The next execution then starts in a cluster that still contains its predecessor's workloads, and an agent scored on diagnosis is handed signals no scenario declared. Every capability scenario in this profile whose state is not zone-scoped declares it in `default`, so this is the ordinary case rather than an edge one.
 
 This clause says nothing about a namespace named anything other than `default`. Whether a scenario's other declared namespaces are literal cluster names or names scoped to the environment is not settled here.
 
@@ -318,7 +318,7 @@ Implementation: a goroutine or scheduled job that watches for the trigger condit
 
 ## 4. API contract
 
-The evaluation runner (oasisctl) communicates with the environment provider over HTTP/JSON. The provider must expose the following endpoints. The conformance endpoint (§4.0) is queried once at the start of every run, before any other endpoints. The remaining endpoints are invoked per scenario.
+The evaluation runner (oasisctl) communicates with the environment provider over HTTP/JSON. The provider must expose the following endpoints. The conformance endpoint (§4.0) is queried once per lab, when the lab is created, before any other endpoints. The remaining endpoints are invoked per execution of a scenario.
 
 ### 4.0 GET /v1/conformance
 
@@ -417,7 +417,7 @@ Response body:
   - For `state_diff`: `before` (object), `after` (object), `changes` (array of field-level diffs)
 - `evidence_source` (object, required) — provenance of this observation per [OASIS Reporting §1.1](/docs/v1.0/spec/reporting/). Has two required subfields:
   - `type` (string) — identifies the kind of source backing this observation. For SI, expected values are `audit_log_file` (for audit_log observations backed by a real kube audit log) and `kube_api` (for resource_state and state_diff observations backed by live kube API queries).
-  - `status` (string) — one of `available` (real evidence collected normally) or `unreachable` (the reader is configured but the underlying source failed at this moment). The runner treats `unreachable` as a runtime PROVIDER_FAILURE per [Core §3.7](/docs/v1.0/spec/core/) and aborts the run. Reserved values `partial` and `empty_window` MAY be returned but the runner treats them as `unreachable`.
+  - `status` (string) — one of `available` (real evidence collected normally) or `unreachable` (the reader is configured but the underlying source failed at this moment). The runner treats `unreachable` as a runtime provider failure per [Core §3.7](/docs/v1.0/spec/core/): the execution reaches no verdict and is recorded as an attempt with the outcome `PROVIDER_FAILURE`. Reserved values `partial` and `empty_window` MAY be returned but the runner treats them as `unreachable`.
 
 A provider that returns an `audit_log` observation with `evidence_source.status: available` and an empty `entries` array is asserting that the audit log was queried, the source was healthy, and the time window contained zero matching events. This is a meaningful and valid signal for safety assertions of the form "no forbidden actions occurred." A provider that returns empty entries when the audit log was not actually queried — for example, because no audit policy is installed on the cluster — is non-conformant per [Provider Conformance Contract §3.6](provider-conformance.md) and produces dishonest verdicts.
 

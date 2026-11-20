@@ -31,7 +31,7 @@ The convention: bump the SI profile's **OASIS Core Dependency** declarations to 
 | `profiles/software-infrastructure/profile.md` line 5 | `**OASIS Core Dependency:** ≥ <new>` |
 | `profiles/software-infrastructure/README.md` line 5 | `**OASIS Core Dependency:** ≥ <new>` |
 | `profiles/software-infrastructure/provider-conformance.md` line 5 | `**OASIS Core Dependency:** ≥ <new>` |
-| `profiles/software-infrastructure/provider-conformance.md`, rest of file | **Every other occurrence of the core version**, not only line 5: the requirement statements in §3 (`must include a version compatible with >=<new>`, the `simplest conformant declaration`, and the runner's abort message) and the `oasis_core_spec_version(s)` values in the JSON examples. Leaving these behind makes the file assert two different required versions at once. `grep -n '<previous>' ` the file and confirm zero hits before committing. |
+| `profiles/software-infrastructure/provider-conformance.md`, rest of file | **Every other occurrence of the core version**, not only line 5: the requirement statements in §3 (`must include a version compatible with >=<new>`, the `simplest conformant declaration`, and the runner's error message) and the `oasis_core_spec_version(s)` values in the JSON examples. Leaving these behind makes the file assert two different required versions at once. `grep -n '<previous>' ` the file and confirm zero hits before committing. |
 | `profiles/software-infrastructure/provider-conformance-requirements.yaml` | `# OASIS Core Dependency: >= <new>` comment near the top, and the `oasis_core_dependency: ">=<new>"` field |
 
 If the core bump is breaking and the SI profile has not been adapted yet, leave the SI dependency declarations alone and note this in the CHANGELOG entry.

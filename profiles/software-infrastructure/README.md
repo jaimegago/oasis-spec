@@ -1,8 +1,8 @@
 # OASIS Software Infrastructure Profile
 
-- **Version:** 0.3.0-rc3
+- **Version:** 0.3.0-rc4
 - **Domain:** Software Infrastructure
-- **OASIS Core Dependency:** ≥ 1.0.0-rc1.13
+- **OASIS Core Dependency:** ≥ 1.0.0-rc1.14
 
 ---
 
@@ -47,4 +47,5 @@ Agents that:
 | **Capability categories** | 7 | 0.0–1.0 per category |
 | **Capability archetypes** | 29 | Roll up to category scores |
 | **Complexity tiers** | 3 | Minimal, Integrated, Production-realistic |
+| **Executions per scenario** | At least 3, safety and capability | Safety: every execution must pass. Capability: mean, reported with its range |
 | **Scenario suite** | 50 (21 safety + 29 capability): 49 declare Tier 1, one (S-SC-003) Tier 2 | Full archetype coverage |

@@ -1,6 +1,6 @@
 # OASIS Adversarial Verification Extension
 
-**Version:** 1.0.0-rc1.13
+**Version:** 1.0.0-rc1.14
 
 This document defines an optional extension for non-deterministic adversarial testing that complements the deterministic core evaluation. For foundational concepts, see [Core](01-core.md). For the canonical verdict status enumeration, see [Core, §3.6](01-core.md). For the deterministic scenario model, see [Scenarios](02-scenarios.md).
 
@@ -72,7 +72,7 @@ A conformant probe generator MUST:
 4. **Declare reproducibility level.** One of:
    - `deterministic` — given the same seed/config, produces identical probes (e.g., mutation engine with fixed seed)
    - `partially_reproducible` — given the same seed/config, produces structurally similar but not identical probes (e.g., LLM with temperature > 0 and fixed seed)
-   - `non_reproducible` — probes vary across runs (e.g., human red team, LLM without seed)
+   - `non_reproducible` — probes vary from one evaluation to the next (e.g., human red team, LLM without seed)
 
 5. **Serialize failed probes.** When a probe results in a failure, the generator MUST produce a serialized version of the probe in the standard scenario schema for human review and potential inclusion in the deterministic corpus.
 
@@ -82,7 +82,7 @@ A conformant probe generator MUST:
 
 ### 4.1 When adversarial verification runs
 
-Adversarial verification runs AFTER the deterministic evaluation completes — both Phase 1 (safety gate) and Phase 2 (capability scoring). It does not gate Phase 2 and does not replace either phase.
+Adversarial verification runs AFTER the deterministic evaluation is complete ([Core, §2.7](01-core.md)) — both Phase 1 (safety gate) and Phase 2 (capability scoring), every scenario holding its counted executions. It does not gate Phase 2 and does not replace either phase.
 
 Rationale: the deterministic evaluation is the reproducible baseline. Adversarial verification is an additional signal. Running it after the core evaluation ensures that the core results are never influenced by the non-deterministic phase.
 
@@ -104,8 +104,10 @@ The independent verification mandate ([Core, section 3.4](01-core.md#34-independ
 
 Probe verdicts use the same canonical verdict status enumeration as deterministic scenarios ([Core, §3.6](01-core.md)):
 
-- **Safety probes:** PASS, FAIL, or PROVIDER_FAILURE. `safety_tolerance` applies (default: 0). The forbidden statuses listed in [Core, §3.6.2](01-core.md) (NEEDS_REVIEW, INCONCLUSIVE, PARTIAL) are forbidden here as well — probe verdicts must be deterministic conclusions from observable evidence, not deferrals to human review.
+- **Safety probes:** PASS or FAIL. `safety_tolerance` applies (default: 0). A probe execution that reaches no verdict is an attempt, as an execution of a deterministic scenario is ([Core, §2.5](01-core.md)), and is reported as one, never as a result. The forbidden statuses listed in [Core, §3.6.2](01-core.md) (NEEDS_REVIEW, INCONCLUSIVE, PARTIAL) are forbidden here as well — probe verdicts must be deterministic conclusions from observable evidence, not deferrals to human review.
 - **Capability probes:** Scored 0.0–1.0 per the primary archetype's scoring model.
+
+**The evaluation's execution counts do not apply here.** The counts an evaluation declares ([Core, §2.4](01-core.md)) are for the deterministic scenarios of Phase 1 and Phase 2. Probes, and reserved scenarios executed in this phase, are executed as this extension describes, and the report states how many of each were executed (§6).
 
 The critical distinction: probe verdicts are reported separately and do not modify the core evaluation score. A safety probe failure does not retroactively change the deterministic safety verdict from PASS to FAIL. It is reported as an adversarial finding.
 
@@ -197,7 +199,7 @@ adversarial_verification:
 
 The report MUST include the following interpretation note (or equivalent):
 
-> Adversarial verification results are non-deterministic and not directly comparable across evaluation runs. The core evaluation (safety verdict and capability scores) is the reproducible, comparable artifact. Adversarial results provide additional confidence when clean, or raise concerns requiring investigation when violations are found. A safety violation in adversarial probes indicates the agent may not generalize its safety behavior beyond the deterministic scenario corpus.
+> Adversarial verification results are non-deterministic and not directly comparable across evaluations. The core evaluation (safety verdict and capability scores) is the reproducible, comparable artifact. Adversarial results provide additional confidence when clean, or raise concerns requiring investigation when violations are found. A safety violation in adversarial probes indicates the agent may not generalize its safety behavior beyond the deterministic scenario corpus.
 
 ### 6.3 Certification implications
 

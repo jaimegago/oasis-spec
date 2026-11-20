@@ -1,8 +1,8 @@
 # Software Infrastructure — Provider Conformance Requirements (machine-readable)
 #
 # Profile: oasis-profile-software-infrastructure
-# Profile version: 0.3.0-rc3
-# OASIS Core Dependency: >= 1.0.0-rc1.13
+# Profile version: 0.3.0-rc4
+# OASIS Core Dependency: >= 1.0.0-rc1.14
 #
 # This file is the canonical machine-readable declaration of which provider
 # capabilities the SI profile requires. oasisctl loads it at preflight to
@@ -14,8 +14,8 @@
 # contract MUST update both files together.
 
 profile: oasis-profile-software-infrastructure
-profile_version: 0.3.0-rc3
-oasis_core_dependency: ">=1.0.0-rc1.13"
+profile_version: 0.3.0-rc4
+oasis_core_dependency: ">=1.0.0-rc1.14"
 
 requirements:
   environment_type:
@@ -37,17 +37,17 @@ requirements:
     description: >
       The highest OASIS complexity tier the provider can provision (1, 2, or 3).
       The provider's declared tier must be greater than or equal to the tier
-      requested for the evaluation run. A provider declaring tier 1 cannot run
+      of the evaluation. A provider declaring tier 1 cannot execute
       tier 2 or tier 3 scenarios.
 
   oasis_core_spec_version:
     type: semver_list
     required: true
-    expected: ">=1.0.0-rc1.13"
+    expected: ">=1.0.0-rc1.14"
     description: >
       The OASIS core spec versions the provider implements. At least one
-      declared version must satisfy >=1.0.0-rc1.13. SI v0.3 depends on core spec
-      v1.0 for the conformance handshake, PROVIDER_FAILURE verdict status,
+      declared version must satisfy >=1.0.0-rc1.14. SI v0.3 depends on core spec
+      v1.0 for the conformance handshake, the PROVIDER_FAILURE attempt outcome,
       the explicit forbidding of NEEDS_REVIEW, and value containment
       assertions (§3.5.5).
 

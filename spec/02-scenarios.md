@@ -1,6 +1,6 @@
 # OASIS Scenario Specification
 
-**Version:** 1.0.0-rc1.13
+**Version:** 1.0.0-rc1.14
 
 This document defines the schema for OASIS evaluation scenarios and suites. For foundational concepts, see [Core](01-core.md).
 
@@ -18,7 +18,7 @@ Scenarios are defined in a structured format (YAML or equivalent). The core spec
 
 **`version`** (string, optional) — Semver version of this scenario definition. May be omitted, in which case the scenario inherits the version of its parent profile. Profiles that omit per-scenario versions treat the profile version as the single source of truth for scenario versioning.
 
-**`classification`** (enum, required) — Either `safety` or `capability`. Determines which evaluation phase the scenario runs in and which scoring model applies.
+**`classification`** (enum, required) — Either `safety` or `capability`. Determines which evaluation phase the scenario is executed in, which of the evaluation's two execution counts it gets ([Core, §2.4](01-core.md)), and which scoring model applies.
 
 **`category`** (string, required) — The specific evaluation category this scenario targets. For safety scenarios, must reference a core safety category or a domain-profile-defined safety category. For capability scenarios, a domain-profile-defined category string.
 
@@ -70,11 +70,11 @@ These fields are optional. When present, they enable richer output from profile 
 
 #### 1.3.1 `preconditions.agent.mode` is not an inclusion filter
 
-A scenario is never excluded from a run on the strength of `preconditions.agent.mode`. Three reasons, and the first is decisive.
+A scenario is never excluded from an evaluation on the strength of `preconditions.agent.mode`. Three reasons, and the first is decisive.
 
 **It is on a different axis from the one exclusion needs.** Its vocabulary contrasts `supervised` with `autonomous` — a question of whether a human is in the loop — while the exclusion an evaluation actually performs is over what the agent is permitted to do. A profile that wants to exclude scenarios requiring a successful mutation declares a dimension saying so and conditions on it through `applicability`; `mode` does not describe that axis, and a field cannot be the requirement for an axis it does not describe. An agent may be autonomous and unable to write at once.
 
-**Two exclusion mechanisms with no stated precedence is not a design.** §1.9 already excludes, keyed on the profile's declared agent configuration schema and producing `NOT_APPLICABLE`. Were `mode` to exclude as well, a run would carry two independent filters with disjoint vocabularies and nothing saying which governs when they disagree. This spec states no such precedence, and states none here: there is one filter.
+**Two exclusion mechanisms with no stated precedence is not a design.** §1.9 already excludes, keyed on the profile's declared agent configuration schema and producing `NOT_APPLICABLE`. Were `mode` to exclude as well, an evaluation would carry two independent filters with disjoint vocabularies and nothing saying which governs when they disagree. This spec states no such precedence, and states none here: there is one filter.
 
 **The consistency check of [Profiles, §2.16.3](03-profiles.md) is validation, not exclusion.** Flagging `applicability: {operational_mode: read_write}` beside `preconditions.agent.mode: read-only` is a claim about whether a scenario **document** coheres. A document-validity check and a runtime inclusion filter are different acts, and only the second removes anything from a run.
 
@@ -124,7 +124,7 @@ At least one verification method is required. The evaluation implementation MUST
 
 ### 1.7 Scoring
 
-**`scoring`** (object, required) — How the scenario result is computed.
+**`scoring`** (object, required) — How one execution of the scenario is scored. A scenario's result in an evaluation is taken over the counted executions the evaluation gives it: PASS only if every one passes for a safety scenario ([Core, §3.3](01-core.md)), the mean of their scores with its range for a capability scenario ([Core, §4.3](01-core.md)). The scoring block does not set how many executions that is; the evaluation declares it ([Core, §2.4](01-core.md)).
 
 - **`scoring.type`** (enum, required) — Either `binary` (for safety) or `weighted` (for capability).
 
@@ -165,9 +165,9 @@ Domain profiles may define additional requirements.
 
 ### 1.9 Applicability
 
-**`applicability`** (object, optional) — Conditions on the agent's reported configuration that determine whether this scenario is included in an evaluation run. Keys are dimension identifiers from the active profile's agent configuration schema (see [Profiles, section 2.16](03-profiles.md)); values are the required configuration values.
+**`applicability`** (object, optional) — Conditions on the agent's reported configuration that determine whether this scenario is included in an evaluation. Keys are dimension identifiers from the active profile's agent configuration schema (see [Profiles, section 2.16](03-profiles.md)); values are the required configuration values.
 
-When `applicability` is absent, the scenario applies to all agent configurations (unconditional). **This is the only mechanism that excludes a scenario from a run** — in particular `preconditions.agent.mode` does not, per §1.3.1.
+When `applicability` is absent, the scenario applies to all agent configurations (unconditional). **This is the only mechanism that excludes a scenario from an evaluation** — in particular `preconditions.agent.mode` does not, per §1.3.1.
 
 When `applicability` is present, the evaluation runner compares each condition against the agent's reported configuration:
 

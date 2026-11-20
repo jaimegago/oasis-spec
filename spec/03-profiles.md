@@ -1,6 +1,6 @@
 # OASIS Domain Profiles
 
-**Version:** 1.0.0-rc1.13
+**Version:** 1.0.0-rc1.14
 
 This document defines the structure of OASIS domain profiles and the quality criteria they must meet. For foundational concepts, see [Core](01-core.md). For a detailed guide on authoring profiles, see the [Profile Authoring Guide](/docs/v1.0/guides/profile-authoring/).
 
@@ -130,7 +130,7 @@ The provider implementation guide MUST contain:
 
 The provider implementation guide serves two audiences. For human implementers, it is a comprehensive checklist. For automated implementers (e.g., an LLM generating or updating provider code), it is a self-contained instruction set that, together with the profile's scenarios and the provider conformance contract (§2.17), contains all information needed to produce a conformant environment provider without external context.
 
-The guide is a normative component of the profile. A provider that does not support an operation listed in the guide cannot execute the scenarios that require it, and the gap MUST be detected by the preflight conformance check ([Provider Conformance, §3.8](08-provider-conformance.md)) so that the run aborts before any scenarios begin.
+The guide is a normative component of the profile. A provider that does not support an operation listed in the guide cannot execute the scenarios that require it, and the gap MUST be detected by the preflight conformance check ([Provider Conformance, §3.8](08-provider-conformance.md)), made when a lab is created, so that no execution is made on a lab that cannot support it.
 
 ### 2.14 Subcategories (optional)
 
@@ -176,7 +176,7 @@ The agent configuration schema serves three purposes:
 
 1. **Scenario applicability.** Scenarios declare which configuration values they require. Scenarios whose requirements are not met by the agent under test are excluded from the evaluation as NOT_APPLICABLE.
 2. **Conditional expected outcomes.** Scenarios that apply across multiple configurations but expect different correct behavior declare configuration-conditioned assertions.
-3. **Coverage awareness.** The evaluation report surfaces how much of the profile was exercised given the agent's reported configuration, enabling informed decisions about additional evaluation runs.
+3. **Coverage awareness.** The evaluation report surfaces how much of the profile was exercised given the agent's reported configuration, enabling informed decisions about additional evaluations.
 
 #### 2.16.1 Schema structure
 
@@ -234,7 +234,7 @@ A scenario's `preconditions.agent.mode` says "run this scenario with the agent i
 
 When both are present, they must be consistent: a scenario with `applicability: {operational_mode: read_write}` and `preconditions.agent.mode: read-only` is malformed. Evaluation tooling SHOULD validate this consistency.
 
-**That check is document validation and not a second inclusion filter.** It asks whether a scenario document coheres; it never removes a scenario from a run, and `preconditions.agent.mode` excludes nothing on its own. See [Scenarios, §1.3.1](02-scenarios.md).
+**That check is document validation and not a second inclusion filter.** It asks whether a scenario document coheres; it never removes a scenario from an evaluation, and `preconditions.agent.mode` excludes nothing on its own. See [Scenarios, §1.3.1](02-scenarios.md).
 
 ### 2.17 Provider conformance contract
 
@@ -267,6 +267,17 @@ This is a quality bar, not a normative requirement, but profiles whose conforman
 The test for "self-contained" is straightforward: hand the conformance contract and the provider implementation guide to a competent implementer who has never seen the profile before, with no other context. Can they build a working provider? If yes, the contract is self-contained. If they need to ask questions about what a requirement means, what a valid value looks like, or what a failure mode entails, the contract is incomplete and the profile author should fill the gap.
 
 This guidance is SHOULD rather than MUST in v1.0 because enforcing it would require human judgment on every profile PR. It is expected to become MUST in a future spec version once the cultural norm is established.
+
+### 2.18 Execution counts
+
+An evaluation gives every applicable scenario a declared number of counted executions: one count for safety scenarios and one for capability scenarios ([Core, §2.4](01-core.md)). A profile sets the minimums an evaluation under it must meet.
+
+- **Capability minimum (required).** The profile MUST declare the minimum capability count, an integer of at least 1. The core spec sets none: how many executions a capability score needs depends on how far a domain's scenarios move between executions, and that is domain knowledge.
+- **Safety minimum (optional).** The core spec sets the minimum safety count at 3. A profile MAY declare a higher minimum. It MUST NOT declare a lower one, and a profile that declares none has the core's.
+
+The minimums are profile-wide. A profile does not set a count per scenario, per archetype or per category: an evaluation declares one safety count and one capability count, and every applicable scenario of each kind gets it. The evaluator chooses each count at or above the minimum; the profile does not choose it and neither does the evaluation implementation.
+
+A profile SHOULD state the ground for the capability minimum it sets — what was measured and how far scores moved — so that an evaluator considering a higher count knows what the minimum was sized against.
 
 ---
 

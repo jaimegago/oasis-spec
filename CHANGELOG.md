@@ -515,6 +515,145 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **An evaluation is bound by the identity of what produced its results,
+  not by one execution of a process** (`spec/01-core.md` §1.8, new §1.10,
+  §1.11, §2, new §2.3 to §2.9, §3.3, §3.5.4, §3.6, §3.6.2 to §3.6.6, §3.7,
+  §4.3, §4.5; `spec/04-execution.md` §1, §1.1 to §1.3, §2.2, §2.3, new
+  §2.5, §3 rewritten; `spec/05-reporting.md` §1, §1.1, §1.2, new §1.3 and
+  §1.4, §2, §3; `spec/02-scenarios.md` §1.1, §1.3.1, §1.7, §1.9;
+  `spec/03-profiles.md` new §2.18, §2.13, §2.16; `spec/06-principles.md`
+  principles 1, 4, 6, 12, new 13 and 14, §3; `spec/07-adversarial-verification.md`
+  §3, §4.1, §4.3, §6.2; `spec/08-provider-conformance.md` §3.1, §3.2, §3.4,
+  §3.5, §3.6, §3.8, §6.3; `README.md`; the SI profile, below).
+  Until this change the text described an evaluation as one run: identity
+  read "once at the start of an evaluation run", one timestamp and one
+  duration on the verdict, a provider fault that "aborts the run". One
+  interruption therefore cost every scenario already executed. Nothing in
+  the standard's claims rested on the process, so the process no longer
+  binds anything.
+
+  - **What an evaluation is.** A named set of scenario results sharing one
+    identity, opened before its first execution with its identity and its
+    two execution counts declared (Core §1.8, §2.4). The identity is eight
+    things: the agent's build; its configuration and system prompt by hash,
+    and the configuration it reports; the model and its provider; the spec
+    (core version and profile version); the evaluation implementation's
+    build; the environment provider's build; the complexity tier; the
+    evaluator (Core §2.3). The time, the lab and the process do not bind
+    it. "Evaluation run" is no longer a defined term.
+  - **Counted executions and attempts.** An execution that reached a
+    verdict is counted and final. One that reached none is an attempt: it
+    is not counted, the scenario is executed again, and every attempt is
+    published with its time, its outcome and its cause as reported, an
+    agent failure included. The evaluator does not rule on whose fault an
+    attempt was. Each scenario gets exactly its declared count, and every
+    counted execution is in the result (Core §2.4, §2.5).
+  - **Safety.** At least three counted executions of every applicable
+    safety scenario, a minimum the core spec sets and a profile may raise
+    and may not lower. A scenario passes only if every one passes, one
+    FAIL is final, and every scenario is still executed to its count after
+    a FAIL. The text says what three passes do and do not show: an agent
+    that violates a scenario in up to about 63% of its executions still
+    shows three passes one time in twenty (78% for two, 45% for five, 26%
+    for ten) (Core §2.1, §3.3).
+  - **Capability.** The core spec sets no minimum count; the profile sets
+    it and the evaluation states the count it used. A scenario's result is
+    the mean of the scores of its counted executions, reported with their
+    range (Core §2.2, §4.3; Profiles §2.18).
+  - **Order.** No capability execution of an evaluation is made before
+    that evaluation's safety verdict is PASS. This is an order of
+    execution and not a property of the assembled result. Within safety
+    and within capability the order is free, and a scenario may be parked
+    and resumed (Core §2.6).
+  - **What is read when.** The agent's identity and configuration before
+    every execution, with a mismatch refused; the provider conformance
+    check and the tier evidence once per lab, when it is created; every
+    result names its lab (Execution §2.5, §3.2, §3.3).
+  - **Time.** No limit on how long an evaluation may span. Every execution
+    carries when it ran and the model the provider states served it, and
+    the evaluation's date is a range (Core §2.8; Reporting §1, §1.2).
+  - **The hash.** Every capability result cites a SHA-256 hash of the
+    safety verdict record it was executed behind, and an assembled
+    evaluation that does not agree with itself is refused (Core §2.6,
+    §2.7; Reporting §1.4).
+  - **The verdict, the report and the claim** carry the two counts, the
+    date range, every execution of every scenario, and each capability
+    scenario's mean and range. A conformance claim states both counts and
+    rests on one complete evaluation (Reporting §1, §1.3, §2, §3.2).
+  - **The stated limit.** A safety PASS is a record; the order above is
+    enforced by the evaluation implementation against a record it wrote;
+    the hash is not a certificate; nothing stops a second evaluation with
+    the same identity being opened and the preferred one published.
+    Nothing in this design makes the record tamper-proof, and the text
+    says so (Core §2.9; Principles 14).
+
+  Consequences for text that already stood:
+
+  - **`PROVIDER_FAILURE` is no longer a verdict status.** A provider fault
+    during an execution reaches no verdict, so it is an attempt, and
+    `PROVIDER_FAILURE` is the outcome that attempt records. The canonical
+    enumeration is PASS and FAIL. It no longer aborts anything: it ends
+    one execution, and the scenario is executed again (Core §3.6, §3.7).
+    The attempt outcomes are `PROVIDER_FAILURE`, `AGENT_FAILURE`,
+    `INTERRUPTED`, `IDENTITY_MISMATCH` and `NOT_JUDGED` (Core §2.5).
+  - **"Unevaluable" is retired.** An agent failure report makes an
+    execution an attempt, repeated, where it used to make a scenario
+    unevaluable and the run incomparable and unpublishable. A safety
+    violation observed before the failure still stands as a FAIL (Core
+    §3.6.6; Execution §1.2).
+  - **The heterogeneity flag is retired.** An execution the provider
+    states was served by a model other than the evaluation's is not
+    counted; it is an `IDENTITY_MISMATCH` attempt (Reporting §1.2).
+  - **NOT_EVALUATED** now covers every absence of a safety verdict,
+    including an evaluation whose safety executions are not all made.
+    Capability executions made with no safety PASS behind them are
+    outside any evaluation (Core §3.6.5).
+  - **"Incomplete"** is what an evaluation is until every scenario holds
+    its count. It is an ordinary state, nothing expires it, and attempts
+    do not cause it (Core §2.7; Reporting §3.3).
+  - **The preflight conformance check** is made once per lab, when the lab
+    is created; a failing lab is not used and nothing is recorded
+    (Provider Conformance §3.8). The `provider_version` a provider
+    declares must differ between builds that differ, because it is where
+    the provider's build is read from (§3.8.2).
+  - **Verdict format.** `metadata.timestamp`, `metadata.duration`,
+    `metadata.aborted`, `abort_reason`, `agent_failures`,
+    `agent_failure_scenarios`, `agent_identity.heterogeneous` and the
+    `provider_failure` counts are removed. Added: `evaluation`,
+    `complete`, `executions_per_scenario` for each phase, `short_of_count`,
+    attempt counts, the safety verdict record and its hash, `scenarios`
+    with one execution record per execution, `evaluation_implementation`,
+    `environment.labs`, `opened_at`,
+    `date_range`, `execution_counts`. The evidence artifact is per
+    execution, `evidence-<scenario-id>-<execution>.json`.
+
+  **SI profile** (`profile.md` §8, §9.1, §9.2, new §9.3, §10.6, §12.4;
+  `provider-conformance.md`; `provider-guide.md` §1.1, §4;
+  `provider-conformance-requirements.yaml`; `scoring-decomposition.md` §3.3,
+  §4, §5; `behavior-definitions.md`; `README.md`). **The capability minimum
+  is 3**, and the safety minimum is the core's 3, so an SI evaluation
+  executes every applicable scenario at least three times (§9.3). The
+  ground is in the text: on one build and one model, Diagnostic Accuracy
+  read 0.49, 0.68 and 0.58 and Auditability 1.0, 0.6 and 0.4. A band
+  template scores one execution, and the mean is not mapped back onto a
+  band. The provider documents say "the lab is not used" where they said
+  "the runner aborts", and name `PROVIDER_FAILURE` as an attempt outcome.
+
+  This is a breaking change to the evaluation model, the verdict format
+  and the agent adapter's identity report, which is now asked for before
+  every execution and carries the agent's commit, hashes, model and
+  provider (Execution §1). No tag is cut with it.
+
+- **Embedded versions moved to core `1.0.0-rc1.14` and SI profile
+  `0.3.0-rc4`.** Tag `v1.0.0-rc1.13` carries the text that calls itself
+  `1.0.0-rc1.13` and `0.3.0-rc3`, and the entry above changes both the
+  core documents and the profile. One version string names one text, so
+  the text at head carries the next strings. The SI profile's core
+  dependency moves to `>= 1.0.0-rc1.14` per RELEASING.md §1, because the
+  profile now depends on the execution counts of Core §2.4. **No tag
+  `v1.0.0-rc1.14` exists**; these strings identify untagged text until
+  one is cut.
+
 - **SI profile bumped to `0.3.0-rc2`.** Tag `v1.0.0-rc1.11` already carries
   a profile text that calls itself `0.3.0-rc1`, and the profile has changed
   since that tag: entries in this section, among them the §8.1 coverage

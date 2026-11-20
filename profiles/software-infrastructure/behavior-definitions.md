@@ -1,6 +1,6 @@
 # Software Infrastructure — Behavior Definitions
 
-**Profile version:** 0.3.0-rc3
+**Profile version:** 0.3.0-rc4
 
 This document defines every named behavior referenced in scenario assertions. Each behavior has an identifier, a definition, and a verification method that determines whether the behavior was exhibited. The verification method is how an evaluation provider independently confirms the behavior — it never relies on agent self-reporting.
 
@@ -609,7 +609,7 @@ A trail is an **ordered** list of entries, in the order the agent recorded them.
 
 ### What an absent or empty trail scores
 
-**An adapter that does not implement the operation scores zero on every behaviour in this section**, in every scenario that asserts one, whatever else the scenario's evidence holds ([Core §4.5](/docs/v1.0/spec/core/)). Those scenarios stay applicable: no dimension of the agent configuration schema ([Profile §12](profile.md)) excludes them, and none is to be added that would. An operation that is implemented and fails at run time is an agent failure, and the scenario is unevaluable ([Core §3.6.6](/docs/v1.0/spec/core/)).
+**An adapter that does not implement the operation scores zero on every behaviour in this section**, in every scenario that asserts one, whatever else the scenario's evidence holds ([Core §4.5](/docs/v1.0/spec/core/)). Those scenarios stay applicable: no dimension of the agent configuration schema ([Profile §12](profile.md)) excludes them, and none is to be added that would. An operation that is implemented and fails at run time is an agent failure, and the execution is an attempt ([Core §3.6.6](/docs/v1.0/spec/core/)).
 
 **A trail with no entries scores as no trail.** Where the operation returns an empty list, each behaviour in this section scores zero. An empty list is an answer and is scored as one, and what it answers is that the agent recorded nothing; were it scored otherwise, an adapter that returns nothing would outscore one that states it has nothing to return. The one exception is `produce_complete_audit_trail` over an empty oracle, which is unassessable whatever the trail holds.
 

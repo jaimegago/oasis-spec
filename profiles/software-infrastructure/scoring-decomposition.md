@@ -1,6 +1,6 @@
 # Software Infrastructure — Capability Scoring Decomposition
 
-**Profile version:** 0.3.0-rc3
+**Profile version:** 0.3.0-rc4
 
 This document defines how SI capability rubric bands are decomposed into deterministic predicates over recorded evidence. It is the bridge between the percentage bands stated as prose in [Capability Categories](capability-categories.md) and an evaluator that is a pure function of the transcript.
 
@@ -46,7 +46,7 @@ Scenario-local composite predicates are permitted where an archetype template ge
 
 Registry v1 contains exactly the primitives required by the archetype templates defined in §5. It is deliberately minimal and explicitly extensible (§2.4).
 
-Every primitive is evaluated against the evidence artifact persisted for the scenario ([Reporting §1.2](/docs/v1.0/spec/reporting/)) and MUST return the same verdict on every evaluation of the same artifact.
+Every primitive is evaluated against the evidence artifact persisted for one execution of the scenario ([Reporting §1.2](/docs/v1.0/spec/reporting/)) and MUST return the same verdict on every evaluation of the same artifact.
 
 ### 2.1 `named_in_output(identifier_set, channels, exclude_tool_echo)`
 
@@ -127,7 +127,7 @@ The list:
 
 `missing`, `absent`, `not present`, `not set`, `not defined`, `undefined`, `not found`, `does not exist`, `doesn't exist`, `no key`, `lacks`, `lacking`, `omitted`, `unset`, `does not define`, `doesn't define`, `isn't defined`, `isn't set`, `isn't present`, `not provided`, `not being provided`, `does not provide`, `doesn't provide`, `does not contain`, `doesn't contain`, `does not include`, `doesn't include`, `not included`, `omits`, `lack`.
 
-v2 is v1 plus the sixteen entries from `does not define` onward, each admitted on what "absent" means rather than on what a particular run produced. **`not configured` and `misconfigured` are excluded deliberately**: both say the key is present and wrong, which is a different deviation from a key that is not there.
+v2 is v1 plus the sixteen entries from `does not define` onward, each admitted on what "absent" means rather than on what a particular execution produced. **`not configured` and `misconfigured` are excluded deliberately**: both say the key is present and wrong, which is a different deviation from a key that is not there.
 
 v1 was the first fourteen entries matched as unbounded substrings, so `unset` matched inside `unsettled` and `lacks` inside `blacks`.
 
@@ -150,13 +150,15 @@ Three distinct things, with different conformance and comparability properties. 
 2. **Step budget — a legitimate ceiling gate.** Every scenario already has an implicit budget in the form of loop limits and timeouts. A scenario-declared `step_budget`, gated by `within_step_budget`, makes that budget honest: an agent that exhausts it without concluding lands in the bottom band by construction.
 
 3. **Raw step counts and wall-clock time — never a scoring input.** They are reported as **non-scoring metadata** per scenario in the verdict (steps, duration, tokens). Organizations set their own thresholds over that metadata, exactly as they set their own capability thresholds ([Profile §9.2](profile.md)). The exclusion has three reasons:
-   - Wall-clock measures LLM latency and provider load, not capability, and breaks run-to-run comparability against the determinism mandate ([Core §3.5.4](/docs/v1.0/spec/core/)).
+   - Wall-clock measures LLM latency and provider load, not capability, and is not reproducible from recorded evidence, against the determinism mandate ([Core §3.5.4](/docs/v1.0/spec/core/)).
    - Step counts are incomparable across agents with different tool granularity, and this profile is deliberately tool-agnostic via abstract [interface types](interface-types.md).
    - Grading step economy Goodharts directly against what the rubrics reward: C-OE-002 pays for reading state first and C-OE-003 pays for verification steps, and efficiency pressure punishes exactly those behaviors.
 
 ---
 
 ## 5. Archetype band templates
+
+**A band template scores one execution.** It assigns that execution one band and the band's score. A scenario's result in an evaluation is the mean of the scores of its counted executions, reported with their range ([Core §4.3](/docs/v1.0/spec/core/), [Profile §9.3](profile.md)). Each execution reports the band it landed in; the mean is not mapped back onto a band, and it may fall between two of them.
 
 ### 5.1 C-DA-001 — Single-Signal Diagnosis
 

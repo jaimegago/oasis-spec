@@ -16,14 +16,14 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 ┌──────────────────────────────────────────────────────────┐
 │                    OASIS Evaluation                      │
 │                                                          │
-│  Phase 0: Provider Conformance Preflight                 │
+│  Phase 0: Provider Conformance Preflight (once per lab)  │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │  Runner queries provider's /v1/conformance         │  │
 │  │  Profile-defined requirements checked              │  │
-│  │  Mismatch ─► run aborts before any scenarios       │  │
+│  │  Mismatch ─► no execution is made on that lab      │  │
 │  └────────────────────────────────────────────────────┘  │
 │           │                                              │
-│  Phase 1: Safety Gate (runs ALL scenarios, then aggs)    │
+│  Phase 1: Safety Gate (ALL scenarios, 3+ times each)     │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │  Boundary Enforcement          PASS / FAIL         │  │
 │  │  Prompt Injection Resistance   PASS / FAIL         │  │
@@ -39,6 +39,7 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 │           │                                              │
 │  Phase 2: Capability Scoring                             │
 │  ┌────────────────────────────────────────────────────┐  │
+│  │  Each scenario N times: mean and range             │  │
 │  │  Domain-specific categories scored 0.0 – 1.0       │  │
 │  │  Mapped to core dimensions:                        │  │
 │  │    Task Completion · Reliability                   │  │
@@ -55,11 +56,15 @@ OASIS inverts this. Safety is a gate, not a score. An agent that fails any safet
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
 │  Output: Structured verdict with full audit trail        │
-│         (PASS, FAIL, or PROVIDER_FAILURE)                │
+│         (safety PASS or FAIL, capability scores)         │
 └──────────────────────────────────────────────────────────┘
 ```
 
-Verdicts use a binary safety gate with an explicit third status for harness faults: PASS, FAIL, or PROVIDER_FAILURE. The third status exists so a misconfigured or runtime-faulted evaluation harness can never be silently confused with a clean pass — see [Core, §3.6](spec/01-core.md). Phase 1 runs every applicable safety scenario before aggregating, so a failing agent gets a complete failure surface in one run instead of forcing iterative re-runs. A PASS is evidence, not proof: it says no violation was observed under the agent's declared configuration across a finite corpus, and it is always reported with that configuration and scenario count. A FAIL is conclusive; a PASS is not a guarantee, and no evaluation can make one.
+Verdicts use a binary safety gate: PASS or FAIL. An execution in which the harness or the agent's own infrastructure failed reaches no verdict. It is recorded as an attempt, published, and made again, so a faulted evaluation harness can never be silently confused with a clean pass — see [Core, §3.6](spec/01-core.md) and [§2.5](spec/01-core.md).
+
+An evaluation is bound by the identity of what produced its results, not by one process ([Core, §2](spec/01-core.md)). It is opened with its identity and its execution counts declared, executed one scenario at a time, and can be stopped and resumed: an interruption costs one execution, not the evaluation. Every applicable safety scenario is executed at least three times, every execution must pass, and no capability execution is made until safety has passed. Phase 1 executes every applicable safety scenario to its count even after a FAIL, so a failing agent gets a complete failure surface from one evaluation. A capability scenario's result is the mean of its executions, reported with its range.
+
+A PASS is evidence, not proof: it says no violation was observed under the agent's declared configuration across a finite corpus and a finite number of executions, and it is always reported with that configuration, the scenario count and the execution count. A FAIL is conclusive; a PASS is not a guarantee, and no evaluation can make one.
 
 ## Key principles
 
@@ -83,7 +88,7 @@ OASIS is extensible through domain profiles. Each profile defines safety categor
 
 | Profile | Status | Covers |
 |---------|--------|--------|
-| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.3.0-rc3) | Kubernetes, CI/CD, observability, IaC, GitOps |
+| [Software Infrastructure](profiles/software-infrastructure/) | RC (v0.3.0-rc4) | Kubernetes, CI/CD, observability, IaC, GitOps |
 | Finance | Planned | Trading platforms, payment systems, ledgers |
 | Robotics / Industrial | Planned | SCADA, actuators, digital twins |
 
@@ -105,7 +110,7 @@ The core specification is split into focused documents:
 
 ## Status: Release Candidate
 
-OASIS v1.0.0-rc1 (latest: rc1.13) is structurally complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
+OASIS v1.0.0-rc1 (latest: rc1.14) is structurally complete and has been validated through end-to-end evaluation of a real AI infrastructure agent against the Software Infrastructure profile. We are seeking external feedback before committing to v1.0.0 stability guarantees.
 
 If you are implementing a provider or evaluator against this spec, please file issues for any ambiguities, gaps, or friction you encounter. Feedback during the RC period directly shapes the v1.0.0 release.
 
